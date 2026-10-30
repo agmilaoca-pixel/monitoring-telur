@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Monitor Kadar Air Garam Telur Asin</title>
+  <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root {
+      --bg: #0c0a17;
+      --card-bg: rgba(26, 16, 43, 0.78);
+      --card-border: rgba(244, 114, 182, 0.22);
+      --text-main: #fdf2f8;
+      --text-muted: #c084fc;
+      --neon-pink: #ff2a85;
+      --neon-cyan: #00f2fe;
+      --neon-yellow: #fde047;
+      --neon-red: #ff3860;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; }
+    body {
+      background: radial-gradient(circle at 50% 0%, #3b0764 0%, var(--bg) 75%);
+      color: var(--text-main);
+      display: flex;
+      justify-content: center;
+      padding: 24px 12px;
+      min-height: 100vh;
+    }
+    .container { width: 100%; max-width: 450px; display: flex; flex-direction: column; gap: 16px; }
+
+    /* Welcome Banner */
+    .welcome-banner {
+      background: linear-gradient(135deg, rgba(255, 42, 133, 0.15), rgba(192, 132, 252, 0.1));
+      border: 1px solid rgba(255, 42, 133, 0.35);
+      border-radius: 16px;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      box-shadow: 0 0 20px rgba(255, 42, 133, 0.15);
+    }
+    .welcome-banner span { font-size: 20px; }
+    .welcome-banner div h3 { font-size: 13.5px; font-weight: 700; color: #ff77b4; letter-spacing: 0.5px; }
+    .welcome-banner div p { font-size: 11px; color: #fbcfe8; }
+
+    /* Warning Banner (> 7 Hari) */
+    .warning-box {
+      display: none;
+      background: linear-gradient(135deg, rgba(255, 56, 96, 0.25), rgba(255, 42, 133, 0.15));
+      border: 1.5px solid var(--neon-red);
+      border-radius: 16px;
+      padding: 14px 16px;
+      box-shadow: 0 0 25px rgba(255, 56, 96, 0.45);
+      animation: alertPulse 1.8s infinite ease-in-out;
+    }
+    .warning-content { display: flex; gap: 12px; align-items: center; }
+    .warning-icon { font-size: 26px; }
+    .warning-text h4 { font-size: 13.5px; font-weight: 800; color: #ff6b8b; text-transform: uppercase; letter-spacing: 0.6px; }
+    .warning-text p { font-size: 11.5px; color: #ffe4e6; margin-top: 2px; line-height: 1.4; }
+    @keyframes alertPulse {
+      0%, 100% { box-shadow: 0 0 15px rgba(255, 56, 96, 0.3); border-color: rgba(255, 56, 96, 0.7); }
+      50% { box-shadow: 0 0 30px rgba(255, 56, 96, 0.7); border-color: #ff3860; }
+    }
+
+    /* Header */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 6px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .header h1 {
+      font-size: 18.5px;
+      font-weight: 800;
+      background: linear-gradient(135deg, #ffffff 20%, #f472b6 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      line-height: 1.3;
+    }
+    .header p { font-size: 12px; color: #e879f9; margin-top: 3px; }
+    
+    .badge-status {
+      display: flex; align-items: center; gap: 6px;
+      padding: 6px 14px; border-radius: 999px;
+      background: rgba(255, 42, 133, 0.15); color: #ff77b4;
+      font-size: 12px; font-weight: 600;
+      border: 1px solid rgba(255, 42, 133, 0.4);
+      box-shadow: 0 0 12px rgba(255, 42, 133, 0.25);
+    }
+    .badge-dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: #ff2a85; box-shadow: 0 0 8px #ff2a85;
+    }
+
+    /* Section Headers */
+    .section-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+    .section-head h2 { font-size: 13px; font-weight: 700; display: flex; align-items: center; gap: 8px; letter-spacing: 0.8px; }
+    .sq-pink { width: 8px; height: 8px; background: var(--neon-pink); border-radius: 2px; box-shadow: 0 0 8px var(--neon-pink); }
+    .sq-cyan { width: 8px; height: 8px; background: var(--neon-cyan); border-radius: 2px; box-shadow: 0 0 8px var(--neon-cyan); }
+    .tag-active {
+      font-size: 11px; padding: 2px 10px; border-radius: 999px;
+      background: rgba(244, 114, 182, 0.18); color: #f472b6;
+      border: 1px solid rgba(244, 114, 182, 0.35); font-weight: 600;
+    }
+
+    /* Cards */
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .card {
+      background: var(--card-bg);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--card-border);
+      border-radius: 18px;
+      padding: 16px;
+      position: relative;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+      overflow: hidden;
+    }
+    .card-title { font-size: 11px; font-weight: 700; color: #d8b4fe; text-transform: uppercase; letter-spacing: 0.6px; }
+    .card-value {
+      font-size: 28px; font-weight: 800; margin: 8px 0 4px 0;
+      color: #ffffff; text-shadow: 0 0 16px rgba(255, 42, 133, 0.35);
+    }
+    .card-unit { font-size: 16px; font-weight: 600; color: var(--neon-yellow); text-shadow: none; }
+    .card-footer { font-size: 10.5px; color: #c084fc; font-weight: 600; letter-spacing: 0.4px; }
+
+    /* Durasi Pengasinan Card */
+    .batch-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 18px;
+      padding: 16px 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+    }
+    .batch-info h3 { font-size: 14px; font-weight: 700; color: #fdf2f8; }
+    .batch-days { font-size: 26px; font-weight: 800; color: #ff77b4; margin: 4px 0; }
+    .batch-days span { font-size: 14px; color: #d8b4fe; font-weight: 600; }
+    .batch-info p { font-size: 11.5px; color: var(--text-muted); }
+    .btn-reset-batch {
+      background: rgba(255, 42, 133, 0.2);
+      border: 1px solid rgba(255, 42, 133, 0.4);
+      color: #ff77b4;
+      padding: 7px 14px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-reset-batch:hover {
+      background: var(--neon-pink);
+      color: #ffffff;
+      box-shadow: 0 0 12px rgba(255, 42, 133, 0.6);
+    }
+
+    /* TDS Graphic Badge */
+    .tds-badge {
+      position: absolute; top: 12px; right: 12px; width: 34px; height: 34px;
+      border-radius: 10px; display: flex; align-items: center; justify-content: center;
+      background: rgba(255, 42, 133, 0.1); border: 1px solid rgba(255, 42, 133, 0.3);
+    }
+    .tds-badge svg { width: 20px; height: 20px; fill: none; stroke: var(--neon-pink); stroke-width: 1.8; }
+    .pulse-dot {
+      position: absolute; top: 4px; right: 4px; width: 6px; height: 6px;
+      background: var(--neon-pink); border-radius: 50%;
+      box-shadow: 0 0 8px var(--neon-pink);
+      animation: pulseAnim 1.4s infinite ease-in-out;
+    }
+    @keyframes pulseAnim {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.6); opacity: 0.4; }
+    }
+
+    /* Water Badge */
+    .water-badge {
+      position: absolute; top: 12px; right: 12px; width: 34px; height: 34px;
+      border-radius: 50%; overflow: hidden;
+      background: rgba(0, 242, 254, 0.1); border: 1.5px solid rgba(0, 242, 254, 0.4);
+    }
+    .water-tank {
+      position: absolute; bottom: 0; left: 0; width: 100%; height: 0%;
+      background: linear-gradient(180deg, rgba(0, 242, 254, 0.7), rgba(0, 168, 255, 0.9));
+      transition: height 0.5s ease;
+    }
+    .wave {
+      position: absolute; top: -7px; left: -50%; width: 200%; height: 14px;
+      background: radial-gradient(circle, rgba(255, 255, 255, 0.6) 20%, transparent 20%);
+      background-size: 12px 12px;
+      animation: waveFlow 2s linear infinite;
+    }
+    @keyframes waveFlow {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(24px); }
+    }
+
+    /* Progress bar */
+    .prog-track { width: 100%; height: 7px; background: rgba(255, 255, 255, 0.08); border-radius: 999px; margin-top: 10px; overflow: hidden; }
+    .prog-fill {
+      height: 100%; width: 50%;
+      background: linear-gradient(90deg, #ec4899, #f43f5e);
+      box-shadow: 0 0 10px rgba(236, 72, 153, 0.7);
+      border-radius: 999px; transition: width 0.4s ease;
+    }
+
+    /* Chart */
+    .chart-container {
+      background: var(--card-bg);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--card-border);
+      border-radius: 18px;
+      padding: 16px 16px 14px 16px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+    }
+    .chart-title {
+      font-size: 11.5px; font-weight: 700; color: #d8b4fe;
+      margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between;
+      letter-spacing: 0.5px;
+    }
+
+    /* Switch Card */
+    .switch-card {
+      background: var(--card-bg);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--card-border);
+      border-radius: 18px;
+      padding: 16px 20px;
+      display: flex; justify-content: space-between; align-items: center;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+    }
+    .switch-label h3 { font-size: 15px; font-weight: 700; color: #fdf2f8; }
+    .switch-label p { font-size: 12px; color: #c084fc; margin-top: 2px; font-weight: 600; }
+    .switch { position: relative; display: inline-block; width: 52px; height: 28px; }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider {
+      position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
+      background-color: rgba(255, 255, 255, 0.12);
+      transition: .3s; border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .slider:before {
+      position: absolute; content: ""; height: 20px; width: 20px; left: 4px; bottom: 3px;
+      background-color: #f472b6; transition: .3s; border-radius: 50%;
+    }
+    input:checked + .slider {
+      background: linear-gradient(135deg, #ff2a85, #ec4899);
+      box-shadow: 0 0 16px rgba(255, 42, 133, 0.6);
+      border-color: #ff2a85;
+    }
+    input:checked + .slider:before { transform: translateX(24px); background-color: #ffffff; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Welcome Banner -->
+    <div class="welcome-banner">
+      <span>✨</span>
+      <div>
+        <h3>Selamat Datang!</h3>
+        <p>Sistem siap memantau proses pengasinan telur asin secara otomatis.</p>
+      </div>
+    </div>
+
+    <!-- Warning Banner (> 7 Hari) -->
+    <div class="warning-box" id="warningBox">
+      <div class="warning-content">
+        <div class="warning-icon">⚠️</div>
+        <div class="warning-text">
+          <h4>PERINGATAN: PENGASINAN &gt; 7 HARI!</h4>
+          <p>Proses perendaman telah melewati batas optimal 7 hari. Segera angkat telur untuk menghindari rasa yang terlalu pekat atau kualitas telur menurun.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Header -->
+    <div class="header">
+      <div>
+        <h1>Monitor Kadar Air Garam<br>Telur Asin</h1>
+        <p>Sistem Otomasi & Telemetri IoT ESP32</p>
+      </div>
+      <div class="badge-status" id="mqttStatus">
+        <span class="badge-dot"></span> Terhubung
+      </div>
+    </div>
+
+    <!-- Durasi Pengasinan Tracker -->
+    <div class="batch-card">
+      <div class="batch-info">
+        <h3>Durasi Perendaman</h3>
+        <div class="batch-days" id="batchDayText">0 <span>Hari</span> 0 <span>Jam</span></div>
+        <p id="batchStartDateText">Mulai: -</p>
+      </div>
+      <button class="btn-reset-batch" onclick="resetBatch()">Mulai Batch Baru</button>
+    </div>
+
+    <!-- Slave 1 -->
+    <div>
+      <div class="section-head">
+        <h2><span class="sq-pink"></span> SLAVE 1</h2>
+        <span class="tag-active">Aktif</span>
+      </div>
+      <div class="grid-2">
+        <div class="card">
+          <div class="tds-badge">
+            <span class="pulse-dot"></span>
+            <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9 3h6v4H9z" />
+              <path d="M10 7v3a2 2 0 0 0 4 0V7" />
+              <path d="M12 12v4" />
+              <line x1="10" y1="20" x2="10" y2="16" />
+              <line x1="14" y1="20" x2="14" y2="16" />
+              <circle cx="8" cy="18" r="1" fill="#ff2a85" />
+              <circle cx="16" cy="14" r="1" fill="#ff2a85" />
+            </svg>
+          </div>
+          <p class="card-title">Kepekatan Garam</p>
+          <p class="card-value" id="valGaram">0.0</p>
+          <p class="card-footer">SENSOR: TDS PROBE</p>
+        </div>
+
+        <div class="card">
+          <div class="water-badge">
+            <div class="water-tank" id="waterWaveBox">
+              <div class="wave"></div>
+            </div>
+          </div>
+          <p class="card-title">Ketinggian Air</p>
+          <p class="card-value"><span id="valWater">0</span> <span class="card-unit">%</span></p>
+          <p class="card-footer">SENSOR: WATER LEVEL</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slave 2 -->
+    <div>
+      <div class="section-head">
+        <h2><span class="sq-cyan"></span> SLAVE 2</h2>
+        <span class="tag-active" style="color:var(--neon-cyan); border-color:rgba(6,182,212,0.35); background:rgba(6,182,212,0.15);">Aktif</span>
+      </div>
+      <div class="card">
+        <div style="position: absolute; top: 14px; right: 14px; font-size: 18px;">🌡️</div>
+        <p class="card-title">Suhu Ruang</p>
+        <p class="card-value"><span id="valSuhuRuang">0.0</span> <span class="card-unit">°C</span></p>
+        <div style="display:flex; justify-content:space-between; font-size:11px; margin-top:8px;">
+          <span style="color:#d8b4fe">Kelembaban Ruang</span>
+          <span style="color:#f472b6; font-weight:700;" id="valHum">0.0%</span>
+        </div>
+        <div class="prog-track"><div class="prog-fill" id="fillHum"></div></div>
+        <p class="card-footer" style="margin-top: 10px;">ESP32: DHT / SUHU RUANG</p>
+      </div>
+    </div>
+
+    <!-- Grafik Harian Kadar Garam -->
+    <div class="chart-container">
+      <div class="chart-title">
+        <span>TREN KADAR GARAM (RIWAYAT HARIAN)</span>
+        <span style="color: var(--neon-pink); font-weight: 700; text-shadow: 0 0 8px var(--neon-pink);">● Harian</span>
+      </div>
+      <div style="height: 190px;">
+        <canvas id="saltChart"></canvas>
+      </div>
+    </div>
+
+    <!-- Kontrol Lampu -->
+    <div>
+      <div class="section-head">
+        <h2 style="font-size:12px; color:#d8b4fe;">≡ &nbsp;KONTROL AKTUATOR</h2>
+      </div>
+      <div class="switch-card">
+        <div class="switch-label">
+          <h3>Lampu</h3>
+          <p id="txtKondisiLampu" style="color: #c084fc;">Kondisi: MATI</p>
+        </div>
+        <label class="switch">
+          <input type="checkbox" id="btnToggleLampu" onchange="toggleLampu(this.checked)">
+          <span class="slider"></span>
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // --- 1. Manajemen Waktu Pengasinan & Peringatan > 7 Hari ---
+    function initBatchTracker() {
+      let startTime = localStorage.getItem('telur_start_time');
+      if (!startTime) {
+        startTime = new Date().getTime();
+        localStorage.setItem('telur_start_time', startTime);
+      }
+      updateBatchDisplay();
+      setInterval(updateBatchDisplay, 60000); // Perbarui durasi tiap 1 menit
+    }
+
+    function updateBatchDisplay() {
+      const startTime = parseInt(localStorage.getItem('telur_start_time'));
+      const now = new Date().getTime();
+      const diffMs = now - startTime;
+
+      const totalDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+      const totalHours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+
+      document.getElementById('batchDayText').innerHTML = `${totalDays} <span>Hari</span> ${totalHours} <span>Jam</span>`;
+      
+      const startDate = new Date(startTime);
+      document.getElementById('batchStartDateText').innerText = `Mulai: ${startDate.toLocaleDateString('id-ID')} ${startDate.toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'})}`;
+
+      // Tampilkan peringatan jika lebih dari 7 hari
+      const warningBox = document.getElementById('warningBox');
+      if (totalDays >= 7) {
+        warningBox.style.display = 'block';
+      } else {
+        warningBox.style.display = 'none';
+      }
+    }
+
+    function resetBatch() {
+      if (confirm("Mulai batch perendaman telur asin yang baru? Hitungan hari akan di-reset ke Hari ke-0.")) {
+        localStorage.setItem('telur_start_time', new Date().getTime());
+        // Inisialisasi ulang riwayat harian
+        const defaultDaily = [0, 0, 0, 0, 0, 0, 0];
+        localStorage.setItem('telur_daily_data', JSON.stringify(defaultDaily));
+        saltChart.data.datasets[0].data = defaultDaily;
+        saltChart.update();
+        updateBatchDisplay();
+      }
+    }
+
+    // --- 2. Setup Grafik Harian (Hari 1 s/d Hari 7) ---
+    const ctx = document.getElementById('saltChart').getContext('2d');
+    const gradient = ctx.createLinearGradient(0, 0, 0, 190);
+    gradient.addColorStop(0, 'rgba(255, 42, 133, 0.45)');
+    gradient.addColorStop(1, 'rgba(255, 42, 133, 0.0)');
+
+    // Ambil data historis harian dari storage
+    let savedDaily = JSON.parse(localStorage.getItem('telur_daily_data')) || [18.5, 18.2, 17.8, 17.1, 16.5, 15.8, 0];
+
+    const saltChart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: ['Hari 1', 'Hari 2', 'Hari 3', 'Hari 4', 'Hari 5', 'Hari 6', 'Hari 7'],
+        datasets: [{
+          label: 'Kadar Garam Rata-rata',
+          data: savedDaily,
+          borderColor: '#ff2a85',
+          backgroundColor: gradient,
+          borderWidth: 2.5,
+          fill: true,
+          tension: 0.35,
+          pointRadius: 4.5,
+          pointHoverRadius: 6,
+          pointBackgroundColor: '#ff2a85',
+          pointBorderColor: '#0c0a17',
+          pointBorderWidth: 2
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: (context) => `Kadar Garam: ${context.parsed.y}`
+            }
+          }
+        },
+        scales: {
+          x: {
+            grid: { color: 'rgba(255, 255, 255, 0.04)' },
+            ticks: { color: '#c084fc', font: { size: 10 } }
+          },
+          y: {
+            grid: { color: 'rgba(255, 255, 255, 0.04)' },
+            ticks: { color: '#c084fc', font: { size: 10 } }
+          }
+        }
+      }
+    });
+
+    // --- 3. Koneksi MQTT EMQX ---
+    const client = mqtt.connect('wss://broker.emqx.io:8084/mqtt');
+
+    client.on('connect', () => {
+      document.getElementById('mqttStatus').innerHTML = '<span class="badge-dot"></span> Terhubung';
+      client.subscribe('telur/slave/#');
+      client.subscribe('telur/kontrol/#');
+    });
+
+    client.on('message', (topic, message) => {
+      const val = message.toString();
+
+      if (topic === 'telur/slave/1') {
+        const numVal = parseFloat(val);
+        document.getElementById('valGaram').innerText = val;
+
+        // Catat nilai hari berjalan ke grafik harian
+        const startTime = parseInt(localStorage.getItem('telur_start_time'));
+        const dayIndex = Math.min(Math.floor((new Date().getTime() - startTime) / (1000 * 60 * 60 * 24)), 6);
+        
+        savedDaily[dayIndex] = numVal;
+        localStorage.setItem('telur_daily_data', JSON.stringify(savedDaily));
+        saltChart.data.datasets[0].data = savedDaily;
+        saltChart.update();
+
+      } else if (topic === 'telur/slave/water') {
+        document.getElementById('valWater').innerText = val;
+        const percent = Math.min(Math.max(parseInt(val) || 0, 0), 100);
+        document.getElementById('waterWaveBox').style.height = percent + '%';
+
+      } else if (topic === 'telur/slave/2' || topic === 'telur/slave/suhu') {
+        document.getElementById('valSuhuRuang').innerText = val;
+
+      } else if (topic === 'telur/slave/hum') {
+        document.getElementById('valHum').innerText = val + '%';
+        document.getElementById('fillHum').style.width = Math.min(Math.max(parseFloat(val), 0), 100) + '%';
+
+      } else if (topic === 'telur/kontrol/heater') {
+        const isNyala = val === 'ON';
+        document.getElementById('btnToggleLampu').checked = isNyala;
+        const txt = document.getElementById('txtKondisiLampu');
+        txt.innerText = `Kondisi: ${val}`;
+        txt.style.color = isNyala ? '#ff2a85' : '#c084fc';
+      }
+    });
+
+    function toggleLampu(state) {
+      client.publish('telur/kontrol/heater', state ? 'ON' : 'OFF');
+    }
+
+    // Jalankan tracker saat halaman dibuka
+    initBatchTracker();
+  </script>
+</body>
+</html>
