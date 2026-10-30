@@ -318,7 +318,7 @@
             </svg>
           </div>
           <p class="card-title">Kepekatan Garam</p>
-          <p class="card-value" id="valGaram">0.0</p>
+          <p class="card-value"><span id="valGaram">0.0</span> <span class="card-unit">%</span></p>
           <p class="card-footer">SENSOR: TDS PROBE</p>
         </div>
 
@@ -346,11 +346,23 @@
         <p class="card-title">Suhu Ruang</p>
         <p class="card-value"><span id="valSuhuRuang">0.0</span> <span class="card-unit">°C</span></p>
         <div style="display:flex; justify-content:space-between; font-size:11px; margin-top:8px;">
-          <span style="color:#d8b4fe">Kelembaban Ruang</span>
+          <!-- TULISAN KELEMBABAN YANG OTOMATIS BERUBAH HARINYA -->
+          <span style="color:#d8b4fe" id="labelHum">Kelembaban Ruang (Hari ke-1)</span>
           <span style="color:#f472b6; font-weight:700;" id="valHum">0.0%</span>
         </div>
         <div class="prog-track"><div class="prog-fill" id="fillHum"></div></div>
         <p class="card-footer" style="margin-top: 10px;">ESP32: DHT / SUHU RUANG</p>
+      </div>
+    </div>
+
+    <!-- Grafik Harian Suhu DHT22 -->
+    <div class="chart-container">
+      <div class="chart-title">
+        <span>TREN SUHU RUANGAN (RIWAYAT HARIAN)</span>
+        <span style="color: var(--neon-cyan); font-weight: 700; text-shadow: 0 0 8px var(--neon-cyan);">● Harian</span>
+      </div>
+      <div style="height: 190px;">
+        <canvas id="grafikSuhu"></canvas>
       </div>
     </div>
 
@@ -408,6 +420,13 @@
       const startDate = new Date(startTime);
       document.getElementById('batchStartDateText').innerText = `Mulai: ${startDate.toLocaleDateString('id-ID')} ${startDate.toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'})}`;
 
+      // Update Teks Kelembaban agar menunjukkan hari proses saat ini
+      const labelHum = document.getElementById('labelHum');
+      if (labelHum) {
+          const hariProses = totalDays + 1; // Hari ke-0 (0-24 jam) ditampilkan sebagai Hari ke-1
+          labelHum.innerText = `Kelembaban Ruang (Hari ke-${hariProses})`;
+      }
+
       // Tampilkan peringatan jika lebih dari 7 hari
       const warningBox = document.getElementById('warningBox');
       if (totalDays >= 7) {
@@ -420,30 +439,38 @@
     function resetBatch() {
       if (confirm("Mulai batch perendaman telur asin yang baru? Hitungan hari akan di-reset ke Hari ke-0.")) {
         localStorage.setItem('telur_start_time', new Date().getTime());
-        // Inisialisasi ulang riwayat harian
-        const defaultDaily = [0, 0, 0, 0, 0, 0, 0];
-        localStorage.setItem('telur_daily_data', JSON.stringify(defaultDaily));
-        saltChart.data.datasets[0].data = defaultDaily;
+        
+        // Inisialisasi ulang riwayat harian Garam
+        const defaultDailyGaram = [0, 0, 0, 0, 0, 0, 0];
+        localStorage.setItem('telur_daily_data', JSON.stringify(defaultDailyGaram));
+        saltChart.data.datasets[0].data = defaultDailyGaram;
         saltChart.update();
+
+        // Inisialisasi ulang riwayat harian Suhu
+        const defaultDailySuhu = [0, 0, 0, 0, 0, 0, 0];
+        localStorage.setItem('telur_daily_suhu', JSON.stringify(defaultDailySuhu));
+        chartSuhu.data.datasets[0].data = defaultDailySuhu;
+        chartSuhu.update();
+
         updateBatchDisplay();
       }
     }
 
-    // --- 2. Setup Grafik Harian (Hari 1 s/d Hari 7) ---
+    // --- 2. Setup Grafik Harian Kadar Garam (Hari 1 s/d Hari 7) ---
     const ctx = document.getElementById('saltChart').getContext('2d');
     const gradient = ctx.createLinearGradient(0, 0, 0, 190);
     gradient.addColorStop(0, 'rgba(255, 42, 133, 0.45)');
     gradient.addColorStop(1, 'rgba(255, 42, 133, 0.0)');
 
     // Ambil data historis harian dari storage
-    let savedDaily = JSON.parse(localStorage.getItem('telur_daily_data')) || [18.5, 18.2, 17.8, 17.1, 16.5, 15.8, 0];
+    let savedDaily = JSON.parse(localStorage.getItem('telur_daily_data')) || [0, 0, 0, 0, 0, 0, 0];
 
     const saltChart = new Chart(ctx, {
       type: 'line',
       data: {
         labels: ['Hari 1', 'Hari 2', 'Hari 3', 'Hari 4', 'Hari 5', 'Hari 6', 'Hari 7'],
         datasets: [{
-          label: 'Kadar Garam Rata-rata',
+          label: 'Kadar Garam',
           data: savedDaily,
           borderColor: '#ff2a85',
           backgroundColor: gradient,
@@ -463,9 +490,7 @@
         plugins: {
           legend: { display: false },
           tooltip: {
-            callbacks: {
-              label: (context) => `Kadar Garam: ${context.parsed.y}`
-            }
+            callbacks: { label: (context) => `Kadar Garam: ${context.parsed.y} %` }
           }
         },
         scales: {
@@ -475,14 +500,78 @@
           },
           y: {
             grid: { color: 'rgba(255, 255, 255, 0.04)' },
-            ticks: { color: '#c084fc', font: { size: 10 } }
+            ticks: { 
+              color: '#c084fc', font: { size: 10 },
+              callback: function(value) { return value + ' %'; }
+            }
           }
         }
       }
     });
 
-    // --- 3. Koneksi MQTT EMQX ---
-    const client = mqtt.connect('wss://broker.emqx.io:8084/mqtt');
+    // --- 3. Setup Grafik Harian Suhu Ruangan (Hari 1 s/d Hari 7) ---
+    const ctxSuhu = document.getElementById('grafikSuhu').getContext('2d');
+    const gradientSuhu = ctxSuhu.createLinearGradient(0, 0, 0, 190);
+    gradientSuhu.addColorStop(0, 'rgba(0, 242, 254, 0.45)');
+    gradientSuhu.addColorStop(1, 'rgba(0, 242, 254, 0.0)');
+
+    // Ambil data historis harian SUHU dari storage
+    let savedDailySuhu = JSON.parse(localStorage.getItem('telur_daily_suhu')) || [0, 0, 0, 0, 0, 0, 0];
+
+    const chartSuhu = new Chart(ctxSuhu, {
+      type: 'line',
+      data: {
+        labels: ['Hari 1', 'Hari 2', 'Hari 3', 'Hari 4', 'Hari 5', 'Hari 6', 'Hari 7'],
+        datasets: [{
+          label: 'Suhu',
+          data: savedDailySuhu, // Data riwayat suhu
+          borderColor: '#00f2fe',
+          backgroundColor: gradientSuhu,
+          borderWidth: 2.5,
+          fill: true,
+          tension: 0.35, // Garis melengkung
+          pointRadius: 4.5,
+          pointHoverRadius: 6,
+          pointBackgroundColor: '#00f2fe',
+          pointBorderColor: '#0c0a17',
+          pointBorderWidth: 2
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: { label: (context) => `Suhu: ${context.parsed.y} °C` }
+          }
+        },
+        scales: {
+          x: {
+            grid: { color: 'rgba(255, 255, 255, 0.04)' },
+            ticks: { color: '#c084fc', font: { size: 10 } }
+          },
+          y: {
+            grid: { color: 'rgba(255, 255, 255, 0.04)' },
+            ticks: { 
+              color: '#c084fc', font: { size: 10 },
+              callback: function(value) { return value + ' °C'; }
+            }
+          }
+        }
+      }
+    });
+
+    // --- 4. Koneksi MQTT EMQX CLOUD (PRIVAT) ---
+    const mqttOptions = {
+        clean: true,
+        connectTimeout: 4000,
+        clientId: 'web_dashboard_' + Math.random().toString(16).substring(2, 8),
+        username: 'mila',
+        password: 'PASSWORD_YANG_KAMU_BUAT_DI_EMQX' // <-- UBAH TEKS INI DENGAN PASSWORD ASLIMU!
+    };
+
+    const client = mqtt.connect('wss://o110101d.ala.eu-central-1.emqxsl.com:8084/mqtt', mqttOptions);
 
     client.on('connect', () => {
       document.getElementById('mqttStatus').innerHTML = '<span class="badge-dot"></span> Terhubung';
@@ -497,7 +586,7 @@
         const numVal = parseFloat(val);
         document.getElementById('valGaram').innerText = val;
 
-        // Catat nilai hari berjalan ke grafik harian
+        // Catat nilai hari berjalan ke grafik harian GARAM
         const startTime = parseInt(localStorage.getItem('telur_start_time'));
         const dayIndex = Math.min(Math.floor((new Date().getTime() - startTime) / (1000 * 60 * 60 * 24)), 6);
         
@@ -512,7 +601,19 @@
         document.getElementById('waterWaveBox').style.height = percent + '%';
 
       } else if (topic === 'telur/slave/2' || topic === 'telur/slave/suhu') {
+        // Update angka suhu pada kartu Slave 2 (Real-time Text)
         document.getElementById('valSuhuRuang').innerText = val;
+
+        const numSuhu = parseFloat(val);
+
+        // Catat nilai hari berjalan ke grafik harian SUHU
+        const startTime = parseInt(localStorage.getItem('telur_start_time'));
+        const dayIndex = Math.min(Math.floor((new Date().getTime() - startTime) / (1000 * 60 * 60 * 24)), 6);
+        
+        savedDailySuhu[dayIndex] = numSuhu;
+        localStorage.setItem('telur_daily_suhu', JSON.stringify(savedDailySuhu));
+        chartSuhu.data.datasets[0].data = savedDailySuhu;
+        chartSuhu.update();
 
       } else if (topic === 'telur/slave/hum') {
         document.getElementById('valHum').innerText = val + '%';
