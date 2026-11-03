@@ -78,6 +78,7 @@
     }
     .brand-box p { font-size: 11px; color: var(--neon-cyan); margin-top: 2px; font-weight: 600; }
 
+    /* Warning Box Berkedip Merah */
     .warning-box {
       display: none;
       background: linear-gradient(135deg, rgba(255, 51, 68, 0.35), rgba(255, 42, 133, 0.2));
@@ -160,19 +161,36 @@
     .val-unit { font-size: 15px; color: var(--neon-yellow); font-weight: 600; }
     .card-meta { font-size: 10.5px; color: #d8b4fe; }
 
+    .btn-group-timer {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+    }
     .btn-start {
+      flex: 1;
       background: linear-gradient(135deg, var(--neon-pink), #a855f7);
       border: none;
       color: white;
-      padding: 6px 14px;
+      padding: 7px 10px;
       border-radius: 8px;
-      font-size: 11px;
+      font-size: 10.5px;
       font-weight: 700;
       cursor: pointer;
       box-shadow: 0 0 12px rgba(255, 42, 133, 0.4);
-      margin-top: 8px;
     }
-    .btn-start:hover { filter: brightness(1.15); }
+    .btn-test {
+      flex: 1;
+      background: linear-gradient(135deg, #f59e0b, #ef4444);
+      border: none;
+      color: white;
+      padding: 7px 10px;
+      border-radius: 8px;
+      font-size: 10.5px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 0 12px rgba(239, 68, 68, 0.4);
+    }
+    .btn-start:hover, .btn-test:hover { filter: brightness(1.15); }
 
     .bottom-bar {
       display: flex;
@@ -242,7 +260,11 @@
         </div>
         <div class="val-main" id="batchDayText">0 <span class="val-unit">Hari</span> 0 <span class="val-unit">Jam</span></div>
         <div class="card-meta" id="txtTargetHari">Target: 7 Hari Perendaman</div>
-        <button class="btn-start" onclick="startBatchBaru()">▶ Mulai Pengasinan (Start)</button>
+        
+        <div class="btn-group-timer">
+          <button class="btn-start" onclick="startBatchBaru()">▶ Mulai Ulang</button>
+          <button class="btn-test" onclick="simulasiWarning()">⚡ Tes Warning</button>
+        </div>
       </div>
 
       <div class="card-hud">
@@ -290,7 +312,7 @@
   </div>
 
   <script>
-    // --- 1. SETUP THREE.JS ENGINE ---
+    // --- 1. THREE.JS ENGINE ---
     const container = document.getElementById('canvas3d');
     const scene = new THREE.Scene();
     scene.fog = new THREE.FogExp2(0x090714, 0.025);
@@ -313,7 +335,6 @@
     cyanRimLight.position.set(6, 6, -5);
     scene.add(cyanRimLight);
 
-    // Lampu Pemanas di Bawah Tutup
     const heaterLight = new THREE.PointLight(0xffaa22, 0.0, 16);
     heaterLight.position.set(0, 1.8, 0);
     scene.add(heaterLight);
@@ -369,20 +390,16 @@
     handleMesh.position.set(-1.0, 2.44, 0);
     lidGroup.add(handleMesh);
 
-    // ========================================================
-    // MODUL SENSOR DHT22 PERSIS SEPERTI GAMBAR (AM2302 MODULE)
-    // ========================================================
+    // MODUL SENSOR DHT22 DI ATAS TUTUP
     const dhtGroup = new THREE.Group();
     dhtGroup.position.set(0.7, 2.33, 0);
 
-    // 1. PCB Hitam Modul (Board Black FR4)
     const pcbGeo = new THREE.BoxGeometry(1.6, 0.09, 0.9);
     const pcbMat = new THREE.MeshStandardMaterial({ color: 0x18181b, roughness: 0.5 });
     const pcbMesh = new THREE.Mesh(pcbGeo, pcbMat);
     pcbMesh.position.set(0, 0.05, 0);
     dhtGroup.add(pcbMesh);
 
-    // Lubang Baut / Sekrup pada PCB (Ring Perak)
     const holeGeo = new THREE.RingGeometry(0.08, 0.18, 16);
     const holeMat = new THREE.MeshBasicMaterial({ color: 0xd4d4d8, side: THREE.DoubleSide });
     const holeMesh = new THREE.Mesh(holeGeo, holeMat);
@@ -390,20 +407,17 @@
     holeMesh.position.set(0.3, 0.1, 0);
     dhtGroup.add(holeMesh);
 
-    // 2. Casing Putih Kisi-kisi DHT22 (Aosong AM2302)
     const dhtBodyGeo = new THREE.BoxGeometry(0.95, 0.45, 0.8);
     const dhtBodyMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.3 });
     const dhtBody = new THREE.Mesh(dhtBodyGeo, dhtBodyMat);
     dhtBody.position.set(-0.25, 0.32, 0);
     dhtGroup.add(dhtBody);
 
-    // Kuping Gantungan Lubang Atas DHT22
     const earGeo = new THREE.BoxGeometry(0.2, 0.28, 0.45);
     const earMesh = new THREE.Mesh(earGeo, dhtBodyMat);
     earMesh.position.set(-0.75, 0.24, 0);
     dhtGroup.add(earMesh);
 
-    // Grid Lubang-lubang Kisi Udara (Matrix 4x3 Lubang Kotak)
     const slotMat = new THREE.MeshBasicMaterial({ color: 0x475569 });
     for (let rx = -0.18; rx <= 0.18; rx += 0.12) {
       for (let rz = -0.24; rz <= 0.24; rz += 0.16) {
@@ -413,7 +427,6 @@
       }
     }
 
-    // 3. Empat Kaki Logam Penyambung Sensor ke PCB
     const legMat = new THREE.MeshStandardMaterial({ color: 0xd4d4d8, metalness: 0.9 });
     for (let l = -0.22; l <= 0.22; l += 0.14) {
       const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.16), legMat);
@@ -421,7 +434,6 @@
       dhtGroup.add(leg);
     }
 
-    // 4. Tiga Header Pin Siku Logam di Ujung PCB (VCC, DATA, GND)
     for (let p = -0.16; p <= 0.16; p += 0.16) {
       const pinV = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, 0.18), legMat);
       pinV.position.set(0.65, 0.16, p);
@@ -432,7 +444,6 @@
       pinH.position.set(0.76, 0.24, p);
       dhtGroup.add(pinH);
     }
-
     lidGroup.add(dhtGroup);
 
     // SOKET & LAMPU PEMANAS DI BAWAH TUTUP
@@ -486,7 +497,6 @@
     saltBed.position.set(0, -0.9, 0);
     groupTank.add(saltBed);
 
-    // Kristal Garam Kasar Acak
     const crystalGeo = new THREE.BoxGeometry(0.12, 0.1, 0.12);
     const crystalMat = new THREE.MeshStandardMaterial({
       color: 0xffffff,
@@ -533,7 +543,6 @@
     waterMesh.position.set(0, 0.05, 0);
     groupTank.add(waterMesh);
 
-    // Posisi Kamera (Disesuaikan agar tutup dan sensor DHT22 terlihat dari atas)
     function setCamIso() {
       camera.position.set(6.5, 6.8, 7.5);
       camera.lookAt(0, 0.6, 0);
@@ -606,10 +615,15 @@
     }
 
     function startBatchBaru() {
-      if (confirm("Mulai batch baru proses pengasinan telur? Waktu akan di-reset ke Hari ke-1.")) {
-        localStorage.setItem('telur_start_time', new Date().getTime());
-        updateTimerDisplay();
-      }
+      localStorage.setItem('telur_start_time', new Date().getTime());
+      updateTimerDisplay();
+    }
+
+    // Fungsi Langsung untuk Tes Warning
+    function simulasiWarning() {
+      // Set waktu mundur 8 hari
+      localStorage.setItem('telur_start_time', new Date().getTime() - (8 * 24 * 60 * 60 * 1000));
+      updateTimerDisplay();
     }
 
     // --- 4. KONEKSI MQTT EMQX CLOUD ---
