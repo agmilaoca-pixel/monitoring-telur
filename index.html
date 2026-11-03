@@ -78,7 +78,6 @@
     }
     .brand-box p { font-size: 11px; color: var(--neon-cyan); margin-top: 2px; font-weight: 600; }
 
-    /* Warning Box Berkedip Merah */
     .warning-box {
       display: none;
       background: linear-gradient(135deg, rgba(255, 51, 68, 0.35), rgba(255, 42, 133, 0.2));
@@ -173,24 +172,24 @@
       color: white;
       padding: 7px 10px;
       border-radius: 8px;
-      font-size: 10.5px;
+      font-size: 11px;
       font-weight: 700;
       cursor: pointer;
       box-shadow: 0 0 12px rgba(255, 42, 133, 0.4);
     }
-    .btn-test {
+    .btn-selesai {
       flex: 1;
-      background: linear-gradient(135deg, #f59e0b, #ef4444);
-      border: none;
+      background: linear-gradient(135deg, #ef4444, #b91c1c);
+      border: 1px solid #f87171;
       color: white;
       padding: 7px 10px;
       border-radius: 8px;
-      font-size: 10.5px;
+      font-size: 11px;
       font-weight: 700;
       cursor: pointer;
       box-shadow: 0 0 12px rgba(239, 68, 68, 0.4);
     }
-    .btn-start:hover, .btn-test:hover { filter: brightness(1.15); }
+    .btn-start:hover, .btn-selesai:hover { filter: brightness(1.15); }
 
     .bottom-bar {
       display: flex;
@@ -262,8 +261,8 @@
         <div class="card-meta" id="txtTargetHari">Target: 7 Hari Perendaman</div>
         
         <div class="btn-group-timer">
-          <button class="btn-start" onclick="startBatchBaru()">▶ Mulai Ulang</button>
-          <button class="btn-test" onclick="simulasiWarning()">⚡ Tes Warning</button>
+          <button class="btn-start" onclick="startBatchBaru()">▶ Mulai Baru</button>
+          <button class="btn-selesai" onclick="simulasiSelesai()">⚠️ Selesai</button>
         </div>
       </div>
 
@@ -368,7 +367,7 @@
     wireframeBox.position.y = 0.1;
     groupTank.add(wireframeBox);
 
-    // TUTUP KOTAK
+    // Tutup Kotak
     const lidGroup = new THREE.Group();
     const lidGeo = new THREE.BoxGeometry(4.4, 0.18, 4.4);
     const lidMat = new THREE.MeshStandardMaterial({
@@ -390,7 +389,7 @@
     handleMesh.position.set(-1.0, 2.44, 0);
     lidGroup.add(handleMesh);
 
-    // MODUL SENSOR DHT22 DI ATAS TUTUP
+    // SENSOR DHT22 DI ATAS TUTUP
     const dhtGroup = new THREE.Group();
     dhtGroup.position.set(0.7, 2.33, 0);
 
@@ -446,7 +445,7 @@
     }
     lidGroup.add(dhtGroup);
 
-    // SOKET & LAMPU PEMANAS DI BAWAH TUTUP
+    // Soket & Lampu Pemanas di Bawah Tutup
     const socketGeo = new THREE.CylinderGeometry(0.4, 0.45, 0.25, 20);
     const socketMat = new THREE.MeshStandardMaterial({ color: 0x333333, metalness: 0.7 });
     const socketMesh = new THREE.Mesh(socketGeo, socketMat);
@@ -461,7 +460,7 @@
 
     groupTank.add(lidGroup);
 
-    // TELUR ASIN DI DASAR
+    // Telur Asin di Dasar
     const eggGeo = new THREE.SphereGeometry(0.55, 32, 28);
     eggGeo.scale(1, 1.35, 1);
     const eggMat = new THREE.MeshStandardMaterial({ color: 0x7da48d, roughness: 0.65 });
@@ -484,7 +483,7 @@
       eggs.push(egg);
     });
 
-    // TIMBUNAN GARAM KROSOK KASAR
+    // Timbunan Garam Krosok Kasar
     const saltBedGeo = new THREE.BoxGeometry(4.0, 1.8, 4.0);
     const saltBedMat = new THREE.MeshStandardMaterial({
       color: 0xf3f4f6,
@@ -529,7 +528,7 @@
     saltCrystals.instanceMatrix.needsUpdate = true;
     groupTank.add(saltCrystals);
 
-    // AIR TIPIS BENING DI ATAS GARAM
+    // Air Tipis Bening di Atas Garam
     const waterGeo = new THREE.BoxGeometry(4.02, 0.22, 4.02);
     const waterMat = new THREE.MeshPhysicalMaterial({
       color: 0xbfe3f7,
@@ -619,9 +618,8 @@
       updateTimerDisplay();
     }
 
-    // Fungsi Langsung untuk Tes Warning
-    function simulasiWarning() {
-      // Set waktu mundur 8 hari
+    // Fungsi Pemicu Selesai Pengasinan
+    function simulasiSelesai() {
       localStorage.setItem('telur_start_time', new Date().getTime() - (8 * 24 * 60 * 60 * 1000));
       updateTimerDisplay();
     }
