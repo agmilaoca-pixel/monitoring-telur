@@ -302,17 +302,18 @@
     renderer.shadowMap.enabled = true;
     container.appendChild(renderer.domElement);
 
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.55);
     scene.add(ambientLight);
 
-    const pinkKeyLight = new THREE.PointLight(0xff2a85, 2.0, 30);
+    const pinkKeyLight = new THREE.PointLight(0xff2a85, 2.2, 30);
     pinkKeyLight.position.set(-6, 8, 5);
     scene.add(pinkKeyLight);
 
-    const cyanRimLight = new THREE.PointLight(0x00f2fe, 2.0, 30);
+    const cyanRimLight = new THREE.PointLight(0x00f2fe, 2.2, 30);
     cyanRimLight.position.set(6, 6, -5);
     scene.add(cyanRimLight);
 
+    // Lampu Pemanas di Bawah Tutup
     const heaterLight = new THREE.PointLight(0xffaa22, 0.0, 16);
     heaterLight.position.set(0, 1.8, 0);
     scene.add(heaterLight);
@@ -346,7 +347,7 @@
     wireframeBox.position.y = 0.1;
     groupTank.add(wireframeBox);
 
-    // Tutup Kotak
+    // TUTUP KOTAK
     const lidGroup = new THREE.Group();
     const lidGeo = new THREE.BoxGeometry(4.4, 0.18, 4.4);
     const lidMat = new THREE.MeshStandardMaterial({
@@ -365,43 +366,67 @@
     const handleMat = new THREE.MeshStandardMaterial({ color: 0x00f2fe, metalness: 0.8 });
     const handleMesh = new THREE.Mesh(handleGeo, handleMat);
     handleMesh.rotation.z = Math.PI / 2;
-    handleMesh.position.set(-0.8, 2.44, 0);
+    handleMesh.position.set(-0.9, 2.44, 0);
     lidGroup.add(handleMesh);
 
-    // SENSOR DHT22 DI ATAS TUTUP
+    // ==========================================
+    // RANGKAIAN MODUL SENSOR DHT22 DI ATAS TUTUP
+    // ==========================================
     const dhtGroup = new THREE.Group();
-    // PCB Modul DHT22 (Biru)
-    const pcbGeo = new THREE.BoxGeometry(0.75, 0.08, 0.55);
-    const pcbMat = new THREE.MeshStandardMaterial({ color: 0x1565c0, roughness: 0.4 });
+    dhtGroup.position.set(0.85, 2.33, 0); // Posisi tepat di atas pelat tutup
+
+    // 1. Papan PCB Biru Modul DHT22
+    const pcbGeo = new THREE.BoxGeometry(1.2, 0.08, 0.9);
+    const pcbMat = new THREE.MeshStandardMaterial({ color: 0x0d47a1, roughness: 0.3, metalness: 0.2 });
     const pcbMesh = new THREE.Mesh(pcbGeo, pcbMat);
-    pcbMesh.position.set(0.9, 2.36, 0);
+    pcbMesh.position.y = 0.04;
     dhtGroup.add(pcbMesh);
 
-    // Kisi-kisi Putih / Rumah Sensor DHT22
-    const grillGeo = new THREE.BoxGeometry(0.55, 0.28, 0.42);
-    const grillMat = new THREE.MeshStandardMaterial({ color: 0xeeeeee, roughness: 0.5 });
+    // 2. Casing Kisi-kisi Sensor DHT22 (Putih Khas DHT22)
+    const grillGeo = new THREE.BoxGeometry(0.85, 0.55, 0.7);
+    const grillMat = new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.4 });
     const grillMesh = new THREE.Mesh(grillGeo, grillMat);
-    grillMesh.position.set(0.9, 2.52, 0);
+    grillMesh.position.set(-0.1, 0.34, 0);
     dhtGroup.add(grillMesh);
 
-    // Header Pin & Kabel Kecil Sensor
-    const pinGeo = new THREE.CylinderGeometry(0.02, 0.02, 0.15);
-    const pinMat = new THREE.MeshStandardMaterial({ color: 0xd4af37, metalness: 0.9 });
-    for (let p = -0.15; p <= 0.15; p += 0.1) {
-      const pin = new THREE.Mesh(pinGeo, pinMat);
-      pin.position.set(1.3, 2.36, p);
-      dhtGroup.add(pin);
+    // Garis Kisi Lubang Udara DHT22
+    for (let g = -0.2; g <= 0.2; g += 0.1) {
+      const slotGeo = new THREE.BoxGeometry(0.65, 0.03, 0.03);
+      const slotMat = new THREE.MeshBasicMaterial({ color: 0x334155 });
+      const slotMesh = new THREE.Mesh(slotGeo, slotMat);
+      slotMesh.position.set(-0.1, 0.45, g);
+      dhtGroup.add(slotMesh);
     }
+
+    // 3. Header Pin Kuningan
+    const pinGeo = new THREE.BoxGeometry(0.04, 0.25, 0.04);
+    const pinMat = new THREE.MeshStandardMaterial({ color: 0xf59e0b, metalness: 0.85 });
+    const wireColors = [0xef4444, 0x111827, 0xfacc15]; // Kabel VCC (Merah), GND (Hitam), Data (Kuning)
+
+    for (let i = 0; i < 3; i++) {
+      const zOffset = (i - 1) * 0.22;
+      const pin = new THREE.Mesh(pinGeo, pinMat);
+      pin.position.set(0.42, 0.12, zOffset);
+      dhtGroup.add(pin);
+
+      // Kabel Jumper Melengkung ke Arah Belakang Tutup
+      const wireGeo = new THREE.CylinderGeometry(0.025, 0.025, 0.65);
+      const wireMat = new THREE.MeshStandardMaterial({ color: wireColors[i], roughness: 0.5 });
+      const wire = new THREE.Mesh(wireGeo, wireMat);
+      wire.rotation.z = Math.PI / 3;
+      wire.position.set(0.65, 0.18, zOffset);
+      dhtGroup.add(wire);
+    }
+
     lidGroup.add(dhtGroup);
 
-    // Soket Lampu di Bawah Tutup
+    // SOKET & LAMPU PEMANAS DI BAWAH TUTUP
     const socketGeo = new THREE.CylinderGeometry(0.4, 0.45, 0.25, 20);
     const socketMat = new THREE.MeshStandardMaterial({ color: 0x333333, metalness: 0.7 });
     const socketMesh = new THREE.Mesh(socketGeo, socketMat);
     socketMesh.position.set(0, 2.05, 0);
     lidGroup.add(socketMesh);
 
-    // Bohlam Lampu Pemanas
     const bulbGeo = new THREE.SphereGeometry(0.32, 20, 20);
     const bulbMat = new THREE.MeshBasicMaterial({ color: 0x555555 });
     const bulbMesh = new THREE.Mesh(bulbGeo, bulbMat);
