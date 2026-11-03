@@ -302,7 +302,7 @@
     renderer.shadowMap.enabled = true;
     container.appendChild(renderer.domElement);
 
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.55);
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
     scene.add(ambientLight);
 
     const pinkKeyLight = new THREE.PointLight(0xff2a85, 2.2, 30);
@@ -366,56 +366,71 @@
     const handleMat = new THREE.MeshStandardMaterial({ color: 0x00f2fe, metalness: 0.8 });
     const handleMesh = new THREE.Mesh(handleGeo, handleMat);
     handleMesh.rotation.z = Math.PI / 2;
-    handleMesh.position.set(-0.9, 2.44, 0);
+    handleMesh.position.set(-1.0, 2.44, 0);
     lidGroup.add(handleMesh);
 
-    // ==========================================
-    // RANGKAIAN MODUL SENSOR DHT22 DI ATAS TUTUP
-    // ==========================================
+    // ========================================================
+    // MODUL SENSOR DHT22 PERSIS SEPERTI GAMBAR (AM2302 MODULE)
+    // ========================================================
     const dhtGroup = new THREE.Group();
-    dhtGroup.position.set(0.85, 2.33, 0); // Posisi tepat di atas pelat tutup
+    dhtGroup.position.set(0.7, 2.33, 0);
 
-    // 1. Papan PCB Biru Modul DHT22
-    const pcbGeo = new THREE.BoxGeometry(1.2, 0.08, 0.9);
-    const pcbMat = new THREE.MeshStandardMaterial({ color: 0x0d47a1, roughness: 0.3, metalness: 0.2 });
+    // 1. PCB Hitam Modul (Board Black FR4)
+    const pcbGeo = new THREE.BoxGeometry(1.6, 0.09, 0.9);
+    const pcbMat = new THREE.MeshStandardMaterial({ color: 0x18181b, roughness: 0.5 });
     const pcbMesh = new THREE.Mesh(pcbGeo, pcbMat);
-    pcbMesh.position.y = 0.04;
+    pcbMesh.position.set(0, 0.05, 0);
     dhtGroup.add(pcbMesh);
 
-    // 2. Casing Kisi-kisi Sensor DHT22 (Putih Khas DHT22)
-    const grillGeo = new THREE.BoxGeometry(0.85, 0.55, 0.7);
-    const grillMat = new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.4 });
-    const grillMesh = new THREE.Mesh(grillGeo, grillMat);
-    grillMesh.position.set(-0.1, 0.34, 0);
-    dhtGroup.add(grillMesh);
+    // Lubang Baut / Sekrup pada PCB (Ring Perak)
+    const holeGeo = new THREE.RingGeometry(0.08, 0.18, 16);
+    const holeMat = new THREE.MeshBasicMaterial({ color: 0xd4d4d8, side: THREE.DoubleSide });
+    const holeMesh = new THREE.Mesh(holeGeo, holeMat);
+    holeMesh.rotation.x = -Math.PI / 2;
+    holeMesh.position.set(0.3, 0.1, 0);
+    dhtGroup.add(holeMesh);
 
-    // Garis Kisi Lubang Udara DHT22
-    for (let g = -0.2; g <= 0.2; g += 0.1) {
-      const slotGeo = new THREE.BoxGeometry(0.65, 0.03, 0.03);
-      const slotMat = new THREE.MeshBasicMaterial({ color: 0x334155 });
-      const slotMesh = new THREE.Mesh(slotGeo, slotMat);
-      slotMesh.position.set(-0.1, 0.45, g);
-      dhtGroup.add(slotMesh);
+    // 2. Casing Putih Kisi-kisi DHT22 (Aosong AM2302)
+    const dhtBodyGeo = new THREE.BoxGeometry(0.95, 0.45, 0.8);
+    const dhtBodyMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.3 });
+    const dhtBody = new THREE.Mesh(dhtBodyGeo, dhtBodyMat);
+    dhtBody.position.set(-0.25, 0.32, 0);
+    dhtGroup.add(dhtBody);
+
+    // Kuping Gantungan Lubang Atas DHT22
+    const earGeo = new THREE.BoxGeometry(0.2, 0.28, 0.45);
+    const earMesh = new THREE.Mesh(earGeo, dhtBodyMat);
+    earMesh.position.set(-0.75, 0.24, 0);
+    dhtGroup.add(earMesh);
+
+    // Grid Lubang-lubang Kisi Udara (Matrix 4x3 Lubang Kotak)
+    const slotMat = new THREE.MeshBasicMaterial({ color: 0x475569 });
+    for (let rx = -0.18; rx <= 0.18; rx += 0.12) {
+      for (let rz = -0.24; rz <= 0.24; rz += 0.16) {
+        const ventHole = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.02, 0.08), slotMat);
+        ventHole.position.set(-0.25 + rx, 0.55, rz);
+        dhtGroup.add(ventHole);
+      }
     }
 
-    // 3. Header Pin Kuningan
-    const pinGeo = new THREE.BoxGeometry(0.04, 0.25, 0.04);
-    const pinMat = new THREE.MeshStandardMaterial({ color: 0xf59e0b, metalness: 0.85 });
-    const wireColors = [0xef4444, 0x111827, 0xfacc15]; // Kabel VCC (Merah), GND (Hitam), Data (Kuning)
+    // 3. Empat Kaki Logam Penyambung Sensor ke PCB
+    const legMat = new THREE.MeshStandardMaterial({ color: 0xd4d4d8, metalness: 0.9 });
+    for (let l = -0.22; l <= 0.22; l += 0.14) {
+      const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.16), legMat);
+      leg.position.set(0.24, 0.16, l);
+      dhtGroup.add(leg);
+    }
 
-    for (let i = 0; i < 3; i++) {
-      const zOffset = (i - 1) * 0.22;
-      const pin = new THREE.Mesh(pinGeo, pinMat);
-      pin.position.set(0.42, 0.12, zOffset);
-      dhtGroup.add(pin);
+    // 4. Tiga Header Pin Siku Logam di Ujung PCB (VCC, DATA, GND)
+    for (let p = -0.16; p <= 0.16; p += 0.16) {
+      const pinV = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, 0.18), legMat);
+      pinV.position.set(0.65, 0.16, p);
+      dhtGroup.add(pinV);
 
-      // Kabel Jumper Melengkung ke Arah Belakang Tutup
-      const wireGeo = new THREE.CylinderGeometry(0.025, 0.025, 0.65);
-      const wireMat = new THREE.MeshStandardMaterial({ color: wireColors[i], roughness: 0.5 });
-      const wire = new THREE.Mesh(wireGeo, wireMat);
-      wire.rotation.z = Math.PI / 3;
-      wire.position.set(0.65, 0.18, zOffset);
-      dhtGroup.add(wire);
+      const pinH = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, 0.25), legMat);
+      pinH.rotation.z = Math.PI / 2;
+      pinH.position.set(0.76, 0.24, p);
+      dhtGroup.add(pinH);
     }
 
     lidGroup.add(dhtGroup);
@@ -518,17 +533,17 @@
     waterMesh.position.set(0, 0.05, 0);
     groupTank.add(waterMesh);
 
-    // Kamera
+    // Posisi Kamera (Disesuaikan agar tutup dan sensor DHT22 terlihat dari atas)
     function setCamIso() {
-      camera.position.set(7, 6, 8);
-      camera.lookAt(0, 0.3, 0);
+      camera.position.set(6.5, 6.8, 7.5);
+      camera.lookAt(0, 0.6, 0);
     }
     function setCamFront() {
-      camera.position.set(0, 0.8, 9);
-      camera.lookAt(0, 0.3, 0);
+      camera.position.set(0, 1.2, 9);
+      camera.lookAt(0, 0.6, 0);
     }
     function setCamTop() {
-      camera.position.set(0, 9.5, 0.1);
+      camera.position.set(0, 9.8, 0.1);
       camera.lookAt(0, 0, 0);
     }
     setCamIso();
