@@ -343,7 +343,6 @@
 
     // A. Wadah Kotak Kaca Transparan (Persegi)
     const boxGeo = new THREE.BoxGeometry(4.2, 4.2, 4.2);
-    // Bahan kaca transparan dengan garis pinggir tepi kotak jelas
     const boxMat = new THREE.MeshPhysicalMaterial({
       color: 0x00f2fe,
       transmission: 0.95,
@@ -373,7 +372,6 @@
     });
 
     const eggs = [];
-    // 5 Butir telur tersusun rapi di dasar wadah
     const eggPositions = [
       { x: -0.9, y: -1.4, z: -0.9 },
       { x:  0.9, y: -1.4, z: -0.9 },
@@ -392,7 +390,6 @@
     });
 
     // C. LAPISAN TENGAH: Garam Tebal / Penuh Sampai Pertengahan Wadah
-    // Garam putih kristal padat yang menimbun telur hingga setengah wadah kotak
     const saltLayerGeo = new THREE.BoxGeometry(4.0, 1.8, 4.0);
     const saltLayerMat = new THREE.MeshStandardMaterial({
       color: 0xf5f5f7,
@@ -433,21 +430,18 @@
 
     // E. MODEL LAMPU PEMANAS (HEATER) DI ATAS AIR
     const lampGroup = new THREE.Group();
-    // Kap Lampu
     const hoodGeo = new THREE.ConeGeometry(0.8, 0.6, 24, 1, true);
     const hoodMat = new THREE.MeshStandardMaterial({ color: 0x222222, side: THREE.DoubleSide });
     const hoodMesh = new THREE.Mesh(hoodGeo, hoodMat);
     hoodMesh.position.set(0, 3.8, 0);
     lampGroup.add(hoodMesh);
 
-    // Bohlam Lampu
     const bulbGeo = new THREE.SphereGeometry(0.28, 16, 16);
     const bulbMat = new THREE.MeshBasicMaterial({ color: 0x555555 });
     const bulbMesh = new THREE.Mesh(bulbGeo, bulbMat);
     bulbMesh.position.set(0, 3.65, 0);
     lampGroup.add(bulbMesh);
 
-    // Kabel Gantung
     const cordGeo = new THREE.CylinderGeometry(0.03, 0.03, 2.0);
     const cordMat = new THREE.MeshBasicMaterial({ color: 0x111111 });
     const cordMesh = new THREE.Mesh(cordGeo, cordMat);
@@ -477,10 +471,7 @@
       requestAnimationFrame(animate);
       const elapsed = clock.getElapsedTime();
 
-      // Rotasi pelan panggung kotak agar bisa diamati 360 derajat
       groupTank.rotation.y += 0.003;
-
-      // Efek air bergerak halus sedikit
       waterMesh.position.y = 0.1 + Math.sin(elapsed * 2) * 0.015;
 
       renderer.render(scene, camera);
@@ -501,7 +492,7 @@
         localStorage.setItem('telur_start_time', startTime);
       }
       updateTimerDisplay();
-      setInterval(updateTimerDisplay, 30000); // Cek tiap 30 detik
+      setInterval(updateTimerDisplay, 30000);
     }
 
     function updateTimerDisplay() {
@@ -517,7 +508,6 @@
       const badgeHari = document.getElementById('badgeHari');
       const warningBox = document.getElementById('warningBox');
 
-      // Jika Hari >= 7, Nyalakan Peringatan Warna Merah Telur Siap Panen
       if (days >= 7) {
         badgeHari.innerText = `SELESAI (HARI KE-${days + 1})`;
         badgeHari.style.background = 'rgba(255, 51, 68, 0.3)';
@@ -560,22 +550,14 @@
     client.on('message', (topic, message) => {
       const val = message.toString();
 
-      // Sensor Garam TDS
       if (topic === 'telur/slave/1') {
         document.getElementById('valGaram').innerText = val;
-
-      // Sensor Water Level
       } else if (topic === 'telur/slave/water') {
         document.getElementById('valWater').innerText = val;
-
-      // Sensor Suhu & Hum
       } else if (topic === 'telur/slave/2' || topic === 'telur/slave/suhu') {
         document.getElementById('valSuhuRuang').innerText = val;
-
       } else if (topic === 'telur/slave/hum') {
         document.getElementById('valHum').innerText = val + '%';
-
-      // Kontrol Lampu Pemanas
       } else if (topic === 'telur/kontrol/heater') {
         const isNyala = val === 'ON';
         document.getElementById('btnToggleLampu').checked = isNyala;
