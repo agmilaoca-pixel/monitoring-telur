@@ -227,13 +227,13 @@
     <div class="top-bar clickable">
       <div class="brand-box">
         <h1>DIGITAL TWIN: WADAH KOTAK PENGASINAN TELUR</h1>
-        <p>● STRATIFIKASI: TELUR DASAR → GARAM JELAS → AIR SEDIKIT → LAMPU PEMANAS</p>
+        <p>● STRATIFIKASI: TELUR DASAR → GARAM JELAS → AIR SEDIKIT → LAMPU NEMPEL TUTUP</p>
       </div>
 
-      <!-- Kotak Warning Merah Saat Selesai (> 7 Hari) -->
+      <!-- Warning Merah Saat Selesai (> 7 Hari) -->
       <div class="warning-box" id="warningBox">
         <h3>⚠️ PERINGATAN: PENGASINAN SELESAI (&gt; 7 HARI)!</h3>
-        <p>Batas maksimal 7 hari tercapai. Angkat telur sekarang agar kuning telur masir berminyak sempurna dan tidak terlalu asin!</p>
+        <p>Batas maksimal 7 hari tercapai. Angkat telur sekarang agar kualitas masir berminyak optimal dan tidak terlalu asin!</p>
       </div>
 
       <div class="status-pill" id="mqttStatus">
@@ -243,7 +243,7 @@
 
     <!-- Panel Kiri -->
     <div class="left-panel clickable">
-      <!-- Tracker Hari -->
+      <!-- Waktu Proses Pengasinan -->
       <div class="card-hud">
         <div class="card-title">
           <span>WAKTU PROSES PENGASINAN</span>
@@ -254,7 +254,7 @@
         <button class="btn-start" onclick="startBatchBaru()">▶ Mulai Pengasinan (Start)</button>
       </div>
 
-      <!-- Slave 1: Garam TDS -->
+      <!-- Slave 1: TDS -->
       <div class="card-hud">
         <div class="card-title">
           <span>Kepekatan Garam (TDS)</span>
@@ -293,9 +293,10 @@
         <button class="btn-cam" onclick="setCamIso()">Sudut Isometrik</button>
       </div>
 
+      <!-- Ganti Jadi Lampu ON/OFF -->
       <div class="action-hud">
         <div class="switch-ui">
-          <span>Lampu Pemanas Atas</span>
+          <span>Lampu ON/OFF</span>
           <input type="checkbox" id="btnToggleLampu" onchange="toggleLampu(this.checked)" style="transform: scale(1.3); cursor: pointer;">
         </div>
       </div>
@@ -315,8 +316,8 @@
     renderer.shadowMap.enabled = true;
     container.appendChild(renderer.domElement);
 
-    // Pencahayaan Ruangan
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
+    // Pencahayaan Sekitar
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.45);
     scene.add(ambientLight);
 
     const pinkKeyLight = new THREE.PointLight(0xff2a85, 2.0, 30);
@@ -327,9 +328,9 @@
     cyanRimLight.position.set(6, 6, -5);
     scene.add(cyanRimLight);
 
-    // Lampu Pemanas (Heater Bulb) yang tergantung di atas wadah kotak
-    const heaterLight = new THREE.PointLight(0xff9900, 0.0, 18);
-    heaterLight.position.set(0, 4.2, 0);
+    // Lampu Pemanas (Bercahaya di balik tutup wadah)
+    const heaterLight = new THREE.PointLight(0xff9900, 0.0, 15);
+    heaterLight.position.set(0, 1.8, 0); // Di bawah tutup menghadap ke dalam wadah
     scene.add(heaterLight);
 
     // Grid Lantai Meja
@@ -337,11 +338,11 @@
     grid.position.y = -2;
     scene.add(grid);
 
-    // --- 2. OBJEK DIGITAL TWIN: WADAH KOTAK PERSEGI & STRATIFIKASI ---
+    // --- 2. DIGITAL TWIN WADAH KOTAK, TUTUP, DAN STRATIFIKASI ---
     const groupTank = new THREE.Group();
     scene.add(groupTank);
 
-    // A. Wadah Kotak Kaca Transparan (Persegi)
+    // A. Wadah Kotak Kaca Transparan
     const boxGeo = new THREE.BoxGeometry(4.2, 4.2, 4.2);
     const boxMat = new THREE.MeshPhysicalMaterial({
       color: 0x00f2fe,
@@ -356,18 +357,58 @@
     boxMesh.position.y = 0.1;
     groupTank.add(boxMesh);
 
-    // Garis Kerangka Wadah Kotak
+    // Garis Kerangka Tepi Kotak
     const edges = new THREE.EdgesGeometry(boxGeo);
     const lineMat = new THREE.LineBasicMaterial({ color: 0x00f2fe, linewidth: 2 });
     const wireframeBox = new THREE.LineSegments(edges, lineMat);
     wireframeBox.position.y = 0.1;
     groupTank.add(wireframeBox);
 
-    // B. LAPISAN DASAR: Telur Asin di Bagian Bawah Sendiri
+    // B. TUTUP KOTAK TELUR ASIN
+    const lidGroup = new THREE.Group();
+    // Pelat Tutup Utama (Bibir Kotak)
+    const lidGeo = new THREE.BoxGeometry(4.4, 0.18, 4.4);
+    const lidMat = new THREE.MeshStandardMaterial({
+      color: 0x1e1533,
+      roughness: 0.3,
+      metalness: 0.5,
+      transparent: true,
+      opacity: 0.85
+    });
+    const lidMesh = new THREE.Mesh(lidGeo, lidMat);
+    lidMesh.position.set(0, 2.24, 0);
+    lidGroup.add(lidMesh);
+
+    // Handle / Pegangan Tutup di Sisi Atas
+    const handleGeo = new THREE.CylinderGeometry(0.12, 0.12, 1.4);
+    const handleMat = new THREE.MeshStandardMaterial({ color: 0x00f2fe, metalness: 0.8 });
+    const handleMesh = new THREE.Mesh(handleGeo, handleMat);
+    handleMesh.rotation.z = Math.PI / 2;
+    handleMesh.position.set(0, 2.45, 0);
+    lidGroup.add(handleMesh);
+
+    // C. LAMPU YANG MENEMPEL DI BALIK (BAWAH) TUTUP KOTAK
+    // Soket / Fitting Lampu Nempel di Bawah Tutup
+    const socketGeo = new THREE.CylinderGeometry(0.4, 0.45, 0.25, 20);
+    const socketMat = new THREE.MeshStandardMaterial({ color: 0x333333, metalness: 0.7 });
+    const socketMesh = new THREE.Mesh(socketGeo, socketMat);
+    socketMesh.position.set(0, 2.05, 0);
+    lidGroup.add(socketMesh);
+
+    // Bohlam Lampu Pemanas
+    const bulbGeo = new THREE.SphereGeometry(0.32, 20, 20);
+    const bulbMat = new THREE.MeshBasicMaterial({ color: 0x555555 });
+    const bulbMesh = new THREE.Mesh(bulbGeo, bulbMat);
+    bulbMesh.position.set(0, 1.82, 0);
+    lidGroup.add(bulbMesh);
+
+    groupTank.add(lidGroup);
+
+    // D. LAPISAN DASAR: Telur Asin Bebek
     const eggGeo = new THREE.SphereGeometry(0.55, 32, 28);
     eggGeo.scale(1, 1.35, 1);
     const eggMat = new THREE.MeshStandardMaterial({
-      color: 0x7da48d, // Hijau kebiruan khas cangkang telur bebek
+      color: 0x7da48d,
       roughness: 0.65
     });
 
@@ -383,13 +424,13 @@
     eggPositions.forEach((pos) => {
       const egg = new THREE.Mesh(eggGeo, eggMat.clone());
       egg.position.set(pos.x, pos.y, pos.z);
-      egg.rotation.x = Math.PI / 2; // Telur berbaring di dasar
+      egg.rotation.x = Math.PI / 2;
       egg.rotation.z = Math.random() * 0.5;
       groupTank.add(egg);
       eggs.push(egg);
     });
 
-    // C. LAPISAN TENGAH: Garam Tebal / Penuh Sampai Pertengahan Wadah
+    // E. LAPISAN TENGAH: Garam Penuh Sampai Pertengahan
     const saltLayerGeo = new THREE.BoxGeometry(4.0, 1.8, 4.0);
     const saltLayerMat = new THREE.MeshStandardMaterial({
       color: 0xf5f5f7,
@@ -399,11 +440,11 @@
       opacity: 0.88
     });
     const saltLayer = new THREE.Mesh(saltLayerGeo, saltLayerMat);
-    saltLayer.position.set(0, -0.9, 0); // Memenuhi area dasar sampai tengah
+    saltLayer.position.set(0, -0.9, 0);
     groupTank.add(saltLayer);
 
-    // Partikel Kristal Garam Halus
-    const saltCount = 200;
+    // Partikel Butiran Kristal Garam
+    const saltCount = 180;
     const saltPtsGeo = new THREE.BufferGeometry();
     const saltPtsPos = new Float32Array(saltCount * 3);
     for (let i = 0; i < saltCount * 3; i += 3) {
@@ -416,7 +457,7 @@
     const saltPoints = new THREE.Points(saltPtsGeo, saltPtsMat);
     groupTank.add(saltPoints);
 
-    // D. LAPISAN ATAS: Air Sedikit di Atas Garam
+    // F. LAPISAN ATAS: Air Sedikit di Atas Garam
     const waterGeo = new THREE.BoxGeometry(4.02, 0.45, 4.02);
     const waterMat = new THREE.MeshStandardMaterial({
       color: 0x00a8ff,
@@ -425,32 +466,10 @@
       roughness: 0.1
     });
     const waterMesh = new THREE.Mesh(waterGeo, waterMat);
-    waterMesh.position.set(0, 0.1, 0); // Pas tepat sedikit di atas permukaan garam
+    waterMesh.position.set(0, 0.1, 0);
     groupTank.add(waterMesh);
 
-    // E. MODEL LAMPU PEMANAS (HEATER) DI ATAS AIR
-    const lampGroup = new THREE.Group();
-    const hoodGeo = new THREE.ConeGeometry(0.8, 0.6, 24, 1, true);
-    const hoodMat = new THREE.MeshStandardMaterial({ color: 0x222222, side: THREE.DoubleSide });
-    const hoodMesh = new THREE.Mesh(hoodGeo, hoodMat);
-    hoodMesh.position.set(0, 3.8, 0);
-    lampGroup.add(hoodMesh);
-
-    const bulbGeo = new THREE.SphereGeometry(0.28, 16, 16);
-    const bulbMat = new THREE.MeshBasicMaterial({ color: 0x555555 });
-    const bulbMesh = new THREE.Mesh(bulbGeo, bulbMat);
-    bulbMesh.position.set(0, 3.65, 0);
-    lampGroup.add(bulbMesh);
-
-    const cordGeo = new THREE.CylinderGeometry(0.03, 0.03, 2.0);
-    const cordMat = new THREE.MeshBasicMaterial({ color: 0x111111 });
-    const cordMesh = new THREE.Mesh(cordGeo, cordMat);
-    cordMesh.position.set(0, 4.8, 0);
-    lampGroup.add(cordMesh);
-
-    groupTank.add(lampGroup);
-
-    // Posisi Sudut Kamera
+    // Posisi Kamera
     function setCamIso() {
       camera.position.set(7, 6, 8);
       camera.lookAt(0, 0.3, 0);
@@ -465,7 +484,7 @@
     }
     setCamIso();
 
-    // Animasi Perputaran & Efek Cahaya
+    // Loop Animasi
     let clock = new THREE.Clock();
     function animate() {
       requestAnimationFrame(animate);
@@ -484,7 +503,7 @@
       renderer.setSize(window.innerWidth, window.innerHeight);
     });
 
-    // --- 3. LOGIKA PERHITUNGAN WAKTU PENGASINAN (HARI 1 - HARI 7+) ---
+    // --- 3. LOGIKA TRACKER WAKTU HARI ---
     function initBatchTimer() {
       let startTime = localStorage.getItem('telur_start_time');
       if (!startTime) {
