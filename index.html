@@ -3,17 +3,18 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Digital Twin - Monitoring & Simulasi 3D Pengasinan Telur</title>
+  <title>Digital Twin - Kotak Pengasinan Telur 3D</title>
   <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <style>
     :root {
       --bg: #090714;
-      --card-bg: rgba(22, 14, 38, 0.78);
-      --card-border: rgba(255, 42, 133, 0.28);
+      --card-bg: rgba(22, 14, 38, 0.82);
+      --card-border: rgba(255, 42, 133, 0.3);
       --neon-pink: #ff2a85;
       --neon-cyan: #00f2fe;
       --neon-yellow: #fde047;
+      --neon-red: #ff3344;
       --text-main: #fdf2f8;
       --text-muted: #c084fc;
     }
@@ -28,7 +29,6 @@
       position: relative;
     }
 
-    /* Panggung 3D Three.js */
     #canvas3d {
       position: absolute;
       top: 0;
@@ -38,7 +38,6 @@
       z-index: 1;
     }
 
-    /* Overlay HUD */
     .hud-layer {
       position: absolute;
       top: 0;
@@ -50,7 +49,7 @@
       display: flex;
       flex-direction: column;
       justify-content: space-between;
-      padding: 24px;
+      padding: 20px;
     }
 
     .clickable { pointer-events: auto; }
@@ -59,7 +58,8 @@
     .top-bar {
       display: flex;
       justify-content: space-between;
-      align-items: center;
+      align-items: flex-start;
+      gap: 15px;
     }
     .brand-box {
       background: var(--card-bg);
@@ -70,49 +70,68 @@
       box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
     }
     .brand-box h1 {
-      font-size: 18px;
+      font-size: 17px;
       font-weight: 800;
       background: linear-gradient(135deg, #fff 20%, #f472b6 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       letter-spacing: 0.8px;
     }
-    .brand-box p { font-size: 11.5px; color: var(--neon-cyan); margin-top: 3px; font-weight: 600; }
+    .brand-box p { font-size: 11px; color: var(--neon-cyan); margin-top: 2px; font-weight: 600; }
+
+    /* Warning Merah Selesai Pengasinan (> 7 Hari) */
+    .warning-box {
+      display: none;
+      background: linear-gradient(135deg, rgba(255, 51, 68, 0.35), rgba(255, 42, 133, 0.2));
+      border: 2px solid var(--neon-red);
+      border-radius: 16px;
+      padding: 10px 18px;
+      box-shadow: 0 0 25px rgba(255, 51, 68, 0.6);
+      animation: alertBlink 1.4s infinite ease-in-out;
+      max-width: 460px;
+    }
+    .warning-box h3 { font-size: 13px; font-weight: 800; color: #ff6677; letter-spacing: 0.5px; }
+    .warning-box p { font-size: 11px; color: #ffe4e6; margin-top: 2px; line-height: 1.3; }
+    @keyframes alertBlink {
+      0%, 100% { border-color: rgba(255, 51, 68, 0.5); box-shadow: 0 0 12px rgba(255, 51, 68, 0.3); }
+      50% { border-color: var(--neon-red); box-shadow: 0 0 28px rgba(255, 51, 68, 0.8); }
+    }
 
     .status-pill {
       background: rgba(255, 42, 133, 0.15);
       border: 1px solid rgba(255, 42, 133, 0.4);
       color: #ff77b4;
-      font-size: 12px;
+      font-size: 11.5px;
       font-weight: 700;
-      padding: 8px 18px;
+      padding: 6px 14px;
       border-radius: 999px;
       display: flex;
       align-items: center;
       gap: 8px;
       backdrop-filter: blur(8px);
+      white-space: nowrap;
     }
     .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--neon-pink); box-shadow: 0 0 10px var(--neon-pink); }
 
-    /* Panel Kiri: Telemetri Slaves */
+    /* Left Panel: Telemetri & Waktu */
     .left-panel {
-      width: 320px;
+      width: 310px;
       display: flex;
       flex-direction: column;
-      gap: 14px;
-      margin-top: 10px;
+      gap: 12px;
+      margin-top: 8px;
     }
     .card-hud {
       background: var(--card-bg);
       border: 1px solid var(--card-border);
       backdrop-filter: blur(14px);
-      border-radius: 18px;
-      padding: 16px 18px;
+      border-radius: 16px;
+      padding: 14px 16px;
       box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
       position: relative;
     }
     .card-title {
-      font-size: 11px;
+      font-size: 10.5px;
       font-weight: 800;
       color: var(--text-muted);
       letter-spacing: 0.8px;
@@ -122,9 +141,9 @@
       align-items: center;
     }
     .badge-node {
-      font-size: 10px;
-      padding: 2px 8px;
-      border-radius: 6px;
+      font-size: 9.5px;
+      padding: 2px 7px;
+      border-radius: 5px;
       background: rgba(255, 42, 133, 0.2);
       color: var(--neon-pink);
       border: 1px solid rgba(255, 42, 133, 0.4);
@@ -135,16 +154,31 @@
       border-color: rgba(0, 242, 254, 0.4);
     }
     .val-main {
-      font-size: 30px;
+      font-size: 26px;
       font-weight: 800;
       color: #fff;
-      margin: 8px 0 4px 0;
+      margin: 6px 0 2px 0;
       text-shadow: 0 0 16px rgba(255, 42, 133, 0.35);
     }
-    .val-unit { font-size: 16px; color: var(--neon-yellow); font-weight: 600; }
-    .card-meta { font-size: 11px; color: #d8b4fe; }
+    .val-unit { font-size: 15px; color: var(--neon-yellow); font-weight: 600; }
+    .card-meta { font-size: 10.5px; color: #d8b4fe; }
 
-    /* Bottom Bar: Kontrol Aktuator & Navigasi 3D */
+    /* Timer Batch Control */
+    .btn-start {
+      background: linear-gradient(135deg, var(--neon-pink), #a855f7);
+      border: none;
+      color: white;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 0 12px rgba(255, 42, 133, 0.4);
+      margin-top: 8px;
+    }
+    .btn-start:hover { filter: brightness(1.15); }
+
+    /* Bottom Bar */
     .bottom-bar {
       display: flex;
       justify-content: space-between;
@@ -154,19 +188,19 @@
       background: var(--card-bg);
       border: 1px solid var(--card-border);
       backdrop-filter: blur(12px);
-      border-radius: 16px;
-      padding: 12px 20px;
+      border-radius: 14px;
+      padding: 10px 16px;
       display: flex;
-      gap: 18px;
+      gap: 14px;
       align-items: center;
     }
     .btn-cam {
       background: rgba(255, 255, 255, 0.08);
       border: 1px solid rgba(255, 255, 255, 0.15);
       color: #fdf2f8;
-      padding: 8px 14px;
-      border-radius: 10px;
-      font-size: 11.5px;
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 11px;
       font-weight: 700;
       cursor: pointer;
       transition: all 0.2s;
@@ -174,28 +208,34 @@
     .btn-cam:hover {
       background: var(--neon-cyan);
       color: #000;
-      box-shadow: 0 0 12px var(--neon-cyan);
+      box-shadow: 0 0 10px var(--neon-cyan);
     }
     .switch-ui {
       display: flex;
       align-items: center;
-      gap: 12px;
-      font-size: 12.5px;
+      gap: 10px;
+      font-size: 12px;
       font-weight: 700;
     }
   </style>
 </head>
 <body>
-  <!-- Panggung Tiga Dimensi -->
   <div id="canvas3d"></div>
 
-  <!-- Lapisan Antarmuka Layar (HUD) -->
   <div class="hud-layer">
+    <!-- Top Bar -->
     <div class="top-bar clickable">
       <div class="brand-box">
-        <h1>DIGITAL TWIN: RUANG PENGASINAN TELUR</h1>
-        <p>● SIMULASI FISIKA 3D & TELEMETRI ESP32</p>
+        <h1>DIGITAL TWIN: WADAH KOTAK PENGASINAN TELUR</h1>
+        <p>● STRATIFIKASI: TELUR DASAR → GARAM JELAS → AIR SEDIKIT → LAMPU PEMANAS</p>
       </div>
+
+      <!-- Kotak Warning Merah Saat Selesai (> 7 Hari) -->
+      <div class="warning-box" id="warningBox">
+        <h3>⚠️ PERINGATAN: PENGASINAN SELESAI (&gt; 7 HARI)!</h3>
+        <p>Batas maksimal 7 hari tercapai. Angkat telur sekarang agar kuning telur masir berminyak sempurna dan tidak terlalu asin!</p>
+      </div>
+
       <div class="status-pill" id="mqttStatus">
         <span class="dot"></span> EMQX Terhubung
       </div>
@@ -203,35 +243,49 @@
 
     <!-- Panel Kiri -->
     <div class="left-panel clickable">
+      <!-- Tracker Hari -->
+      <div class="card-hud">
+        <div class="card-title">
+          <span>WAKTU PROSES PENGASINAN</span>
+          <span class="badge-node" id="badgeHari">HARI 1 / 7</span>
+        </div>
+        <div class="val-main" id="batchDayText">0 <span class="val-unit">Hari</span> 0 <span class="val-unit">Jam</span></div>
+        <div class="card-meta" id="txtTargetHari">Target: 7 Hari Perendaman</div>
+        <button class="btn-start" onclick="startBatchBaru()">▶ Mulai Pengasinan (Start)</button>
+      </div>
+
+      <!-- Slave 1: Garam TDS -->
       <div class="card-hud">
         <div class="card-title">
           <span>Kepekatan Garam (TDS)</span>
           <span class="badge-node">SLAVE 1</span>
         </div>
         <div class="val-main"><span id="valGaram">0.0</span> <span class="val-unit">%</span></div>
-        <div class="card-meta">DIFUSI ION: <span id="txtDifusi">Aktif Bertahap</span></div>
+        <div class="card-meta">STATUS: <span id="txtDifusi">Lapisan Garam Bawah Jenuh</span></div>
       </div>
 
+      <!-- Slave 1: Water Level -->
       <div class="card-hud">
         <div class="card-title">
           <span>Ketinggian Air Larutan</span>
           <span class="badge-node">SLAVE 1</span>
         </div>
         <div class="val-main"><span id="valWater">0</span> <span class="val-unit">%</span></div>
-        <div class="card-meta">VOLUME BEJANA: <span id="txtVolume">Tenggelam Sempurna</span></div>
+        <div class="card-meta">VOLUME: Air Sedikit di Atas Garam</div>
       </div>
 
+      <!-- Slave 2: Suhu & Hum -->
       <div class="card-hud">
         <div class="card-title">
           <span>Suhu Ruang Inkubasi</span>
           <span class="badge-node cyan">SLAVE 2</span>
         </div>
         <div class="val-main"><span id="valSuhuRuang">0.0</span> <span class="val-unit">°C</span></div>
-        <div class="card-meta">KELEMBABAN: <span id="valHum" style="color:var(--neon-pink); font-weight:700;">0.0%</span></div>
+        <div class="card-meta">KELEMBABAN RUANG: <span id="valHum" style="color:var(--neon-pink); font-weight:700;">0.0%</span></div>
       </div>
     </div>
 
-    <!-- Baris Bawah -->
+    <!-- Bottom Bar -->
     <div class="bottom-bar clickable">
       <div class="action-hud">
         <button class="btn-cam" onclick="setCamTop()">Sudut Atas (Top)</button>
@@ -241,15 +295,15 @@
 
       <div class="action-hud">
         <div class="switch-ui">
-          <span>Lampu Pemanas (Heater)</span>
-          <input type="checkbox" id="btnToggleLampu" onchange="toggleLampu(this.checked)" style="transform: scale(1.4); cursor: pointer;">
+          <span>Lampu Pemanas Atas</span>
+          <input type="checkbox" id="btnToggleLampu" onchange="toggleLampu(this.checked)" style="transform: scale(1.3); cursor: pointer;">
         </div>
       </div>
     </div>
   </div>
 
   <script>
-    // --- 1. SETUP THREE.JS 3D ENVIRONMENT ---
+    // --- 1. SETUP THREE.JS ENGINE ---
     const container = document.getElementById('canvas3d');
     const scene = new THREE.Scene();
     scene.fog = new THREE.FogExp2(0x090714, 0.025);
@@ -261,127 +315,173 @@
     renderer.shadowMap.enabled = true;
     container.appendChild(renderer.domElement);
 
-    // Pencahayaan
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.45);
+    // Pencahayaan Ruangan
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
     scene.add(ambientLight);
 
-    const pinkKeyLight = new THREE.PointLight(0xff2a85, 2.5, 30);
+    const pinkKeyLight = new THREE.PointLight(0xff2a85, 2.0, 30);
     pinkKeyLight.position.set(-6, 8, 5);
     scene.add(pinkKeyLight);
 
-    const cyanRimLight = new THREE.PointLight(0x00f2fe, 2.5, 30);
+    const cyanRimLight = new THREE.PointLight(0x00f2fe, 2.0, 30);
     cyanRimLight.position.set(6, 6, -5);
     scene.add(cyanRimLight);
 
-    const heaterLight = new THREE.PointLight(0xffaa22, 0.0, 20);
-    heaterLight.position.set(0, 7, 0);
+    // Lampu Pemanas (Heater Bulb) yang tergantung di atas wadah kotak
+    const heaterLight = new THREE.PointLight(0xff9900, 0.0, 18);
+    heaterLight.position.set(0, 4.2, 0);
     scene.add(heaterLight);
 
+    // Grid Lantai Meja
     const grid = new THREE.GridHelper(30, 30, 0xff2a85, 0x1f1435);
     grid.position.y = -2;
     scene.add(grid);
 
-    // --- 2. OBJEK 3D BEJANA & TELUR ASIN ---
+    // --- 2. OBJEK DIGITAL TWIN: WADAH KOTAK PERSEGI & STRATIFIKASI ---
     const groupTank = new THREE.Group();
     scene.add(groupTank);
 
-    const jarGeo = new THREE.CylinderGeometry(2.6, 2.6, 4.8, 36, 1, true);
-    const jarMat = new THREE.MeshPhysicalMaterial({
+    // A. Wadah Kotak Kaca Transparan (Persegi)
+    const boxGeo = new THREE.BoxGeometry(4.2, 4.2, 4.2);
+    // Bahan kaca transparan dengan garis pinggir tepi kotak jelas
+    const boxMat = new THREE.MeshPhysicalMaterial({
       color: 0x00f2fe,
-      transmission: 0.92,
+      transmission: 0.95,
       opacity: 1,
       transparent: true,
-      roughness: 0.05,
+      roughness: 0.08,
       ior: 1.5,
       side: THREE.DoubleSide
     });
-    const jarMesh = new THREE.Mesh(jarGeo, jarMat);
-    jarMesh.position.y = 0.4;
-    groupTank.add(jarMesh);
+    const boxMesh = new THREE.Mesh(boxGeo, boxMat);
+    boxMesh.position.y = 0.1;
+    groupTank.add(boxMesh);
 
-    const waterGeo = new THREE.CylinderGeometry(2.5, 2.5, 3.8, 32);
-    const waterMat = new THREE.MeshStandardMaterial({
-      color: 0x0077be,
-      transparent: true,
-      opacity: 0.55,
-      roughness: 0.1
-    });
-    const waterMesh = new THREE.Mesh(waterGeo, waterMat);
-    waterMesh.position.y = -0.1;
-    groupTank.add(waterMesh);
+    // Garis Kerangka Wadah Kotak
+    const edges = new THREE.EdgesGeometry(boxGeo);
+    const lineMat = new THREE.LineBasicMaterial({ color: 0x00f2fe, linewidth: 2 });
+    const wireframeBox = new THREE.LineSegments(edges, lineMat);
+    wireframeBox.position.y = 0.1;
+    groupTank.add(wireframeBox);
 
-    const eggGeo = new THREE.SphereGeometry(0.9, 32, 28);
+    // B. LAPISAN DASAR: Telur Asin di Bagian Bawah Sendiri
+    const eggGeo = new THREE.SphereGeometry(0.55, 32, 28);
     eggGeo.scale(1, 1.35, 1);
     const eggMat = new THREE.MeshStandardMaterial({
-      color: 0xca8a04,
-      roughness: 0.6,
-      metalness: 0.1
+      color: 0x7da48d, // Hijau kebiruan khas cangkang telur bebek
+      roughness: 0.65
     });
 
     const eggs = [];
+    // 5 Butir telur tersusun rapi di dasar wadah
     const eggPositions = [
-      { x: 0, y: -0.6, z: 0 },
-      { x: 0.9, y: -0.7, z: 0.6 },
-      { x: -0.8, y: -0.5, z: -0.5 }
+      { x: -0.9, y: -1.4, z: -0.9 },
+      { x:  0.9, y: -1.4, z: -0.9 },
+      { x: -0.9, y: -1.4, z:  0.9 },
+      { x:  0.9, y: -1.4, z:  0.9 },
+      { x:  0.0, y: -1.35, z: 0.0 }
     ];
 
     eggPositions.forEach((pos) => {
       const egg = new THREE.Mesh(eggGeo, eggMat.clone());
       egg.position.set(pos.x, pos.y, pos.z);
-      egg.rotation.z = Math.random() * 0.4 - 0.2;
+      egg.rotation.x = Math.PI / 2; // Telur berbaring di dasar
+      egg.rotation.z = Math.random() * 0.5;
       groupTank.add(egg);
       eggs.push(egg);
     });
 
-    const ionCount = 120;
-    const ionGeo = new THREE.BufferGeometry();
-    const ionPos = new Float32Array(ionCount * 3);
-    for (let i = 0; i < ionCount * 3; i += 3) {
-      ionPos[i] = (Math.random() - 0.5) * 4.2;
-      ionPos[i + 1] = (Math.random() - 0.5) * 3.5;
-      ionPos[i + 2] = (Math.random() - 0.5) * 4.2;
-    }
-    ionGeo.setAttribute('position', new THREE.BufferAttribute(ionPos, 3));
-    const ionMat = new THREE.PointsMaterial({
-      color: 0x00f2fe,
-      size: 0.08,
+    // C. LAPISAN TENGAH: Garam Tebal / Penuh Sampai Pertengahan Wadah
+    // Garam putih kristal padat yang menimbun telur hingga setengah wadah kotak
+    const saltLayerGeo = new THREE.BoxGeometry(4.0, 1.8, 4.0);
+    const saltLayerMat = new THREE.MeshStandardMaterial({
+      color: 0xf5f5f7,
+      roughness: 0.9,
+      metalness: 0.1,
       transparent: true,
-      opacity: 0.8
+      opacity: 0.88
     });
-    const ionParticles = new THREE.Points(ionGeo, ionMat);
-    groupTank.add(ionParticles);
+    const saltLayer = new THREE.Mesh(saltLayerGeo, saltLayerMat);
+    saltLayer.position.set(0, -0.9, 0); // Memenuhi area dasar sampai tengah
+    groupTank.add(saltLayer);
 
+    // Partikel Kristal Garam Halus
+    const saltCount = 200;
+    const saltPtsGeo = new THREE.BufferGeometry();
+    const saltPtsPos = new Float32Array(saltCount * 3);
+    for (let i = 0; i < saltCount * 3; i += 3) {
+      saltPtsPos[i] = (Math.random() - 0.5) * 3.8;
+      saltPtsPos[i + 1] = -1.8 + Math.random() * 1.8;
+      saltPtsPos[i + 2] = (Math.random() - 0.5) * 3.8;
+    }
+    saltPtsGeo.setAttribute('position', new THREE.BufferAttribute(saltPtsPos, 3));
+    const saltPtsMat = new THREE.PointsMaterial({ color: 0xffffff, size: 0.07, transparent: true, opacity: 0.9 });
+    const saltPoints = new THREE.Points(saltPtsGeo, saltPtsMat);
+    groupTank.add(saltPoints);
+
+    // D. LAPISAN ATAS: Air Sedikit di Atas Garam
+    const waterGeo = new THREE.BoxGeometry(4.02, 0.45, 4.02);
+    const waterMat = new THREE.MeshStandardMaterial({
+      color: 0x00a8ff,
+      transparent: true,
+      opacity: 0.6,
+      roughness: 0.1
+    });
+    const waterMesh = new THREE.Mesh(waterGeo, waterMat);
+    waterMesh.position.set(0, 0.1, 0); // Pas tepat sedikit di atas permukaan garam
+    groupTank.add(waterMesh);
+
+    // E. MODEL LAMPU PEMANAS (HEATER) DI ATAS AIR
+    const lampGroup = new THREE.Group();
+    // Kap Lampu
+    const hoodGeo = new THREE.ConeGeometry(0.8, 0.6, 24, 1, true);
+    const hoodMat = new THREE.MeshStandardMaterial({ color: 0x222222, side: THREE.DoubleSide });
+    const hoodMesh = new THREE.Mesh(hoodGeo, hoodMat);
+    hoodMesh.position.set(0, 3.8, 0);
+    lampGroup.add(hoodMesh);
+
+    // Bohlam Lampu
+    const bulbGeo = new THREE.SphereGeometry(0.28, 16, 16);
+    const bulbMat = new THREE.MeshBasicMaterial({ color: 0x555555 });
+    const bulbMesh = new THREE.Mesh(bulbGeo, bulbMat);
+    bulbMesh.position.set(0, 3.65, 0);
+    lampGroup.add(bulbMesh);
+
+    // Kabel Gantung
+    const cordGeo = new THREE.CylinderGeometry(0.03, 0.03, 2.0);
+    const cordMat = new THREE.MeshBasicMaterial({ color: 0x111111 });
+    const cordMesh = new THREE.Mesh(cordGeo, cordMat);
+    cordMesh.position.set(0, 4.8, 0);
+    lampGroup.add(cordMesh);
+
+    groupTank.add(lampGroup);
+
+    // Posisi Sudut Kamera
     function setCamIso() {
-      camera.position.set(7, 5, 8);
-      camera.lookAt(0, 0.4, 0);
+      camera.position.set(7, 6, 8);
+      camera.lookAt(0, 0.3, 0);
     }
     function setCamFront() {
-      camera.position.set(0, 0.5, 9);
-      camera.lookAt(0, 0.4, 0);
+      camera.position.set(0, 0.8, 9);
+      camera.lookAt(0, 0.3, 0);
     }
     function setCamTop() {
-      camera.position.set(0, 10, 0.1);
+      camera.position.set(0, 9.5, 0.1);
       camera.lookAt(0, 0, 0);
     }
     setCamIso();
 
+    // Animasi Perputaran & Efek Cahaya
     let clock = new THREE.Clock();
     function animate() {
       requestAnimationFrame(animate);
       const elapsed = clock.getElapsedTime();
 
-      groupTank.rotation.y += 0.005;
+      // Rotasi pelan panggung kotak agar bisa diamati 360 derajat
+      groupTank.rotation.y += 0.003;
 
-      eggs.forEach((egg, index) => {
-        egg.position.y += Math.sin(elapsed * 2 + index) * 0.0015;
-      });
-
-      const positions = ionParticles.geometry.attributes.position.array;
-      for (let i = 1; i < ionCount * 3; i += 3) {
-        positions[i] -= 0.006;
-        if (positions[i] < -1.8) positions[i] = 1.8;
-      }
-      ionParticles.geometry.attributes.position.needsUpdate = true;
+      // Efek air bergerak halus sedikit
+      waterMesh.position.y = 0.1 + Math.sin(elapsed * 2) * 0.015;
 
       renderer.render(scene, camera);
     }
@@ -393,13 +493,60 @@
       renderer.setSize(window.innerWidth, window.innerHeight);
     });
 
-    // --- 3. KONEKSI MQTT EMQX CLOUD ---
+    // --- 3. LOGIKA PERHITUNGAN WAKTU PENGASINAN (HARI 1 - HARI 7+) ---
+    function initBatchTimer() {
+      let startTime = localStorage.getItem('telur_start_time');
+      if (!startTime) {
+        startTime = new Date().getTime();
+        localStorage.setItem('telur_start_time', startTime);
+      }
+      updateTimerDisplay();
+      setInterval(updateTimerDisplay, 30000); // Cek tiap 30 detik
+    }
+
+    function updateTimerDisplay() {
+      const startTime = parseInt(localStorage.getItem('telur_start_time'));
+      const now = new Date().getTime();
+      const diffMs = now - startTime;
+
+      const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+
+      document.getElementById('batchDayText').innerHTML = `${days} <span class="val-unit">Hari</span> ${hours} <span class="val-unit">Jam</span>`;
+
+      const badgeHari = document.getElementById('badgeHari');
+      const warningBox = document.getElementById('warningBox');
+
+      // Jika Hari >= 7, Nyalakan Peringatan Warna Merah Telur Siap Panen
+      if (days >= 7) {
+        badgeHari.innerText = `SELESAI (HARI KE-${days + 1})`;
+        badgeHari.style.background = 'rgba(255, 51, 68, 0.3)';
+        badgeHari.style.borderColor = 'var(--neon-red)';
+        badgeHari.style.color = '#ff6677';
+        warningBox.style.display = 'block';
+      } else {
+        badgeHari.innerText = `HARI ${days + 1} / 7`;
+        badgeHari.style.background = 'rgba(255, 42, 133, 0.2)';
+        badgeHari.style.borderColor = 'rgba(255, 42, 133, 0.4)';
+        badgeHari.style.color = 'var(--neon-pink)';
+        warningBox.style.display = 'none';
+      }
+    }
+
+    function startBatchBaru() {
+      if (confirm("Mulai batch baru proses pengasinan telur? Waktu akan di-reset ke Hari ke-1.")) {
+        localStorage.setItem('telur_start_time', new Date().getTime());
+        updateTimerDisplay();
+      }
+    }
+
+    // --- 4. KONEKSI MQTT EMQX CLOUD ---
     const mqttOptions = {
       clean: true,
       connectTimeout: 4000,
-      clientId: 'web_3d_' + Math.random().toString(16).substring(2, 8),
+      clientId: 'web_box_3d_' + Math.random().toString(16).substring(2, 8),
       username: 'mila',
-      password: 'Mila12345' // <-- Ganti dengan password EMQX milikmu
+      password: 'Mila12345'
     };
 
     const client = mqtt.connect('wss://o110101d.ala.eu-central-1.emqxsl.com:8084/mqtt', mqttOptions);
@@ -413,36 +560,37 @@
     client.on('message', (topic, message) => {
       const val = message.toString();
 
+      // Sensor Garam TDS
       if (topic === 'telur/slave/1') {
         document.getElementById('valGaram').innerText = val;
-        const tds = parseFloat(val) || 0;
-        ionMat.size = 0.05 + (tds * 0.008);
-        document.getElementById('txtDifusi').innerText = tds > 10 ? "Difusi Jenuh Kuat" : "Penetrasi Normal";
 
+      // Sensor Water Level
       } else if (topic === 'telur/slave/water') {
         document.getElementById('valWater').innerText = val;
-        const waterPct = Math.min(Math.max(parseFloat(val) || 0, 10), 100);
-        const targetScale = waterPct / 100;
-        waterMesh.scale.set(1, targetScale, 1);
-        waterMesh.position.y = -0.1 - (1 - targetScale) * 1.5;
 
+      // Sensor Suhu & Hum
       } else if (topic === 'telur/slave/2' || topic === 'telur/slave/suhu') {
         document.getElementById('valSuhuRuang').innerText = val;
 
       } else if (topic === 'telur/slave/hum') {
         document.getElementById('valHum').innerText = val + '%';
 
+      // Kontrol Lampu Pemanas
       } else if (topic === 'telur/kontrol/heater') {
         const isNyala = val === 'ON';
         document.getElementById('btnToggleLampu').checked = isNyala;
-        heaterLight.intensity = isNyala ? 3.5 : 0.0;
+        heaterLight.intensity = isNyala ? 3.8 : 0.0;
+        bulbMat.color.setHex(isNyala ? 0xffaa00 : 0x555555);
       }
     });
 
     function toggleLampu(state) {
       client.publish('telur/kontrol/heater', state ? 'ON' : 'OFF');
-      heaterLight.intensity = state ? 3.5 : 0.0;
+      heaterLight.intensity = state ? 3.8 : 0.0;
+      bulbMat.color.setHex(state ? 0xffaa00 : 0x555555);
     }
+
+    initBatchTimer();
   </script>
 </body>
 </html>
