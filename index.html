@@ -191,7 +191,7 @@
     }
     .btn-start:hover, .btn-selesai:hover { filter: brightness(1.15); }
 
-    /* Panel Kanan: 2 Kotak Grafik */
+    /* Panel Kanan: 2 Kotak Grafik Mandiri */
     .right-panel {
       position: absolute;
       top: 80px;
@@ -264,7 +264,7 @@
     <div class="top-bar clickable">
       <div class="brand-box">
         <h1>DIGITAL TWIN: WADAH KOTAK PENGASINAN TELUR</h1>
-        <p>● SENSOR DHT22 BERDIRI DI ATAS TUTUP → LAMPU HEATER DALAM → GARAM KROSOK</p>
+        <p>● SENSOR DHT22 BERDIRI &amp; PORT SENSOR TDS → LAMPU DALAM → GARAM KROSOK</p>
       </div>
 
       <div class="warning-box" id="warningBox">
@@ -299,7 +299,7 @@
           <span class="badge-node">SLAVE 1</span>
         </div>
         <div class="val-main"><span id="valGaram">0.0</span> <span class="val-unit">%</span></div>
-        <div class="card-meta">STATUS: <span id="txtDifusi">Garam Krosok Kasar Padat</span></div>
+        <div class="card-meta">STATUS: <span id="txtDifusi">Probe TDS Masuk ke Larutan</span></div>
       </div>
 
       <div class="card-hud">
@@ -446,8 +446,7 @@
     // MODUL SENSOR DHT22 BERDIRI TEGAK (TEPAT DI ATAS TUTUP)
     // ========================================================
     const dhtGroup = new THREE.Group();
-    // Posisi di sisi kanan tutup, tegak berdiri mengarah ke atas (+Y)
-    dhtGroup.position.set(0.85, 2.33, 0);
+    dhtGroup.position.set(0.85, 2.33, 0.5);
 
     // 1. PCB Hitam Modul Berdiri Vertikal
     const pcbGeo = new THREE.BoxGeometry(0.85, 1.5, 0.08);
@@ -456,27 +455,26 @@
     pcbMesh.position.set(0, 0.75, 0);
     dhtGroup.add(pcbMesh);
 
-    // Lubang Baut / Sekrup Perak di Ujung Atas PCB
+    // Lubang Baut Perak
     const holeGeo = new THREE.RingGeometry(0.07, 0.15, 16);
     const holeMat = new THREE.MeshBasicMaterial({ color: 0xd4d4d8, side: THREE.DoubleSide });
     const holeMesh = new THREE.Mesh(holeGeo, holeMat);
     holeMesh.position.set(0, 1.35, 0.045);
     dhtGroup.add(holeMesh);
 
-    // 2. Bodi Putih DHT22 Berdiri Menghadap Depan (+Z)
+    // 2. Bodi Putih DHT22 Berdiri Menghadap Depan
     const dhtBodyGeo = new THREE.BoxGeometry(0.75, 0.95, 0.38);
     const dhtBodyMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.3 });
     const dhtBody = new THREE.Mesh(dhtBodyGeo, dhtBodyMat);
     dhtBody.position.set(0, 0.7, 0.23);
     dhtGroup.add(dhtBody);
 
-    // Kuping Pengait Atas Bodi Sensor
     const earGeo = new THREE.BoxGeometry(0.42, 0.2, 0.24);
     const earMesh = new THREE.Mesh(earGeo, dhtBodyMat);
     earMesh.position.set(0, 1.25, 0.16);
     dhtGroup.add(earMesh);
 
-    // Kisi-kisi Lubang Ventilasi Udara DHT22 (Grid 3x4 Lubang)
+    // Kisi-kisi Lubang Ventilasi Udara DHT22
     const slotMat = new THREE.MeshBasicMaterial({ color: 0x334155 });
     for (let rx = -0.2; rx <= 0.2; rx += 0.13) {
       for (let ry = -0.28; ry <= 0.28; ry += 0.14) {
@@ -486,23 +484,67 @@
       }
     }
 
-    // 3. Empat Kaki Logam Penyambung Bodi ke PCB
+    // Header Pin Kaki Bawah
     const legMat = new THREE.MeshStandardMaterial({ color: 0xd4d4d8, metalness: 0.9 });
-    for (let l = -0.21; l <= 0.21; l += 0.14) {
-      const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.018, 0.018, 0.1), legMat);
-      leg.rotation.x = Math.PI / 2;
-      leg.position.set(l, 0.28, 0.09);
-      dhtGroup.add(leg);
-    }
-
-    // 4. Header Pin Bawah (Kaki Pin Menancap ke Tutup)
     for (let p = -0.16; p <= 0.16; p += 0.16) {
       const pinV = new THREE.Mesh(new THREE.CylinderGeometry(0.022, 0.022, 0.2), legMat);
       pinV.position.set(p, 0.05, 0);
       dhtGroup.add(pinV);
     }
-
     lidGroup.add(dhtGroup);
+
+    // ========================================================
+    // LUBANG PORT & PROBE SENSOR TDS MASUK KE DALAM WADAH
+    // ========================================================
+    const tdsGroup = new THREE.Group();
+    tdsGroup.position.set(0.85, 2.24, -1.1); // Di sisi belakang kanan tutup
+
+    // 1. Cincin Karet Lubang Port Tutup (Grommet Rubber Black)
+    const grommetOuterGeo = new THREE.CylinderGeometry(0.24, 0.26, 0.24, 24);
+    const grommetMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.8 });
+    const grommetOuter = new THREE.Mesh(grommetOuterGeo, grommetMat);
+    tdsGroup.add(grommetOuter);
+
+    // Lubang Dalam Port (Tembus)
+    const holeInnerGeo = new THREE.CylinderGeometry(0.12, 0.12, 0.26, 24);
+    const holeInnerMat = new THREE.MeshBasicMaterial({ color: 0x050505 });
+    const holeInner = new THREE.Mesh(holeInnerGeo, holeInnerMat);
+    tdsGroup.add(holeInner);
+
+    // 2. Kabel Hitam Sensor TDS Menjulur dari Luar Menembus ke Bawah
+    const cableTopGeo = new THREE.CylinderGeometry(0.035, 0.035, 0.8, 16);
+    const cableMat = new THREE.MeshStandardMaterial({ color: 0x1a1a1a, roughness: 0.6 });
+    const cableTop = new THREE.Mesh(cableTopGeo, cableMat);
+    cableTop.position.set(0, 0.4, 0);
+    cableTop.rotation.z = 0.15;
+    tdsGroup.add(cableTop);
+
+    // 3. Batang Kabel Sensor Menjulur ke Bawah Tutup (Menembus Air)
+    const probeRodGeo = new THREE.CylinderGeometry(0.04, 0.04, 2.2, 16);
+    const probeRod = new THREE.Mesh(probeRodGeo, cableMat);
+    probeRod.position.set(0, -1.1, 0);
+    tdsGroup.add(probeRod);
+
+    // 4. Bodi Probe Sensor TDS Waterproof (Hitam & Ujung Elektroda Logam)
+    const probeBodyGeo = new THREE.CylinderGeometry(0.12, 0.12, 0.9, 20);
+    const probeBodyMat = new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.4 });
+    const probeBody = new THREE.Mesh(probeBodyGeo, probeBodyMat);
+    probeBody.position.set(0, -2.1, 0);
+    tdsGroup.add(probeBody);
+
+    // Jarum Elektroda Kembar Sensor TDS (Menyentuh Larutan Garam)
+    const electroMat = new THREE.MeshStandardMaterial({ color: 0xe2e8f0, metalness: 0.95 });
+    const electroGeo = new THREE.CylinderGeometry(0.015, 0.015, 0.22, 12);
+    
+    const pin1 = new THREE.Mesh(electroGeo, electroMat);
+    pin1.position.set(-0.045, -2.6, 0);
+    tdsGroup.add(pin1);
+
+    const pin2 = new THREE.Mesh(electroGeo, electroMat);
+    pin2.position.set(0.045, -2.6, 0);
+    tdsGroup.add(pin2);
+
+    lidGroup.add(tdsGroup);
 
     // Soket & Lampu di Bawah Tutup
     const socketGeo = new THREE.CylinderGeometry(0.4, 0.45, 0.25, 20);
