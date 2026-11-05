@@ -76,7 +76,6 @@
     }
     .brand-box p { font-size: 10.5px; color: var(--neon-cyan); margin-top: 2px; font-weight: 600; }
 
-    /* Warning Box */
     .warning-box {
       display: none;
       background: linear-gradient(135deg, rgba(255, 51, 68, 0.35), rgba(255, 42, 133, 0.2));
@@ -114,7 +113,7 @@
       position: absolute;
       top: 80px;
       left: 20px;
-      width: 290px;
+      width: 285px;
       display: flex;
       flex-direction: column;
       gap: 10px;
@@ -191,12 +190,12 @@
     }
     .btn-start:hover, .btn-selesai:hover { filter: brightness(1.15); }
 
-    /* Panel Kanan: 2 Grafik Mandiri */
+    /* Panel Kanan: 2 KOTAK GRAFIK SENDIRI-SENDIRI */
     .right-panel {
       position: absolute;
       top: 80px;
       right: 20px;
-      width: 350px;
+      width: 330px;
       display: flex;
       flex-direction: column;
       gap: 12px;
@@ -211,7 +210,7 @@
     }
     .chart-container {
       position: relative;
-      height: 125px;
+      height: 120px;
       width: 100%;
       margin-top: 6px;
     }
@@ -321,24 +320,24 @@
       </div>
     </div>
 
-    <!-- Panel Kanan: 2 Grafik Mandiri -->
+    <!-- Panel Kanan: 2 Grafik Sendiri-Sendiri -->
     <div class="right-panel clickable">
-      <!-- Grafik 1: Slave 1 (TDS Garam) -->
+      <!-- KOTAK GRAFIK 1: TDS GARAM (SLAVE 1) -->
       <div class="card-chart">
         <div class="card-title">
           <span>GRAFIK TDS GARAM (SLAVE 1)</span>
-          <span class="badge-node">PER JAM HARI INI</span>
+          <span class="badge-node">HARI INI (%)</span>
         </div>
         <div class="chart-container">
           <canvas id="saltChart"></canvas>
         </div>
       </div>
 
-      <!-- Grafik 2: Slave 2 (Suhu DHT22) -->
+      <!-- KOTAK GRAFIK 2: SUHU DHT22 (SLAVE 2) -->
       <div class="card-chart">
         <div class="card-title">
-          <span>GRAFIK SUHU RUANG DHT22 (SLAVE 2)</span>
-          <span class="badge-node cyan">PER JAM HARI INI</span>
+          <span>GRAFIK SUHU DHT22 (SLAVE 2)</span>
+          <span class="badge-node cyan">HARI INI (°C)</span>
         </div>
         <div class="chart-container">
           <canvas id="tempChart"></canvas>
@@ -626,12 +625,12 @@
       renderer.setSize(window.innerWidth, window.innerHeight);
     });
 
-    // --- 3. DUA GRAFIK MANDIRI (SLAVE 1 & SLAVE 2 PER JAM) ---
+    // --- 3. DUA GRAFIK MANDIRI SENDIRI-SENDIRI ---
     let saltChartInstance, tempChartInstance;
     function initCharts() {
       const hoursLabels = ['00:00', '03:00', '06:00', '09:00', '12:00', '15:00', '18:00', '21:00'];
       
-      // Setup Grafik 1: TDS Garam
+      // Grafik 1: TDS Garam (Slave 1)
       const ctxSalt = document.getElementById('saltChart').getContext('2d');
       saltChartInstance = new Chart(ctxSalt, {
         type: 'line',
@@ -644,7 +643,9 @@
             backgroundColor: 'rgba(255, 42, 133, 0.18)',
             borderWidth: 2,
             tension: 0.35,
-            fill: true
+            fill: true,
+            pointRadius: 2.5,
+            pointBackgroundColor: '#ff2a85'
           }]
         },
         options: {
@@ -654,17 +655,17 @@
           scales: {
             x: {
               grid: { color: 'rgba(255, 255, 255, 0.06)' },
-              ticks: { color: '#c084fc', font: { size: 8.5 } }
+              ticks: { color: '#c084fc', font: { size: 8 } }
             },
             y: {
               grid: { color: 'rgba(255, 42, 133, 0.12)' },
-              ticks: { color: '#ff2a85', font: { size: 8.5 } }
+              ticks: { color: '#ff2a85', font: { size: 8 } }
             }
           }
         }
       });
 
-      // Setup Grafik 2: Suhu DHT22
+      // Grafik 2: Suhu DHT22 (Slave 2)
       const ctxTemp = document.getElementById('tempChart').getContext('2d');
       tempChartInstance = new Chart(ctxTemp, {
         type: 'line',
@@ -677,7 +678,9 @@
             backgroundColor: 'rgba(0, 242, 254, 0.18)',
             borderWidth: 2,
             tension: 0.35,
-            fill: true
+            fill: true,
+            pointRadius: 2.5,
+            pointBackgroundColor: '#00f2fe'
           }]
         },
         options: {
@@ -687,11 +690,11 @@
           scales: {
             x: {
               grid: { color: 'rgba(255, 255, 255, 0.06)' },
-              ticks: { color: '#c084fc', font: { size: 8.5 } }
+              ticks: { color: '#c084fc', font: { size: 8 } }
             },
             y: {
               grid: { color: 'rgba(0, 242, 254, 0.12)' },
-              ticks: { color: '#00f2fe', font: { size: 8.5 } }
+              ticks: { color: '#00f2fe', font: { size: 8 } }
             }
           }
         }
