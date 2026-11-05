@@ -191,7 +191,7 @@
     }
     .btn-start:hover, .btn-selesai:hover { filter: brightness(1.15); }
 
-    /* Panel Kanan: 2 Kotak Grafik Mandiri */
+    /* Panel Kanan: 2 Kotak Grafik */
     .right-panel {
       position: absolute;
       top: 80px;
@@ -376,7 +376,7 @@
     renderer.shadowMap.enabled = true;
     container.appendChild(renderer.domElement);
 
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.65);
     scene.add(ambientLight);
 
     const pinkKeyLight = new THREE.PointLight(0xff2a85, 2.2, 30);
@@ -434,6 +434,7 @@
     lidMesh.position.set(0, 2.24, 0);
     lidGroup.add(lidMesh);
 
+    // Pegangan Tutup
     const handleGeo = new THREE.CylinderGeometry(0.1, 0.1, 1.2);
     const handleMat = new THREE.MeshStandardMaterial({ color: 0x00f2fe, metalness: 0.8 });
     const handleMesh = new THREE.Mesh(handleGeo, handleMat);
@@ -442,67 +443,68 @@
     lidGroup.add(handleMesh);
 
     // ========================================================
-    // MODUL SENSOR DHT22 POSISI BERDIRI TEGAK (VERTICAL MOUNT)
+    // MODUL SENSOR DHT22 BERDIRI TEGAK (TEPAT DI ATAS TUTUP)
     // ========================================================
     const dhtGroup = new THREE.Group();
-    dhtGroup.position.set(0.8, 2.33, 0); // Di atas pelat penutup
+    // Posisi di sisi kanan tutup, tegak berdiri mengarah ke atas (+Y)
+    dhtGroup.position.set(0.85, 2.33, 0);
 
-    // 1. PCB Hitam Modul Berdiri Tegak
-    const pcbGeo = new THREE.BoxGeometry(0.1, 1.6, 0.9);
-    const pcbMat = new THREE.MeshStandardMaterial({ color: 0x18181b, roughness: 0.5 });
+    // 1. PCB Hitam Modul Berdiri Vertikal
+    const pcbGeo = new THREE.BoxGeometry(0.85, 1.5, 0.08);
+    const pcbMat = new THREE.MeshStandardMaterial({ color: 0x18181b, roughness: 0.45 });
     const pcbMesh = new THREE.Mesh(pcbGeo, pcbMat);
-    pcbMesh.position.set(0, 0.8, 0);
+    pcbMesh.position.set(0, 0.75, 0);
     dhtGroup.add(pcbMesh);
 
-    // Lubang Baut / Sekrup pada PCB (Ring Perak di Sisi Atas PCB)
-    const holeGeo = new THREE.RingGeometry(0.08, 0.16, 16);
+    // Lubang Baut / Sekrup Perak di Ujung Atas PCB
+    const holeGeo = new THREE.RingGeometry(0.07, 0.15, 16);
     const holeMat = new THREE.MeshBasicMaterial({ color: 0xd4d4d8, side: THREE.DoubleSide });
     const holeMesh = new THREE.Mesh(holeGeo, holeMat);
-    holeMesh.rotation.y = Math.PI / 2;
-    holeMesh.position.set(-0.06, 1.35, 0);
+    holeMesh.position.set(0, 1.35, 0.045);
     dhtGroup.add(holeMesh);
 
-    // 2. Casing Putih Berdiri Menghadap ke Luar
-    const dhtBodyGeo = new THREE.BoxGeometry(0.45, 0.95, 0.8);
+    // 2. Bodi Putih DHT22 Berdiri Menghadap Depan (+Z)
+    const dhtBodyGeo = new THREE.BoxGeometry(0.75, 0.95, 0.38);
     const dhtBodyMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.3 });
     const dhtBody = new THREE.Mesh(dhtBodyGeo, dhtBodyMat);
-    dhtBody.position.set(0.28, 0.8, 0);
+    dhtBody.position.set(0, 0.7, 0.23);
     dhtGroup.add(dhtBody);
 
-    // Kuping Atas Sensor
-    const earGeo = new THREE.BoxGeometry(0.28, 0.22, 0.45);
+    // Kuping Pengait Atas Bodi Sensor
+    const earGeo = new THREE.BoxGeometry(0.42, 0.2, 0.24);
     const earMesh = new THREE.Mesh(earGeo, dhtBodyMat);
-    earMesh.position.set(0.2, 1.35, 0);
+    earMesh.position.set(0, 1.25, 0.16);
     dhtGroup.add(earMesh);
 
-    // Kisi-kisi Lubang Ventilasi Udara DHT22
-    const slotMat = new THREE.MeshBasicMaterial({ color: 0x475569 });
-    for (let ry = -0.3; ry <= 0.3; ry += 0.15) {
-      for (let rz = -0.24; rz <= 0.24; rz += 0.16) {
-        const ventHole = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.08, 0.07), slotMat);
-        ventHole.position.set(0.51, 0.8 + ry, rz);
+    // Kisi-kisi Lubang Ventilasi Udara DHT22 (Grid 3x4 Lubang)
+    const slotMat = new THREE.MeshBasicMaterial({ color: 0x334155 });
+    for (let rx = -0.2; rx <= 0.2; rx += 0.13) {
+      for (let ry = -0.28; ry <= 0.28; ry += 0.14) {
+        const ventHole = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.07, 0.02), slotMat);
+        ventHole.position.set(rx, 0.7 + ry, 0.43);
         dhtGroup.add(ventHole);
       }
     }
 
-    // 3. Empat Pin Logam Penyambung Bodi ke PCB
+    // 3. Empat Kaki Logam Penyambung Bodi ke PCB
     const legMat = new THREE.MeshStandardMaterial({ color: 0xd4d4d8, metalness: 0.9 });
-    for (let l = -0.22; l <= 0.22; l += 0.14) {
-      const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.12), legMat);
-      leg.rotation.z = Math.PI / 2;
-      leg.position.set(0.11, 0.38, l);
+    for (let l = -0.21; l <= 0.21; l += 0.14) {
+      const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.018, 0.018, 0.1), legMat);
+      leg.rotation.x = Math.PI / 2;
+      leg.position.set(l, 0.28, 0.09);
       dhtGroup.add(leg);
     }
 
-    // 4. Tiga Pin Header Bawah (Menembus ke Arah Tutup)
+    // 4. Header Pin Bawah (Kaki Pin Menancap ke Tutup)
     for (let p = -0.16; p <= 0.16; p += 0.16) {
-      const pinV = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, 0.22), legMat);
-      pinV.position.set(0, 0.05, p);
+      const pinV = new THREE.Mesh(new THREE.CylinderGeometry(0.022, 0.022, 0.2), legMat);
+      pinV.position.set(p, 0.05, 0);
       dhtGroup.add(pinV);
     }
+
     lidGroup.add(dhtGroup);
 
-    // Soket & Lampu
+    // Soket & Lampu di Bawah Tutup
     const socketGeo = new THREE.CylinderGeometry(0.4, 0.45, 0.25, 20);
     const socketMat = new THREE.MeshStandardMaterial({ color: 0x333333, metalness: 0.7 });
     const socketMesh = new THREE.Mesh(socketGeo, socketMat);
