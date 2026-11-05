@@ -190,16 +190,48 @@
     }
     .btn-start:hover, .btn-selesai:hover { filter: brightness(1.15); }
 
-    /* Panel Kanan: 2 Kotak Grafik Mandiri */
+    /* Panel Kanan: Grafik Mandiri & Selector Hari */
     .right-panel {
       position: absolute;
       top: 80px;
       right: 20px;
-      width: 330px;
+      width: 350px;
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      gap: 10px;
     }
+
+    .day-selector-bar {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      backdrop-filter: blur(14px);
+      border-radius: 12px;
+      padding: 8px 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 4px;
+    }
+    .day-btn {
+      flex: 1;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: var(--text-muted);
+      padding: 5px 0;
+      font-size: 10px;
+      font-weight: 700;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .day-btn:hover { background: rgba(0, 242, 254, 0.15); color: #fff; }
+    .day-btn.active {
+      background: linear-gradient(135deg, var(--neon-pink), #a855f7);
+      border-color: var(--neon-pink);
+      color: #fff;
+      box-shadow: 0 0 10px rgba(255, 42, 133, 0.5);
+    }
+
     .card-chart {
       background: var(--card-bg);
       border: 1px solid var(--card-border);
@@ -210,7 +242,7 @@
     }
     .chart-container {
       position: relative;
-      height: 120px;
+      height: 110px;
       width: 100%;
       margin-top: 6px;
     }
@@ -263,7 +295,7 @@
     <div class="top-bar clickable">
       <div class="brand-box">
         <h1>DIGITAL TWIN: WADAH KOTAK PENGASINAN TELUR</h1>
-        <p>● SENSOR DHT22 BERDIRI &amp; LUBANG PROBE TDS → LAMPU DALAM → GARAM KROSOK</p>
+        <p>● SENSOR DHT22 BERDIRI &amp; LUBANG PROBE TDS → RIWAYAT H1 - H7 TERSIMPAN</p>
       </div>
 
       <div class="warning-box" id="warningBox">
@@ -320,13 +352,24 @@
       </div>
     </div>
 
-    <!-- Panel Kanan: 2 Grafik Sendiri-Sendiri -->
+    <!-- Panel Kanan: Selector Hari & 2 Grafik Mandiri -->
     <div class="right-panel clickable">
+      <!-- Selector Riwayat Hari H1 - H7 -->
+      <div class="day-selector-bar">
+        <button class="day-btn active" id="btnDay1" onclick="switchDayView(1)">H1</button>
+        <button class="day-btn" id="btnDay2" onclick="switchDayView(2)">H2</button>
+        <button class="day-btn" id="btnDay3" onclick="switchDayView(3)">H3</button>
+        <button class="day-btn" id="btnDay4" onclick="switchDayView(4)">H4</button>
+        <button class="day-btn" id="btnDay5" onclick="switchDayView(5)">H5</button>
+        <button class="day-btn" id="btnDay6" onclick="switchDayView(6)">H6</button>
+        <button class="day-btn" id="btnDay7" onclick="switchDayView(7)">H7</button>
+      </div>
+
       <!-- Grafik 1: Slave 1 (TDS Garam) -->
       <div class="card-chart">
         <div class="card-title">
           <span>GRAFIK TDS GARAM (SLAVE 1)</span>
-          <span class="badge-node">HARI INI (%)</span>
+          <span class="badge-node" id="lblChartSalt">HARI 1 (%)</span>
         </div>
         <div class="chart-container">
           <canvas id="saltChart"></canvas>
@@ -337,7 +380,7 @@
       <div class="card-chart">
         <div class="card-title">
           <span>GRAFIK SUHU DHT22 (SLAVE 2)</span>
-          <span class="badge-node cyan">HARI INI (°C)</span>
+          <span class="badge-node cyan" id="lblChartTemp">HARI 1 (°C)</span>
         </div>
         <div class="chart-container">
           <canvas id="tempChart"></canvas>
@@ -441,27 +484,22 @@
     handleMesh.position.set(-1.0, 2.44, 0);
     lidGroup.add(handleMesh);
 
-    // ========================================================
-    // SENSOR DHT22 BERDIRI TEGAK DI ATAS TUTUP
-    // ========================================================
+    // MODUL SENSOR DHT22 BERDIRI TEGAK
     const dhtGroup = new THREE.Group();
     dhtGroup.position.set(0.85, 2.33, 0.6);
 
-    // 1. PCB Hitam Modul Berdiri Vertikal
     const pcbGeo = new THREE.BoxGeometry(0.85, 1.5, 0.08);
     const pcbMat = new THREE.MeshStandardMaterial({ color: 0x18181b, roughness: 0.45 });
     const pcbMesh = new THREE.Mesh(pcbGeo, pcbMat);
     pcbMesh.position.set(0, 0.75, 0);
     dhtGroup.add(pcbMesh);
 
-    // Lubang Baut Perak
     const dhtHoleGeo = new THREE.RingGeometry(0.07, 0.15, 16);
     const dhtHoleMat = new THREE.MeshBasicMaterial({ color: 0xd4d4d8, side: THREE.DoubleSide });
     const dhtHole = new THREE.Mesh(dhtHoleGeo, dhtHoleMat);
     dhtHole.position.set(0, 1.35, 0.045);
     dhtGroup.add(dhtHole);
 
-    // 2. Bodi Putih DHT22 Berdiri Menghadap Depan
     const dhtBodyGeo = new THREE.BoxGeometry(0.75, 0.95, 0.38);
     const dhtBodyMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.3 });
     const dhtBody = new THREE.Mesh(dhtBodyGeo, dhtBodyMat);
@@ -473,7 +511,6 @@
     earMesh.position.set(0, 1.25, 0.16);
     dhtGroup.add(earMesh);
 
-    // Kisi-kisi Lubang Ventilasi Udara DHT22
     const slotMat = new THREE.MeshBasicMaterial({ color: 0x334155 });
     for (let rx = -0.2; rx <= 0.2; rx += 0.13) {
       for (let ry = -0.28; ry <= 0.28; ry += 0.14) {
@@ -483,7 +520,6 @@
       }
     }
 
-    // Header Pin Kaki Bawah
     const legMat = new THREE.MeshStandardMaterial({ color: 0xd4d4d8, metalness: 0.9 });
     for (let p = -0.16; p <= 0.16; p += 0.16) {
       const pinV = new THREE.Mesh(new THREE.CylinderGeometry(0.022, 0.022, 0.2), legMat);
@@ -492,14 +528,10 @@
     }
     lidGroup.add(dhtGroup);
 
-    // ========================================================
-    // LUBANG PORT TUTUP & PROBE SENSOR TDS MASUK KE DALAM
-    // ========================================================
-    const tdsSystem = new THREE.Group();
+    // LUBANG PORT TUTUP & PROBE SENSOR TDS MASUK WADAH
     const portX = 0.85;
     const portZ = -0.95;
 
-    // 1. Cincin Karet Lubang Tutup (Grommet Rubber Port)
     const grommetGeo = new THREE.TorusGeometry(0.24, 0.06, 16, 32);
     const grommetMat = new THREE.MeshStandardMaterial({ color: 0x050505, roughness: 0.9 });
     const grommetMesh = new THREE.Mesh(grommetGeo, grommetMat);
@@ -507,7 +539,6 @@
     grommetMesh.position.set(portX, 2.34, portZ);
     lidGroup.add(grommetMesh);
 
-    // Lubang Bolong Hitam Tembus Tutup
     const holeDiscGeo = new THREE.CircleGeometry(0.23, 24);
     const holeDiscMat = new THREE.MeshBasicMaterial({ color: 0x000000 });
     const holeDisc = new THREE.Mesh(holeDiscGeo, holeDiscMat);
@@ -515,7 +546,6 @@
     holeDisc.position.set(portX, 2.335, portZ);
     lidGroup.add(holeDisc);
 
-    // 2. Kabel Hitam Melingkar di Atas Tutup lalu Menukik Masuk Lubang
     const cableCurve = new THREE.CatmullRomCurve3([
       new THREE.Vector3(portX - 0.7, 2.45, portZ - 0.4),
       new THREE.Vector3(portX - 0.4, 2.65, portZ + 0.3),
@@ -528,36 +558,30 @@
     const cableTopMesh = new THREE.Mesh(cableTopGeo, cableMat);
     lidGroup.add(cableTopMesh);
 
-    // 3. Kabel yang Turun Menembus dari Bawah Lubang Tutup ke Dalam Wadah
     const innerCableGeo = new THREE.CylinderGeometry(0.042, 0.042, 1.4, 16);
     const innerCable = new THREE.Mesh(innerCableGeo, cableMat);
     innerCable.position.set(portX, 1.5, portZ);
     groupTank.add(innerCable);
 
-    // 4. Bodi Probe Sensor TDS Putih (AMBIL DARI BENTUK FOTO PROBE TDS)
     const probeGroup = new THREE.Group();
     probeGroup.position.set(portX, 0.25, portZ);
 
-    // Collar / Leher Atas Bodi Probe
     const probeNeckGeo = new THREE.CylinderGeometry(0.09, 0.09, 0.35, 20);
     const probeWhiteMat = new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.35 });
     const probeNeck = new THREE.Mesh(probeNeckGeo, probeWhiteMat);
     probeNeck.position.y = 0.55;
     probeGroup.add(probeNeck);
 
-    // Bodi Silinder Utama Probe Putih
     const probeMainGeo = new THREE.CylinderGeometry(0.19, 0.19, 0.75, 24);
     const probeMain = new THREE.Mesh(probeMainGeo, probeWhiteMat);
     probeMain.position.y = 0.1;
     probeGroup.add(probeMain);
 
-    // Ujung Bawah Silinder Probe yang Mengecil
     const probeTipGeo = new THREE.CylinderGeometry(0.12, 0.12, 0.55, 20);
     const probeTip = new THREE.Mesh(probeTipGeo, probeWhiteMat);
     probeTip.position.y = -0.45;
     probeGroup.add(probeTip);
 
-    // Dua Jarum Logam Elektroda TDS di Ujung Bawah (Menembus Air ke Garam)
     const pinGeo = new THREE.CylinderGeometry(0.016, 0.016, 0.26, 12);
     const pinMat = new THREE.MeshStandardMaterial({ color: 0xe2e8f0, metalness: 0.95, roughness: 0.15 });
 
@@ -571,7 +595,7 @@
 
     groupTank.add(probeGroup);
 
-    // Soket & Lampu di Bawah Tutup
+    // Soket & Lampu
     const socketGeo = new THREE.CylinderGeometry(0.4, 0.45, 0.25, 20);
     const socketMat = new THREE.MeshStandardMaterial({ color: 0x333333, metalness: 0.7 });
     const socketMesh = new THREE.Mesh(socketGeo, socketMat);
@@ -700,12 +724,39 @@
       renderer.setSize(window.innerWidth, window.innerHeight);
     });
 
-    // --- 3. DUA GRAFIK MANDIRI SENDIRI-SENDIRI ---
+    // --- 3. LOGIKA PENYIMPANAN RIWAYAT GRAFIK H1 - H7 ---
+    const hoursLabels = ['00:00', '03:00', '06:00', '09:00', '12:00', '15:00', '18:00', '21:00'];
+    let selectedDayView = 1;
+    let historyDatabase = {};
+
+    function initHistoryDatabase() {
+      const stored = localStorage.getItem('telur_history_db');
+      if (stored) {
+        historyDatabase = JSON.parse(stored);
+      } else {
+        // Data inisialisasi baseline tren kenaikan TDS dan kurva suhu H1 - H7
+        historyDatabase = {
+          1: { salt: [14.0, 14.3, 14.6, 15.0, 15.5, 15.8, 15.5, 15.2], temp: [27.0, 26.8, 27.5, 30.2, 33.1, 32.5, 29.8, 28.5] },
+          2: { salt: [15.2, 15.4, 15.8, 16.2, 16.8, 17.0, 16.7, 16.5], temp: [27.2, 27.0, 27.8, 30.5, 33.5, 32.8, 30.1, 28.8] },
+          3: { salt: [16.5, 16.7, 17.0, 17.5, 18.2, 18.5, 18.2, 18.0], temp: [27.5, 27.2, 28.0, 31.0, 33.8, 33.0, 30.4, 29.0] },
+          4: { salt: [18.0, 18.2, 18.5, 19.0, 19.6, 19.9, 19.6, 19.4], temp: [27.4, 27.1, 28.2, 30.8, 33.6, 32.9, 30.2, 28.9] },
+          5: { salt: [19.4, 19.6, 20.0, 20.5, 21.0, 21.4, 21.1, 20.9], temp: [27.3, 27.0, 27.9, 30.7, 33.7, 33.1, 30.3, 28.7] },
+          6: { salt: [20.9, 21.1, 21.5, 22.0, 22.6, 23.0, 22.7, 22.5], temp: [27.6, 27.3, 28.1, 31.2, 34.0, 33.3, 30.5, 29.1] },
+          7: { salt: [22.5, 22.7, 23.0, 23.5, 24.2, 24.6, 24.3, 24.0], temp: [27.5, 27.2, 28.0, 31.0, 33.9, 33.2, 30.4, 29.0] }
+        };
+        saveHistoryDatabase();
+      }
+    }
+
+    function saveHistoryDatabase() {
+      localStorage.setItem('telur_history_db', JSON.stringify(historyDatabase));
+    }
+
     let saltChartInstance, tempChartInstance;
     function initCharts() {
-      const hoursLabels = ['00:00', '03:00', '06:00', '09:00', '12:00', '15:00', '18:00', '21:00'];
-      
-      // Grafik 1: TDS Garam (Slave 1)
+      initHistoryDatabase();
+
+      // Grafik 1: TDS Garam
       const ctxSalt = document.getElementById('saltChart').getContext('2d');
       saltChartInstance = new Chart(ctxSalt, {
         type: 'line',
@@ -713,7 +764,7 @@
           labels: hoursLabels,
           datasets: [{
             label: 'TDS Garam (%)',
-            data: [16.2, 16.4, 16.8, 17.5, 18.2, 18.9, 18.5, 18.1],
+            data: historyDatabase[selectedDayView].salt,
             borderColor: '#ff2a85',
             backgroundColor: 'rgba(255, 42, 133, 0.18)',
             borderWidth: 2,
@@ -740,7 +791,7 @@
         }
       });
 
-      // Grafik 2: Suhu DHT22 (Slave 2)
+      // Grafik 2: Suhu DHT22
       const ctxTemp = document.getElementById('tempChart').getContext('2d');
       tempChartInstance = new Chart(ctxTemp, {
         type: 'line',
@@ -748,7 +799,7 @@
           labels: hoursLabels,
           datasets: [{
             label: 'Suhu (°C)',
-            data: [27.5, 27.2, 28.1, 31.0, 33.8, 33.2, 30.5, 29.0],
+            data: historyDatabase[selectedDayView].temp,
             borderColor: '#00f2fe',
             backgroundColor: 'rgba(0, 242, 254, 0.18)',
             borderWidth: 2,
@@ -774,6 +825,29 @@
           }
         }
       });
+    }
+
+    function switchDayView(dayNum) {
+      selectedDayView = dayNum;
+
+      // Update state tombol hari
+      for (let i = 1; i <= 7; i++) {
+        const btn = document.getElementById(`btnDay${i}`);
+        if (btn) btn.classList.toggle('active', i === dayNum);
+      }
+
+      // Update label judul kartu
+      document.getElementById('lblChartSalt').innerText = `HARI ${dayNum} (%)`;
+      document.getElementById('lblChartTemp').innerText = `HARI ${dayNum} (°C)`;
+
+      // Render ulang data pada chart
+      if (saltChartInstance && tempChartInstance) {
+        saltChartInstance.data.datasets[0].data = historyDatabase[dayNum].salt;
+        saltChartInstance.update();
+
+        tempChartInstance.data.datasets[0].data = historyDatabase[dayNum].temp;
+        tempChartInstance.update();
+      }
     }
 
     // --- 4. TRACKER WAKTU PENGASINAN ---
@@ -816,13 +890,19 @@
     }
 
     function startBatchBaru() {
-      localStorage.setItem('telur_start_time', new Date().getTime());
-      updateTimerDisplay();
+      if (confirm("Mulai batch baru pengasinan telur? Riwayat akan diatur ulang.")) {
+        localStorage.setItem('telur_start_time', new Date().getTime());
+        localStorage.removeItem('telur_history_db');
+        initHistoryDatabase();
+        switchDayView(1);
+        updateTimerDisplay();
+      }
     }
 
     function simulasiSelesai() {
       localStorage.setItem('telur_start_time', new Date().getTime() - (8 * 24 * 60 * 60 * 1000));
       updateTimerDisplay();
+      switchDayView(7);
     }
 
     // --- 5. KONEKSI MQTT EMQX CLOUD ---
@@ -845,19 +925,39 @@
     client.on('message', (topic, message) => {
       const val = message.toString();
 
+      // Hitung hari berjalan saat ini (1 sampai 7)
+      const startTime = parseInt(localStorage.getItem('telur_start_time') || Date.now());
+      const currentDay = Math.min(Math.max(Math.floor((Date.now() - startTime) / (1000 * 60 * 60 * 24)) + 1, 1), 7);
+
       if (topic === 'telur/slave/1') {
+        const numVal = parseFloat(val);
         document.getElementById('valGaram').innerText = val;
-        if (saltChartInstance) {
-          saltChartInstance.data.datasets[0].data[saltChartInstance.data.datasets[0].data.length - 1] = parseFloat(val);
-          saltChartInstance.update('none');
+        
+        // Simpan titik data terakhir pada hari aktif
+        if (historyDatabase[currentDay]) {
+          const arr = historyDatabase[currentDay].salt;
+          arr[arr.length - 1] = numVal;
+          saveHistoryDatabase();
+          if (selectedDayView === currentDay && saltChartInstance) {
+            saltChartInstance.data.datasets[0].data = arr;
+            saltChartInstance.update('none');
+          }
         }
       } else if (topic === 'telur/slave/water') {
         document.getElementById('valWater').innerText = val;
       } else if (topic === 'telur/slave/2' || topic === 'telur/slave/suhu') {
+        const numVal = parseFloat(val);
         document.getElementById('valSuhuRuang').innerText = val;
-        if (tempChartInstance) {
-          tempChartInstance.data.datasets[0].data[tempChartInstance.data.datasets[0].data.length - 1] = parseFloat(val);
-          tempChartInstance.update('none');
+
+        // Simpan titik data terakhir pada hari aktif
+        if (historyDatabase[currentDay]) {
+          const arr = historyDatabase[currentDay].temp;
+          arr[arr.length - 1] = numVal;
+          saveHistoryDatabase();
+          if (selectedDayView === currentDay && tempChartInstance) {
+            tempChartInstance.data.datasets[0].data = arr;
+            tempChartInstance.update('none');
+          }
         }
       } else if (topic === 'telur/slave/hum') {
         document.getElementById('valHum').innerText = val + '%';
