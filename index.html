@@ -52,6 +52,7 @@
 
     .clickable { pointer-events: auto; }
 
+    /* Top Bar */
     .top-bar {
       display: flex;
       justify-content: space-between;
@@ -113,6 +114,7 @@
     .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--neon-pink); box-shadow: 0 0 10px var(--neon-pink); }
     .dot.offline { background: var(--neon-red); box-shadow: 0 0 10px var(--neon-red); }
 
+    /* Panel Kiri: Telemetri */
     .left-panel {
       position: absolute;
       top: 80px;
@@ -194,6 +196,7 @@
     }
     .btn-start:hover, .btn-selesai:hover { filter: brightness(1.15); }
 
+    /* Panel Kanan: Filter Hari Terkunci & Grafik */
     .right-panel {
       position: absolute;
       top: 80px;
@@ -211,30 +214,39 @@
       border-radius: 12px;
       padding: 6px 8px;
       display: flex;
-      justify-content: flex-start;
+      justify-content: space-between;
       align-items: center;
-      gap: 6px;
-      min-height: 38px;
+      gap: 5px;
     }
     .day-btn {
       flex: 1;
-      max-width: 55px;
       background: rgba(255, 255, 255, 0.05);
       border: 1px solid rgba(255, 255, 255, 0.12);
       color: var(--text-muted);
-      padding: 5px 0;
+      padding: 6px 0;
       font-size: 10px;
       font-weight: 700;
       border-radius: 6px;
       cursor: pointer;
       transition: all 0.2s;
     }
-    .day-btn:hover { background: rgba(0, 242, 254, 0.15); color: #fff; }
-    .day-btn.active {
-      background: linear-gradient(135deg, var(--neon-pink), #a855f7);
-      border-color: var(--neon-pink);
+    .day-btn:hover:not(:disabled) {
+      background: rgba(0, 242, 254, 0.15);
       color: #fff;
+    }
+    .day-btn.active {
+      background: linear-gradient(135deg, var(--neon-pink), #a855f7) !important;
+      border-color: var(--neon-pink) !important;
+      color: #fff !important;
       box-shadow: 0 0 10px rgba(255, 42, 133, 0.5);
+    }
+    /* Tombol Hari Masa Depan yang Dikunci */
+    .day-btn:disabled {
+      opacity: 0.25;
+      cursor: not-allowed;
+      border-color: rgba(255, 255, 255, 0.05);
+      color: #64748b;
+      background: rgba(0, 0, 0, 0.2);
     }
 
     .card-chart {
@@ -252,6 +264,7 @@
       margin-top: 6px;
     }
 
+    /* Bottom Bar */
     .bottom-bar {
       position: absolute;
       bottom: 20px;
@@ -295,6 +308,7 @@
   <div id="canvas3d"></div>
 
   <div class="hud-layer">
+    <!-- Top Bar -->
     <div class="top-bar clickable">
       <div class="brand-box">
         <h1>DIGITAL TWIN: WADAH KOTAK PENGASINAN TELUR</h1>
@@ -355,10 +369,17 @@
       </div>
     </div>
 
-    <!-- Panel Kanan: Selector Hari Dinamis & 2 Grafik -->
+    <!-- Panel Kanan: Tombol Hari Terproteksi & 2 Grafik -->
     <div class="right-panel clickable">
-      <!-- Container Tombol Hari (Otomatis Terbentuk Sesuai Hari Berjalan) -->
-      <div class="day-selector-bar" id="daySelectorContainer"></div>
+      <div class="day-selector-bar">
+        <button class="day-btn active" id="btnDay1" onclick="switchDayView(1)">H1</button>
+        <button class="day-btn" id="btnDay2" onclick="switchDayView(2)" disabled>H2</button>
+        <button class="day-btn" id="btnDay3" onclick="switchDayView(3)" disabled>H3</button>
+        <button class="day-btn" id="btnDay4" onclick="switchDayView(4)" disabled>H4</button>
+        <button class="day-btn" id="btnDay5" onclick="switchDayView(5)" disabled>H5</button>
+        <button class="day-btn" id="btnDay6" onclick="switchDayView(6)" disabled>H6</button>
+        <button class="day-btn" id="btnDay7" onclick="switchDayView(7)" disabled>H7</button>
+      </div>
 
       <div class="card-chart">
         <div class="card-title">
@@ -419,7 +440,7 @@
 
     if ('serviceWorker' in navigator) {
       const swCode = `
-        const CACHE_NAME = 'telur-3d-cache-v2';
+        const CACHE_NAME = 'telur-3d-cache-v3';
         const ASSETS = [
           './',
           'https://unpkg.com/mqtt/dist/mqtt.min.js',
@@ -757,9 +778,10 @@
       renderer.setSize(window.innerWidth, window.innerHeight);
     });
 
-    // --- 3. LOGIKA DATABASE RIWAYAT H1 - H7 ---
+    // --- 3. DATABASE RIWAYAT H1 - H7 & PENGUNCIAN HARI ---
     const hoursLabels = ['00:00', '03:00', '06:00', '09:00', '12:00', '15:00', '18:00', '21:00'];
     let selectedDayView = 1;
+    let currentAllowedMaxDay = 1; // Batas hari yang boleh diakses
     let historyDatabase = {};
 
     function initHistoryDatabase() {
@@ -795,7 +817,7 @@
           labels: hoursLabels,
           datasets: [{
             label: 'TDS Garam (%)',
-            data: (historyDatabase[selectedDayView] || historyDatabase[1]).salt,
+            data: historyDatabase[1].salt,
             borderColor: '#ff2a85',
             backgroundColor: 'rgba(255, 42, 133, 0.18)',
             borderWidth: 2,
@@ -829,7 +851,7 @@
           labels: hoursLabels,
           datasets: [{
             label: 'Suhu (°C)',
-            data: (historyDatabase[selectedDayView] || historyDatabase[1]).temp,
+            data: historyDatabase[1].temp,
             borderColor: '#00f2fe',
             backgroundColor: 'rgba(0, 242, 254, 0.18)',
             borderWidth: 2,
@@ -857,33 +879,39 @@
       });
     }
 
-    // FUNGSI DINAMIS: Render Tombol Hari Sesuai Hari Berjalan
-    function renderDayButtons(currentDay) {
-      const container = document.getElementById('daySelectorContainer');
-      const maxDay = Math.min(Math.max(currentDay, 1), 7);
-      
-      container.innerHTML = '';
-      for (let i = 1; i <= maxDay; i++) {
-        const btn = document.createElement('button');
-        btn.id = `btnDay${i}`;
-        btn.className = `day-btn ${i === selectedDayView ? 'active' : ''}`;
-        btn.innerText = `H${i}`;
-        btn.onclick = () => switchDayView(i);
-        container.appendChild(btn);
+    // FUNGSI KUNCI: Update tombol yang boleh diklik (1 s/d currentAllowedMaxDay)
+    function updateDayButtonsAccessibility(activeDay) {
+      currentAllowedMaxDay = Math.min(Math.max(activeDay, 1), 7);
+
+      for (let i = 1; i <= 7; i++) {
+        const btn = document.getElementById(`btnDay${i}`);
+        if (btn) {
+          if (i <= currentAllowedMaxDay) {
+            btn.removeAttribute('disabled');
+            btn.title = `Buka data Hari ${i}`;
+          } else {
+            btn.setAttribute('disabled', 'true');
+            btn.title = `Hari ${i} belum berlangsung`;
+          }
+        }
       }
 
-      // Pastikan hari yang sedang dipilih tidak melebihi hari berjalan
-      if (selectedDayView > maxDay) {
-        switchDayView(maxDay);
+      // Jika hari yang sedang tampil melebihi hari berjalan, kembalikan ke hari maksimal yang sah
+      if (selectedDayView > currentAllowedMaxDay) {
+        switchDayView(currentAllowedMaxDay);
       }
     }
 
     function switchDayView(dayNum) {
+      // PROTEKSI: Tolak jika mencoba klik hari masa depan
+      if (dayNum > currentAllowedMaxDay) return;
+
       selectedDayView = dayNum;
 
-      document.querySelectorAll('.day-btn').forEach((btn) => {
-        btn.classList.toggle('active', btn.id === `btnDay${dayNum}`);
-      });
+      for (let i = 1; i <= 7; i++) {
+        const btn = document.getElementById(`btnDay${i}`);
+        if (btn) btn.classList.toggle('active', i === dayNum);
+      }
 
       document.getElementById('lblChartSalt').innerText = `HARI ${dayNum} (%)`;
       document.getElementById('lblChartTemp').innerText = `HARI ${dayNum} (°C)`;
@@ -915,7 +943,7 @@
 
       const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
       const hours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-      const currentDayNumber = days + 1;
+      const currentDayNumber = days + 1; // Hari ke-1 jika 0 hari x jam
 
       document.getElementById('batchDayText').innerHTML = `${days} <span class="val-unit">Hari</span> ${hours} <span class="val-unit">Jam</span>`;
 
@@ -936,12 +964,12 @@
         warningBox.style.display = 'none';
       }
 
-      // Render tombol hari hanya sampai hari yang aktif saat ini
-      renderDayButtons(currentDayNumber);
+      // Kunci tombol hari secara ketat sesuai hari berjalan
+      updateDayButtonsAccessibility(currentDayNumber);
     }
 
     function startBatchBaru() {
-      if (confirm("Mulai batch baru pengasinan telur? Riwayat grafik akan diatur ulang ke Hari 1.")) {
+      if (confirm("Mulai batch baru pengasinan telur? Hari akan diatur ulang ke Hari 1.")) {
         localStorage.setItem('telur_start_time', new Date().getTime());
         localStorage.removeItem('telur_history_db');
         initHistoryDatabase();
