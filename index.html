@@ -191,29 +191,29 @@
     }
     .btn-start:hover, .btn-selesai:hover { filter: brightness(1.15); }
 
-    /* Panel Kanan: Grafik Harian Realtime */
+    /* Panel Kanan: 2 Grafik Mandiri */
     .right-panel {
       position: absolute;
       top: 80px;
       right: 20px;
-      width: 360px;
+      width: 350px;
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 12px;
     }
     .card-chart {
       background: var(--card-bg);
       border: 1px solid var(--card-border);
       backdrop-filter: blur(14px);
       border-radius: 14px;
-      padding: 14px 16px;
+      padding: 10px 14px;
       box-shadow: 0 10px 25px rgba(0, 0, 0, 0.45);
     }
     .chart-container {
       position: relative;
-      height: 230px;
+      height: 125px;
       width: 100%;
-      margin-top: 8px;
+      margin-top: 6px;
     }
 
     /* Bottom Bar */
@@ -321,18 +321,27 @@
       </div>
     </div>
 
-    <!-- Panel Kanan: Grafik Tren Harian -->
+    <!-- Panel Kanan: 2 Grafik Mandiri -->
     <div class="right-panel clickable">
+      <!-- Grafik 1: Slave 1 (TDS Garam) -->
       <div class="card-chart">
         <div class="card-title">
-          <span>GRAFIK HARIAN (SLAVE 1 &amp; SLAVE 2)</span>
-          <span class="badge-node cyan">HARI INI (JAM)</span>
+          <span>GRAFIK TDS GARAM (SLAVE 1)</span>
+          <span class="badge-node">PER JAM HARI INI</span>
         </div>
         <div class="chart-container">
-          <canvas id="dailyChart"></canvas>
+          <canvas id="saltChart"></canvas>
         </div>
-        <div class="card-meta" style="margin-top:8px; font-size:9.5px; text-align:center;">
-          ● Garis Pink: TDS Garam (%) &nbsp;|&nbsp; ● Garis Biru: Suhu Ruang (°C)
+      </div>
+
+      <!-- Grafik 2: Slave 2 (Suhu DHT22) -->
+      <div class="card-chart">
+        <div class="card-title">
+          <span>GRAFIK SUHU RUANG DHT22 (SLAVE 2)</span>
+          <span class="badge-node cyan">PER JAM HARI INI</span>
+        </div>
+        <div class="chart-container">
+          <canvas id="tempChart"></canvas>
         </div>
       </div>
     </div>
@@ -617,68 +626,72 @@
       renderer.setSize(window.innerWidth, window.innerHeight);
     });
 
-    // --- 3. GRAFIK HARIAN (SLAVE 1 & SLAVE 2 PER JAM) ---
-    let dailyChart;
-    function initChart() {
-      const ctx = document.getElementById('dailyChart').getContext('2d');
+    // --- 3. DUA GRAFIK MANDIRI (SLAVE 1 & SLAVE 2 PER JAM) ---
+    let saltChartInstance, tempChartInstance;
+    function initCharts() {
       const hoursLabels = ['00:00', '03:00', '06:00', '09:00', '12:00', '15:00', '18:00', '21:00'];
-      const saltDailyData = [16.2, 16.4, 16.8, 17.5, 18.2, 18.9, 18.5, 18.1];
-      const tempDailyData = [27.5, 27.2, 28.1, 31.0, 33.8, 33.2, 30.5, 29.0];
-
-      dailyChart = new Chart(ctx, {
+      
+      // Setup Grafik 1: TDS Garam
+      const ctxSalt = document.getElementById('saltChart').getContext('2d');
+      saltChartInstance = new Chart(ctxSalt, {
         type: 'line',
         data: {
           labels: hoursLabels,
-          datasets: [
-            {
-              label: 'TDS Garam (%)',
-              data: saltDailyData,
-              borderColor: '#ff2a85',
-              backgroundColor: 'rgba(255, 42, 133, 0.15)',
-              borderWidth: 2,
-              tension: 0.35,
-              yAxisID: 'y'
-            },
-            {
-              label: 'Suhu DHT22 (°C)',
-              data: tempDailyData,
-              borderColor: '#00f2fe',
-              backgroundColor: 'rgba(0, 242, 254, 0.15)',
-              borderWidth: 2,
-              tension: 0.35,
-              yAxisID: 'y1'
-            }
-          ]
+          datasets: [{
+            label: 'TDS Garam (%)',
+            data: [16.2, 16.4, 16.8, 17.5, 18.2, 18.9, 18.5, 18.1],
+            borderColor: '#ff2a85',
+            backgroundColor: 'rgba(255, 42, 133, 0.18)',
+            borderWidth: 2,
+            tension: 0.35,
+            fill: true
+          }]
         },
         options: {
           responsive: true,
           maintainAspectRatio: false,
-          interaction: { mode: 'index', intersect: false },
-          plugins: {
-            legend: {
-              labels: { color: '#fdf2f8', font: { size: 9.5 } }
-            }
-          },
+          plugins: { legend: { display: false } },
           scales: {
             x: {
-              grid: { color: 'rgba(255, 255, 255, 0.08)' },
-              ticks: { color: '#c084fc', font: { size: 9 } }
+              grid: { color: 'rgba(255, 255, 255, 0.06)' },
+              ticks: { color: '#c084fc', font: { size: 8.5 } }
             },
             y: {
-              type: 'linear',
-              display: true,
-              position: 'left',
               grid: { color: 'rgba(255, 42, 133, 0.12)' },
-              ticks: { color: '#ff2a85', font: { size: 9 } },
-              title: { display: true, text: 'TDS %', color: '#ff2a85', font: { size: 9 } }
+              ticks: { color: '#ff2a85', font: { size: 8.5 } }
+            }
+          }
+        }
+      });
+
+      // Setup Grafik 2: Suhu DHT22
+      const ctxTemp = document.getElementById('tempChart').getContext('2d');
+      tempChartInstance = new Chart(ctxTemp, {
+        type: 'line',
+        data: {
+          labels: hoursLabels,
+          datasets: [{
+            label: 'Suhu (°C)',
+            data: [27.5, 27.2, 28.1, 31.0, 33.8, 33.2, 30.5, 29.0],
+            borderColor: '#00f2fe',
+            backgroundColor: 'rgba(0, 242, 254, 0.18)',
+            borderWidth: 2,
+            tension: 0.35,
+            fill: true
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: {
+              grid: { color: 'rgba(255, 255, 255, 0.06)' },
+              ticks: { color: '#c084fc', font: { size: 8.5 } }
             },
-            y1: {
-              type: 'linear',
-              display: true,
-              position: 'right',
-              grid: { drawOnChartArea: false },
-              ticks: { color: '#00f2fe', font: { size: 9 } },
-              title: { display: true, text: 'Suhu °C', color: '#00f2fe', font: { size: 9 } }
+            y: {
+              grid: { color: 'rgba(0, 242, 254, 0.12)' },
+              ticks: { color: '#00f2fe', font: { size: 8.5 } }
             }
           }
         }
@@ -756,17 +769,17 @@
 
       if (topic === 'telur/slave/1') {
         document.getElementById('valGaram').innerText = val;
-        if (dailyChart) {
-          dailyChart.data.datasets[0].data[dailyChart.data.datasets[0].data.length - 1] = parseFloat(val);
-          dailyChart.update('none');
+        if (saltChartInstance) {
+          saltChartInstance.data.datasets[0].data[saltChartInstance.data.datasets[0].data.length - 1] = parseFloat(val);
+          saltChartInstance.update('none');
         }
       } else if (topic === 'telur/slave/water') {
         document.getElementById('valWater').innerText = val;
       } else if (topic === 'telur/slave/2' || topic === 'telur/slave/suhu') {
         document.getElementById('valSuhuRuang').innerText = val;
-        if (dailyChart) {
-          dailyChart.data.datasets[1].data[dailyChart.data.datasets[1].data.length - 1] = parseFloat(val);
-          dailyChart.update('none');
+        if (tempChartInstance) {
+          tempChartInstance.data.datasets[0].data[tempChartInstance.data.datasets[0].data.length - 1] = parseFloat(val);
+          tempChartInstance.update('none');
         }
       } else if (topic === 'telur/slave/hum') {
         document.getElementById('valHum').innerText = val + '%';
@@ -784,7 +797,7 @@
       bulbMat.color.setHex(state ? 0xffaa00 : 0x555555);
     }
 
-    initChart();
+    initCharts();
     initBatchTimer();
   </script>
 </body>
