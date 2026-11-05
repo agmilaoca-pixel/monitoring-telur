@@ -190,48 +190,16 @@
     }
     .btn-start:hover, .btn-selesai:hover { filter: brightness(1.15); }
 
-    /* Panel Kanan: Grafik Mandiri & Selector Hari */
+    /* Panel Kanan: Grafik H1 - H8 */
     .right-panel {
       position: absolute;
       top: 80px;
       right: 20px;
-      width: 350px;
+      width: 330px;
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 12px;
     }
-
-    .day-selector-bar {
-      background: var(--card-bg);
-      border: 1px solid var(--card-border);
-      backdrop-filter: blur(14px);
-      border-radius: 12px;
-      padding: 8px 10px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 4px;
-    }
-    .day-btn {
-      flex: 1;
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      color: var(--text-muted);
-      padding: 5px 0;
-      font-size: 10px;
-      font-weight: 700;
-      border-radius: 6px;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-    .day-btn:hover { background: rgba(0, 242, 254, 0.15); color: #fff; }
-    .day-btn.active {
-      background: linear-gradient(135deg, var(--neon-pink), #a855f7);
-      border-color: var(--neon-pink);
-      color: #fff;
-      box-shadow: 0 0 10px rgba(255, 42, 133, 0.5);
-    }
-
     .card-chart {
       background: var(--card-bg);
       border: 1px solid var(--card-border);
@@ -242,7 +210,7 @@
     }
     .chart-container {
       position: relative;
-      height: 110px;
+      height: 120px;
       width: 100%;
       margin-top: 6px;
     }
@@ -295,7 +263,7 @@
     <div class="top-bar clickable">
       <div class="brand-box">
         <h1>DIGITAL TWIN: WADAH KOTAK PENGASINAN TELUR</h1>
-        <p>● SENSOR DHT22 BERDIRI &amp; LUBANG PROBE TDS → RIWAYAT H1 - H7 TERSIMPAN</p>
+        <p>● SENSOR DHT22 BERDIRI &amp; LUBANG PROBE TDS → TREN HARI KE-1 s/d HARI KE-8</p>
       </div>
 
       <div class="warning-box" id="warningBox">
@@ -352,35 +320,24 @@
       </div>
     </div>
 
-    <!-- Panel Kanan: Selector Hari & 2 Grafik Mandiri -->
+    <!-- Panel Kanan: Grafik H1 s/d H8 Tersimpan -->
     <div class="right-panel clickable">
-      <!-- Selector Riwayat Hari H1 - H7 -->
-      <div class="day-selector-bar">
-        <button class="day-btn active" id="btnDay1" onclick="switchDayView(1)">H1</button>
-        <button class="day-btn" id="btnDay2" onclick="switchDayView(2)">H2</button>
-        <button class="day-btn" id="btnDay3" onclick="switchDayView(3)">H3</button>
-        <button class="day-btn" id="btnDay4" onclick="switchDayView(4)">H4</button>
-        <button class="day-btn" id="btnDay5" onclick="switchDayView(5)">H5</button>
-        <button class="day-btn" id="btnDay6" onclick="switchDayView(6)">H6</button>
-        <button class="day-btn" id="btnDay7" onclick="switchDayView(7)">H7</button>
-      </div>
-
-      <!-- Grafik 1: Slave 1 (TDS Garam) -->
+      <!-- Grafik 1: Slave 1 (TDS Garam H1 - H8) -->
       <div class="card-chart">
         <div class="card-title">
-          <span>GRAFIK TDS GARAM (SLAVE 1)</span>
-          <span class="badge-node" id="lblChartSalt">HARI 1 (%)</span>
+          <span>TREN TDS GARAM (SLAVE 1)</span>
+          <span class="badge-node">H1 - H8 (%)</span>
         </div>
         <div class="chart-container">
           <canvas id="saltChart"></canvas>
         </div>
       </div>
 
-      <!-- Grafik 2: Slave 2 (Suhu DHT22) -->
+      <!-- Grafik 2: Slave 2 (Suhu DHT22 H1 - H8) -->
       <div class="card-chart">
         <div class="card-title">
-          <span>GRAFIK SUHU DHT22 (SLAVE 2)</span>
-          <span class="badge-node cyan" id="lblChartTemp">HARI 1 (°C)</span>
+          <span>TREN SUHU RUANG DHT22 (SLAVE 2)</span>
+          <span class="badge-node cyan">H1 - H8 (°C)</span>
         </div>
         <div class="chart-container">
           <canvas id="tempChart"></canvas>
@@ -484,7 +441,7 @@
     handleMesh.position.set(-1.0, 2.44, 0);
     lidGroup.add(handleMesh);
 
-    // MODUL SENSOR DHT22 BERDIRI TEGAK
+    // SENSOR DHT22 BERDIRI TEGAK
     const dhtGroup = new THREE.Group();
     dhtGroup.position.set(0.85, 2.33, 0.6);
 
@@ -528,7 +485,7 @@
     }
     lidGroup.add(dhtGroup);
 
-    // LUBANG PORT TUTUP & PROBE SENSOR TDS MASUK WADAH
+    // LUBANG PORT TUTUP & PROBE SENSOR TDS MASUK KE WADAH
     const portX = 0.85;
     const portZ = -0.95;
 
@@ -724,53 +681,46 @@
       renderer.setSize(window.innerWidth, window.innerHeight);
     });
 
-    // --- 3. LOGIKA PENYIMPANAN RIWAYAT GRAFIK H1 - H7 ---
-    const hoursLabels = ['00:00', '03:00', '06:00', '09:00', '12:00', '15:00', '18:00', '21:00'];
-    let selectedDayView = 1;
-    let historyDatabase = {};
+    // --- 3. LOGIKA PENYIMPANAN DATA GRAFIK H1 - H8 ---
+    const dayLabelsH1H8 = ['H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'H7', 'H8'];
+    let saltDataH1H8 = [14.5, 16.2, 17.8, 19.5, 21.0, 22.8, 24.5, 25.0];
+    let tempDataH1H8 = [28.2, 29.5, 30.1, 31.8, 32.5, 33.0, 32.8, 32.0];
 
     function initHistoryDatabase() {
-      const stored = localStorage.getItem('telur_history_db');
-      if (stored) {
-        historyDatabase = JSON.parse(stored);
+      const storedSalt = localStorage.getItem('telur_salt_h1_h8');
+      const storedTemp = localStorage.getItem('telur_temp_h1_h8');
+      if (storedSalt && storedTemp) {
+        saltDataH1H8 = JSON.parse(storedSalt);
+        tempDataH1H8 = JSON.parse(storedTemp);
       } else {
-        // Data inisialisasi baseline tren kenaikan TDS dan kurva suhu H1 - H7
-        historyDatabase = {
-          1: { salt: [14.0, 14.3, 14.6, 15.0, 15.5, 15.8, 15.5, 15.2], temp: [27.0, 26.8, 27.5, 30.2, 33.1, 32.5, 29.8, 28.5] },
-          2: { salt: [15.2, 15.4, 15.8, 16.2, 16.8, 17.0, 16.7, 16.5], temp: [27.2, 27.0, 27.8, 30.5, 33.5, 32.8, 30.1, 28.8] },
-          3: { salt: [16.5, 16.7, 17.0, 17.5, 18.2, 18.5, 18.2, 18.0], temp: [27.5, 27.2, 28.0, 31.0, 33.8, 33.0, 30.4, 29.0] },
-          4: { salt: [18.0, 18.2, 18.5, 19.0, 19.6, 19.9, 19.6, 19.4], temp: [27.4, 27.1, 28.2, 30.8, 33.6, 32.9, 30.2, 28.9] },
-          5: { salt: [19.4, 19.6, 20.0, 20.5, 21.0, 21.4, 21.1, 20.9], temp: [27.3, 27.0, 27.9, 30.7, 33.7, 33.1, 30.3, 28.7] },
-          6: { salt: [20.9, 21.1, 21.5, 22.0, 22.6, 23.0, 22.7, 22.5], temp: [27.6, 27.3, 28.1, 31.2, 34.0, 33.3, 30.5, 29.1] },
-          7: { salt: [22.5, 22.7, 23.0, 23.5, 24.2, 24.6, 24.3, 24.0], temp: [27.5, 27.2, 28.0, 31.0, 33.9, 33.2, 30.4, 29.0] }
-        };
         saveHistoryDatabase();
       }
     }
 
     function saveHistoryDatabase() {
-      localStorage.setItem('telur_history_db', JSON.stringify(historyDatabase));
+      localStorage.setItem('telur_salt_h1_h8', JSON.stringify(saltDataH1H8));
+      localStorage.setItem('telur_temp_h1_h8', JSON.stringify(tempDataH1H8));
     }
 
     let saltChartInstance, tempChartInstance;
     function initCharts() {
       initHistoryDatabase();
 
-      // Grafik 1: TDS Garam
+      // Grafik 1: TDS Garam H1 s/d H8
       const ctxSalt = document.getElementById('saltChart').getContext('2d');
       saltChartInstance = new Chart(ctxSalt, {
         type: 'line',
         data: {
-          labels: hoursLabels,
+          labels: dayLabelsH1H8,
           datasets: [{
             label: 'TDS Garam (%)',
-            data: historyDatabase[selectedDayView].salt,
+            data: saltDataH1H8,
             borderColor: '#ff2a85',
             backgroundColor: 'rgba(255, 42, 133, 0.18)',
-            borderWidth: 2,
+            borderWidth: 2.2,
             tension: 0.35,
             fill: true,
-            pointRadius: 2.5,
+            pointRadius: 3.5,
             pointBackgroundColor: '#ff2a85'
           }]
         },
@@ -780,32 +730,32 @@
           plugins: { legend: { display: false } },
           scales: {
             x: {
-              grid: { color: 'rgba(255, 255, 255, 0.06)' },
-              ticks: { color: '#c084fc', font: { size: 8 } }
+              grid: { color: 'rgba(255, 255, 255, 0.08)' },
+              ticks: { color: '#c084fc', font: { size: 9, weight: 'bold' } }
             },
             y: {
               grid: { color: 'rgba(255, 42, 133, 0.12)' },
-              ticks: { color: '#ff2a85', font: { size: 8 } }
+              ticks: { color: '#ff2a85', font: { size: 8.5 } }
             }
           }
         }
       });
 
-      // Grafik 2: Suhu DHT22
+      // Grafik 2: Suhu Ruang DHT22 H1 s/d H8
       const ctxTemp = document.getElementById('tempChart').getContext('2d');
       tempChartInstance = new Chart(ctxTemp, {
         type: 'line',
         data: {
-          labels: hoursLabels,
+          labels: dayLabelsH1H8,
           datasets: [{
             label: 'Suhu (°C)',
-            data: historyDatabase[selectedDayView].temp,
+            data: tempDataH1H8,
             borderColor: '#00f2fe',
             backgroundColor: 'rgba(0, 242, 254, 0.18)',
-            borderWidth: 2,
+            borderWidth: 2.2,
             tension: 0.35,
             fill: true,
-            pointRadius: 2.5,
+            pointRadius: 3.5,
             pointBackgroundColor: '#00f2fe'
           }]
         },
@@ -815,39 +765,16 @@
           plugins: { legend: { display: false } },
           scales: {
             x: {
-              grid: { color: 'rgba(255, 255, 255, 0.06)' },
-              ticks: { color: '#c084fc', font: { size: 8 } }
+              grid: { color: 'rgba(255, 255, 255, 0.08)' },
+              ticks: { color: '#c084fc', font: { size: 9, weight: 'bold' } }
             },
             y: {
               grid: { color: 'rgba(0, 242, 254, 0.12)' },
-              ticks: { color: '#00f2fe', font: { size: 8 } }
+              ticks: { color: '#00f2fe', font: { size: 8.5 } }
             }
           }
         }
       });
-    }
-
-    function switchDayView(dayNum) {
-      selectedDayView = dayNum;
-
-      // Update state tombol hari
-      for (let i = 1; i <= 7; i++) {
-        const btn = document.getElementById(`btnDay${i}`);
-        if (btn) btn.classList.toggle('active', i === dayNum);
-      }
-
-      // Update label judul kartu
-      document.getElementById('lblChartSalt').innerText = `HARI ${dayNum} (%)`;
-      document.getElementById('lblChartTemp').innerText = `HARI ${dayNum} (°C)`;
-
-      // Render ulang data pada chart
-      if (saltChartInstance && tempChartInstance) {
-        saltChartInstance.data.datasets[0].data = historyDatabase[dayNum].salt;
-        saltChartInstance.update();
-
-        tempChartInstance.data.datasets[0].data = historyDatabase[dayNum].temp;
-        tempChartInstance.update();
-      }
     }
 
     // --- 4. TRACKER WAKTU PENGASINAN ---
@@ -890,11 +817,19 @@
     }
 
     function startBatchBaru() {
-      if (confirm("Mulai batch baru pengasinan telur? Riwayat akan diatur ulang.")) {
+      if (confirm("Mulai batch baru pengasinan telur? Riwayat grafik akan direset.")) {
         localStorage.setItem('telur_start_time', new Date().getTime());
-        localStorage.removeItem('telur_history_db');
-        initHistoryDatabase();
-        switchDayView(1);
+        localStorage.removeItem('telur_salt_h1_h8');
+        localStorage.removeItem('telur_temp_h1_h8');
+        saltDataH1H8 = [14.5, 16.2, 17.8, 19.5, 21.0, 22.8, 24.5, 25.0];
+        tempDataH1H8 = [28.2, 29.5, 30.1, 31.8, 32.5, 33.0, 32.8, 32.0];
+        saveHistoryDatabase();
+        if (saltChartInstance && tempChartInstance) {
+          saltChartInstance.data.datasets[0].data = saltDataH1H8;
+          saltChartInstance.update();
+          tempChartInstance.data.datasets[0].data = tempDataH1H8;
+          tempChartInstance.update();
+        }
         updateTimerDisplay();
       }
     }
@@ -902,7 +837,6 @@
     function simulasiSelesai() {
       localStorage.setItem('telur_start_time', new Date().getTime() - (8 * 24 * 60 * 60 * 1000));
       updateTimerDisplay();
-      switchDayView(7);
     }
 
     // --- 5. KONEKSI MQTT EMQX CLOUD ---
@@ -925,23 +859,20 @@
     client.on('message', (topic, message) => {
       const val = message.toString();
 
-      // Hitung hari berjalan saat ini (1 sampai 7)
+      // Hitung index hari keberapa (0 = H1, 7 = H8)
       const startTime = parseInt(localStorage.getItem('telur_start_time') || Date.now());
-      const currentDay = Math.min(Math.max(Math.floor((Date.now() - startTime) / (1000 * 60 * 60 * 24)) + 1, 1), 7);
+      const dayIdx = Math.min(Math.max(Math.floor((Date.now() - startTime) / (1000 * 60 * 60 * 24)), 0), 7);
 
       if (topic === 'telur/slave/1') {
         const numVal = parseFloat(val);
         document.getElementById('valGaram').innerText = val;
         
-        // Simpan titik data terakhir pada hari aktif
-        if (historyDatabase[currentDay]) {
-          const arr = historyDatabase[currentDay].salt;
-          arr[arr.length - 1] = numVal;
-          saveHistoryDatabase();
-          if (selectedDayView === currentDay && saltChartInstance) {
-            saltChartInstance.data.datasets[0].data = arr;
-            saltChartInstance.update('none');
-          }
+        // Simpan titik data hari yang sedang berjalan
+        saltDataH1H8[dayIdx] = numVal;
+        saveHistoryDatabase();
+        if (saltChartInstance) {
+          saltChartInstance.data.datasets[0].data = saltDataH1H8;
+          saltChartInstance.update('none');
         }
       } else if (topic === 'telur/slave/water') {
         document.getElementById('valWater').innerText = val;
@@ -949,15 +880,12 @@
         const numVal = parseFloat(val);
         document.getElementById('valSuhuRuang').innerText = val;
 
-        // Simpan titik data terakhir pada hari aktif
-        if (historyDatabase[currentDay]) {
-          const arr = historyDatabase[currentDay].temp;
-          arr[arr.length - 1] = numVal;
-          saveHistoryDatabase();
-          if (selectedDayView === currentDay && tempChartInstance) {
-            tempChartInstance.data.datasets[0].data = arr;
-            tempChartInstance.update('none');
-          }
+        // Simpan titik data hari yang sedang berjalan
+        tempDataH1H8[dayIdx] = numVal;
+        saveHistoryDatabase();
+        if (tempChartInstance) {
+          tempChartInstance.data.datasets[0].data = tempDataH1H8;
+          tempChartInstance.update('none');
         }
       } else if (topic === 'telur/slave/hum') {
         document.getElementById('valHum').innerText = val + '%';
