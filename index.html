@@ -108,22 +108,28 @@
     }
     .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--neon-pink); box-shadow: 0 0 10px var(--neon-pink); }
 
-    /* Panel Kiri: Telemetri */
+    /* Panel Kiri: Telemetri & Grafik Progres H1-H Sekarang */
     .left-panel {
       position: absolute;
       top: 80px;
       left: 20px;
-      width: 285px;
+      width: 295px;
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 8px;
+      max-height: calc(100vh - 160px);
+      overflow-y: auto;
+      padding-right: 4px;
     }
+    .left-panel::-webkit-scrollbar { width: 4px; }
+    .left-panel::-webkit-scrollbar-thumb { background: var(--card-border); border-radius: 4px; }
+
     .card-hud {
       background: var(--card-bg);
       border: 1px solid var(--card-border);
       backdrop-filter: blur(14px);
       border-radius: 14px;
-      padding: 12px 14px;
+      padding: 10px 14px;
       box-shadow: 0 10px 25px rgba(0, 0, 0, 0.45);
     }
     .card-title {
@@ -149,29 +155,34 @@
       color: var(--neon-cyan);
       border-color: rgba(0, 242, 254, 0.4);
     }
+    .badge-node.yellow {
+      background: rgba(253, 224, 71, 0.18);
+      color: var(--neon-yellow);
+      border-color: rgba(253, 224, 71, 0.4);
+    }
     .val-main {
-      font-size: 24px;
+      font-size: 22px;
       font-weight: 800;
       color: #fff;
-      margin: 4px 0 2px 0;
+      margin: 3px 0 2px 0;
       text-shadow: 0 0 16px rgba(255, 42, 133, 0.35);
     }
-    .val-unit { font-size: 14px; color: var(--neon-yellow); font-weight: 600; }
-    .card-meta { font-size: 10px; color: #d8b4fe; }
+    .val-unit { font-size: 13px; color: var(--neon-yellow); font-weight: 600; }
+    .card-meta { font-size: 9.5px; color: #d8b4fe; }
 
     .btn-group-timer {
       display: flex;
       gap: 8px;
-      margin-top: 8px;
+      margin-top: 6px;
     }
     .btn-start {
       flex: 1;
       background: linear-gradient(135deg, var(--neon-pink), #a855f7);
       border: none;
       color: white;
-      padding: 6px 8px;
+      padding: 5px 8px;
       border-radius: 8px;
-      font-size: 10.5px;
+      font-size: 10px;
       font-weight: 700;
       cursor: pointer;
       box-shadow: 0 0 10px rgba(255, 42, 133, 0.4);
@@ -181,21 +192,37 @@
       background: linear-gradient(135deg, #ef4444, #b91c1c);
       border: 1px solid #f87171;
       color: white;
-      padding: 6px 8px;
+      padding: 5px 8px;
       border-radius: 8px;
-      font-size: 10.5px;
+      font-size: 10px;
       font-weight: 700;
       cursor: pointer;
       box-shadow: 0 0 10px rgba(239, 68, 68, 0.4);
     }
     .btn-start:hover, .btn-selesai:hover { filter: brightness(1.15); }
 
-    /* Panel Kanan: Grafik H1 - H8 */
+    /* Kartu Grafik Bawah Suhu Ruang */
+    .card-progress-chart {
+      background: var(--card-bg);
+      border: 1px solid rgba(0, 242, 254, 0.35);
+      backdrop-filter: blur(14px);
+      border-radius: 14px;
+      padding: 10px 12px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.45);
+    }
+    .progress-chart-container {
+      position: relative;
+      height: 110px;
+      width: 100%;
+      margin-top: 6px;
+    }
+
+    /* Panel Kanan: Grafik Lengkap H1 - H8 */
     .right-panel {
       position: absolute;
       top: 80px;
       right: 20px;
-      width: 330px;
+      width: 320px;
       display: flex;
       flex-direction: column;
       gap: 12px;
@@ -263,7 +290,7 @@
     <div class="top-bar clickable">
       <div class="brand-box">
         <h1>DIGITAL TWIN: WADAH KOTAK PENGASINAN TELUR</h1>
-        <p>● SENSOR DHT22 BERDIRI &amp; LUBANG PROBE TDS → TREN HARI KE-1 s/d HARI KE-8</p>
+        <p>● SENSOR DHT22 BERDIRI &amp; LUBANG PROBE TDS → HASIL GRAFIK H1 - H SEKARANG</p>
       </div>
 
       <div class="warning-box" id="warningBox">
@@ -276,7 +303,7 @@
       </div>
     </div>
 
-    <!-- Panel Kiri: Telemetri -->
+    <!-- Panel Kiri: Telemetri & Grafik Progres H1-Sekarang -->
     <div class="left-panel clickable">
       <div class="card-hud">
         <div class="card-title">
@@ -318,11 +345,24 @@
         <div class="val-main"><span id="valSuhuRuang">0.0</span> <span class="val-unit">°C</span></div>
         <div class="card-meta">KELEMBABAN: <span id="valHum" style="color:var(--neon-pink); font-weight:700;">0.0%</span></div>
       </div>
+
+      <!-- GRAFIK HASIL PENGASINAN H1 - H SEKARANG (DI BAWAH SUHU RUANG) -->
+      <div class="card-progress-chart">
+        <div class="card-title">
+          <span>HASIL PENGASINAN (H1 - H SEKARANG)</span>
+          <span class="badge-node yellow" id="badgeCurrentDayProg">H1</span>
+        </div>
+        <div class="progress-chart-container">
+          <canvas id="progressChart"></canvas>
+        </div>
+        <div class="card-meta" style="margin-top:4px; font-size:8.5px; text-align:center;">
+          ● Pink: TDS Garam (%) &nbsp;|&nbsp; ● Cyan: Suhu (°C)
+        </div>
+      </div>
     </div>
 
-    <!-- Panel Kanan: Grafik H1 s/d H8 Tersimpan -->
+    <!-- Panel Kanan: Grafik Lengkap H1 - H8 -->
     <div class="right-panel clickable">
-      <!-- Grafik 1: Slave 1 (TDS Garam H1 - H8) -->
       <div class="card-chart">
         <div class="card-title">
           <span>TREN TDS GARAM (SLAVE 1)</span>
@@ -333,7 +373,6 @@
         </div>
       </div>
 
-      <!-- Grafik 2: Slave 2 (Suhu DHT22 H1 - H8) -->
       <div class="card-chart">
         <div class="card-title">
           <span>TREN SUHU RUANG DHT22 (SLAVE 2)</span>
@@ -485,7 +524,7 @@
     }
     lidGroup.add(dhtGroup);
 
-    // LUBANG PORT TUTUP & PROBE SENSOR TDS MASUK KE WADAH
+    // LUBANG PORT TUTUP & PROBE SENSOR TDS MASUK WADAH
     const portX = 0.85;
     const portZ = -0.95;
 
@@ -681,8 +720,8 @@
       renderer.setSize(window.innerWidth, window.innerHeight);
     });
 
-    // --- 3. LOGIKA PENYIMPANAN DATA GRAFIK H1 - H8 ---
-    const dayLabelsH1H8 = ['H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'H7', 'H8'];
+    // --- 3. LOGIKA DATA GRAFIK H1 - H8 & GRAFIK PROGRES H1-SEKARANG ---
+    const allDaysLabels = ['H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'H7', 'H8'];
     let saltDataH1H8 = [14.5, 16.2, 17.8, 19.5, 21.0, 22.8, 24.5, 25.0];
     let tempDataH1H8 = [28.2, 29.5, 30.1, 31.8, 32.5, 33.0, 32.8, 32.0];
 
@@ -702,25 +741,26 @@
       localStorage.setItem('telur_temp_h1_h8', JSON.stringify(tempDataH1H8));
     }
 
-    let saltChartInstance, tempChartInstance;
+    let saltChartInstance, tempChartInstance, progressChartInstance;
+
     function initCharts() {
       initHistoryDatabase();
 
-      // Grafik 1: TDS Garam H1 s/d H8
+      // 1. Grafik Kanan Atas: TDS Garam H1 s/d H8
       const ctxSalt = document.getElementById('saltChart').getContext('2d');
       saltChartInstance = new Chart(ctxSalt, {
         type: 'line',
         data: {
-          labels: dayLabelsH1H8,
+          labels: allDaysLabels,
           datasets: [{
             label: 'TDS Garam (%)',
             data: saltDataH1H8,
             borderColor: '#ff2a85',
             backgroundColor: 'rgba(255, 42, 133, 0.18)',
-            borderWidth: 2.2,
+            borderWidth: 2,
             tension: 0.35,
             fill: true,
-            pointRadius: 3.5,
+            pointRadius: 3,
             pointBackgroundColor: '#ff2a85'
           }]
         },
@@ -741,21 +781,21 @@
         }
       });
 
-      // Grafik 2: Suhu Ruang DHT22 H1 s/d H8
+      // 2. Grafik Kanan Bawah: Suhu Ruang DHT22 H1 s/d H8
       const ctxTemp = document.getElementById('tempChart').getContext('2d');
       tempChartInstance = new Chart(ctxTemp, {
         type: 'line',
         data: {
-          labels: dayLabelsH1H8,
+          labels: allDaysLabels,
           datasets: [{
             label: 'Suhu (°C)',
             data: tempDataH1H8,
             borderColor: '#00f2fe',
             backgroundColor: 'rgba(0, 242, 254, 0.18)',
-            borderWidth: 2.2,
+            borderWidth: 2,
             tension: 0.35,
             fill: true,
-            pointRadius: 3.5,
+            pointRadius: 3,
             pointBackgroundColor: '#00f2fe'
           }]
         },
@@ -775,6 +815,81 @@
           }
         }
       });
+
+      // 3. GRAFIK KIRI: Hasil Pengasinan dari H1 sampai Hari Sekarang (di Bawah Suhu Ruang)
+      const ctxProg = document.getElementById('progressChart').getContext('2d');
+      progressChartInstance = new Chart(ctxProg, {
+        type: 'line',
+        data: {
+          labels: ['H1'],
+          datasets: [
+            {
+              label: 'TDS Garam (%)',
+              data: [saltDataH1H8[0]],
+              borderColor: '#ff2a85',
+              backgroundColor: 'rgba(255, 42, 133, 0.15)',
+              borderWidth: 2,
+              tension: 0.35,
+              pointRadius: 3.5,
+              pointBackgroundColor: '#ff2a85',
+              yAxisID: 'y'
+            },
+            {
+              label: 'Suhu (°C)',
+              data: [tempDataH1H8[0]],
+              borderColor: '#00f2fe',
+              backgroundColor: 'rgba(0, 242, 254, 0.15)',
+              borderWidth: 2,
+              tension: 0.35,
+              pointRadius: 3.5,
+              pointBackgroundColor: '#00f2fe',
+              yAxisID: 'y1'
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: {
+              grid: { color: 'rgba(255, 255, 255, 0.06)' },
+              ticks: { color: '#c084fc', font: { size: 8.5, weight: 'bold' } }
+            },
+            y: {
+              type: 'linear',
+              display: true,
+              position: 'left',
+              grid: { color: 'rgba(255, 42, 133, 0.12)' },
+              ticks: { color: '#ff2a85', font: { size: 8 } }
+            },
+            y1: {
+              type: 'linear',
+              display: true,
+              position: 'right',
+              grid: { drawOnChartArea: false },
+              ticks: { color: '#00f2fe', font: { size: 8 } }
+            }
+          }
+        }
+      });
+    }
+
+    // Fungsi Update Grafik Progres Berdasarkan Hari Berjalan
+    function updateProgressChartToCurrentDay(currentDay) {
+      if (!progressChartInstance) return;
+
+      const count = Math.min(Math.max(currentDay, 1), 8);
+      const labels = allDaysLabels.slice(0, count);
+      const saltSlice = saltDataH1H8.slice(0, count);
+      const tempSlice = tempDataH1H8.slice(0, count);
+
+      progressChartInstance.data.labels = labels;
+      progressChartInstance.data.datasets[0].data = saltSlice;
+      progressChartInstance.data.datasets[1].data = tempSlice;
+      progressChartInstance.update();
+
+      document.getElementById('badgeCurrentDayProg').innerText = `H1 - H${count}`;
     }
 
     // --- 4. TRACKER WAKTU PENGASINAN ---
@@ -795,6 +910,7 @@
 
       const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
       const hours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const currentDayNumber = days + 1;
 
       document.getElementById('batchDayText').innerHTML = `${days} <span class="val-unit">Hari</span> ${hours} <span class="val-unit">Jam</span>`;
 
@@ -802,18 +918,21 @@
       const warningBox = document.getElementById('warningBox');
 
       if (days >= 7) {
-        badgeHari.innerText = `SELESAI (HARI KE-${days + 1})`;
+        badgeHari.innerText = `SELESAI (HARI KE-${currentDayNumber})`;
         badgeHari.style.background = 'rgba(255, 51, 68, 0.3)';
         badgeHari.style.borderColor = 'var(--neon-red)';
         badgeHari.style.color = '#ff6677';
         warningBox.style.display = 'block';
       } else {
-        badgeHari.innerText = `HARI ${days + 1} / 7`;
+        badgeHari.innerText = `HARI ${currentDayNumber} / 7`;
         badgeHari.style.background = 'rgba(255, 42, 133, 0.2)';
         badgeHari.style.borderColor = 'rgba(255, 42, 133, 0.4)';
         badgeHari.style.color = 'var(--neon-pink)';
         warningBox.style.display = 'none';
       }
+
+      // Perbarui grafik progres H1 - Hari Sekarang
+      updateProgressChartToCurrentDay(currentDayNumber);
     }
 
     function startBatchBaru() {
@@ -824,6 +943,7 @@
         saltDataH1H8 = [14.5, 16.2, 17.8, 19.5, 21.0, 22.8, 24.5, 25.0];
         tempDataH1H8 = [28.2, 29.5, 30.1, 31.8, 32.5, 33.0, 32.8, 32.0];
         saveHistoryDatabase();
+        
         if (saltChartInstance && tempChartInstance) {
           saltChartInstance.data.datasets[0].data = saltDataH1H8;
           saltChartInstance.update();
@@ -859,7 +979,7 @@
     client.on('message', (topic, message) => {
       const val = message.toString();
 
-      // Hitung index hari keberapa (0 = H1, 7 = H8)
+      // Hitung index hari keberapa saat ini (0 = H1, 7 = H8)
       const startTime = parseInt(localStorage.getItem('telur_start_time') || Date.now());
       const dayIdx = Math.min(Math.max(Math.floor((Date.now() - startTime) / (1000 * 60 * 60 * 24)), 0), 7);
 
@@ -870,10 +990,12 @@
         // Simpan titik data hari yang sedang berjalan
         saltDataH1H8[dayIdx] = numVal;
         saveHistoryDatabase();
+
         if (saltChartInstance) {
           saltChartInstance.data.datasets[0].data = saltDataH1H8;
           saltChartInstance.update('none');
         }
+        updateProgressChartToCurrentDay(dayIdx + 1);
       } else if (topic === 'telur/slave/water') {
         document.getElementById('valWater').innerText = val;
       } else if (topic === 'telur/slave/2' || topic === 'telur/slave/suhu') {
@@ -883,10 +1005,12 @@
         // Simpan titik data hari yang sedang berjalan
         tempDataH1H8[dayIdx] = numVal;
         saveHistoryDatabase();
+
         if (tempChartInstance) {
           tempChartInstance.data.datasets[0].data = tempDataH1H8;
           tempChartInstance.update('none');
         }
+        updateProgressChartToCurrentDay(dayIdx + 1);
       } else if (topic === 'telur/slave/hum') {
         document.getElementById('valHum').innerText = val + '%';
       } else if (topic === 'telur/kontrol/heater') {
