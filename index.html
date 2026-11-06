@@ -4,11 +4,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Dashboard Monitoring Telur Asin</title>
-<meta property="og:title" content="Dashboard Monitoring Telur Asin" />
-<meta property="og:description" content="Monitoring Suhu, Kelembaban, dan TDS Garam Secara Real-Time" />
+  <meta property="og:title" content="Dashboard Monitoring Telur Asin" />
+  <meta property="og:description" content="Monitoring Suhu, Kelembaban, dan TDS Garam Secara Real-Time" />
+  
+  <!-- Library 3D & MQTT -->
   <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
   <style>
     :root {
       --bg: #090714;
@@ -198,7 +200,7 @@
     }
     .btn-start:hover, .btn-selesai:hover { filter: brightness(1.15); }
 
-    /* Panel Kanan: Filter Hari Terkunci & Grafik */
+    /* Panel Kanan: Grafik Mandiri */
     .right-panel {
       position: absolute;
       top: 80px;
@@ -242,7 +244,6 @@
       color: #fff !important;
       box-shadow: 0 0 10px rgba(255, 42, 133, 0.5);
     }
-    /* Tombol Hari Masa Depan yang Dikunci */
     .day-btn:disabled {
       opacity: 0.25;
       cursor: not-allowed;
@@ -264,6 +265,11 @@
       height: 110px;
       width: 100%;
       margin-top: 6px;
+    }
+    .chart-container canvas {
+      width: 100% !important;
+      height: 100% !important;
+      display: block;
     }
 
     /* Bottom Bar */
@@ -371,7 +377,7 @@
       </div>
     </div>
 
-    <!-- Panel Kanan: Tombol Hari Terproteksi & 2 Grafik -->
+    <!-- Panel Kanan: Filter Hari & Grafik -->
     <div class="right-panel clickable">
       <div class="day-selector-bar">
         <button class="day-btn active" id="btnDay1" onclick="switchDayView(1)">H1</button>
@@ -404,6 +410,7 @@
       </div>
     </div>
 
+    <!-- Bottom Bar -->
     <div class="bottom-bar clickable">
       <div class="action-hud">
         <button class="btn-cam" onclick="setCamTop()">Sudut Atas (Top)</button>
@@ -440,36 +447,7 @@
     window.addEventListener('online', updateNetworkStatus);
     window.addEventListener('offline', updateNetworkStatus);
 
-    if ('serviceWorker' in navigator) {
-      const swCode = `
-        const CACHE_NAME = 'telur-3d-cache-v3';
-        const ASSETS = [
-          './',
-          'https://unpkg.com/mqtt/dist/mqtt.min.js',
-          'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js',
-          'https://cdn.jsdelivr.net/npm/chart.js'
-        ];
-
-        self.addEventListener('install', (e) => {
-          e.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS)));
-          self.skipWaiting();
-        });
-
-        self.addEventListener('activate', (e) => {
-          e.waitUntil(clients.claim());
-        });
-
-        self.addEventListener('fetch', (e) => {
-          e.respondWith(
-            fetch(e.request).catch(() => caches.match(e.request))
-          );
-        });
-      `;
-      const blob = new Blob([swCode], { type: 'application/javascript' });
-      navigator.serviceWorker.register(URL.createObjectURL(blob)).catch(() => {});
-    }
-
-    // --- 2. THREE.JS ENGINE ---
+    // --- 2. THREE.JS ENGINE 3D ---
     const container = document.getElementById('canvas3d');
     const scene = new THREE.Scene();
     scene.fog = new THREE.FogExp2(0x090714, 0.025);
@@ -544,7 +522,7 @@
     handleMesh.position.set(-1.0, 2.44, 0);
     lidGroup.add(handleMesh);
 
-    // Modul Sensor DHT22 Berdiri Tegak
+    // Sensor DHT22 Berdiri Tegak
     const dhtGroup = new THREE.Group();
     dhtGroup.position.set(0.85, 2.33, 0.6);
 
@@ -778,12 +756,13 @@
       camera.aspect = window.innerWidth / window.innerHeight;
       camera.updateProjectionMatrix();
       renderer.setSize(window.innerWidth, window.innerHeight);
+      renderAllCharts();
     });
 
-    // --- 3. DATABASE RIWAYAT H1 - H7 & PENGUNCIAN HARI ---
+    // --- 3. DATABASE RIWAYAT H1 - H7 & MESIN GRAFIK PURE CANVAS (OFFLINE RESISTANT) ---
     const hoursLabels = ['00:00', '03:00', '06:00', '09:00', '12:00', '15:00', '18:00', '21:00'];
     let selectedDayView = 1;
-    let currentAllowedMaxDay = 1; // Batas hari yang boleh diakses
+    let currentAllowedMaxDay = 1;
     let historyDatabase = {};
 
     function initHistoryDatabase() {
@@ -808,80 +787,118 @@
       localStorage.setItem('telur_history_db', JSON.stringify(historyDatabase));
     }
 
-    let saltChartInstance, tempChartInstance;
-    function initCharts() {
-      initHistoryDatabase();
+    // FUNGSI MENGGAMBAR GRAFIK NATIVE (100% OFFLINE TANPA INTERNET)
+    function drawOfflineLineChart(canvasId, labels, data, strokeColor, fillColor) {
+      const canvas = document.getElementById(canvasId);
+      if (!canvas) return;
 
-      const ctxSalt = document.getElementById('saltChart').getContext('2d');
-      saltChartInstance = new Chart(ctxSalt, {
-        type: 'line',
-        data: {
-          labels: hoursLabels,
-          datasets: [{
-            label: 'TDS Garam (%)',
-            data: historyDatabase[1].salt,
-            borderColor: '#ff2a85',
-            backgroundColor: 'rgba(255, 42, 133, 0.18)',
-            borderWidth: 2,
-            tension: 0.35,
-            fill: true,
-            pointRadius: 2.5,
-            pointBackgroundColor: '#ff2a85'
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: { legend: { display: false } },
-          scales: {
-            x: {
-              grid: { color: 'rgba(255, 255, 255, 0.06)' },
-              ticks: { color: '#c084fc', font: { size: 8 } }
-            },
-            y: {
-              grid: { color: 'rgba(255, 42, 133, 0.12)' },
-              ticks: { color: '#ff2a85', font: { size: 8 } }
-            }
-          }
-        }
+      const rect = canvas.parentElement.getBoundingClientRect();
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = rect.width * dpr;
+      canvas.height = rect.height * dpr;
+
+      const ctx = canvas.getContext('2d');
+      ctx.scale(dpr, dpr);
+
+      const w = rect.width;
+      const h = rect.height;
+
+      const padLeft = 32;
+      const padRight = 14;
+      const padTop = 14;
+      const padBottom = 20;
+
+      const plotW = w - padLeft - padRight;
+      const plotH = h - padTop - padBottom;
+
+      ctx.clearRect(0, 0, w, h);
+
+      // Hitung min & max
+      let minVal = Math.min(...data);
+      let maxVal = Math.max(...data);
+      if (minVal === maxVal) { minVal -= 1; maxVal += 1; }
+      const margin = (maxVal - minVal) * 0.15 || 1;
+      minVal = Math.floor(minVal - margin);
+      maxVal = Math.ceil(maxVal + margin);
+
+      // Garis Grid Horizontal & Angka Sumbu Y
+      ctx.lineWidth = 1;
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
+      ctx.fillStyle = strokeColor;
+      ctx.font = '9px monospace';
+      ctx.textAlign = 'right';
+
+      const gridSteps = 4;
+      for (let i = 0; i <= gridSteps; i++) {
+        const yVal = minVal + ((maxVal - minVal) / gridSteps) * i;
+        const py = padTop + plotH - (plotH / gridSteps) * i;
+
+        ctx.beginPath();
+        ctx.moveTo(padLeft, py);
+        ctx.lineTo(w - padRight, py);
+        ctx.stroke();
+
+        ctx.fillText(yVal.toFixed(1), padLeft - 6, py + 3);
+      }
+
+      // Hitung koordinat titik
+      const points = data.map((val, idx) => {
+        const px = padLeft + (plotW / (data.length - 1)) * idx;
+        const py = padTop + plotH - ((val - minVal) / (maxVal - minVal)) * plotH;
+        return { x: px, y: py };
       });
 
-      const ctxTemp = document.getElementById('tempChart').getContext('2d');
-      tempChartInstance = new Chart(ctxTemp, {
-        type: 'line',
-        data: {
-          labels: hoursLabels,
-          datasets: [{
-            label: 'Suhu (°C)',
-            data: historyDatabase[1].temp,
-            borderColor: '#00f2fe',
-            backgroundColor: 'rgba(0, 242, 254, 0.18)',
-            borderWidth: 2,
-            tension: 0.35,
-            fill: true,
-            pointRadius: 2.5,
-            pointBackgroundColor: '#00f2fe'
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: { legend: { display: false } },
-          scales: {
-            x: {
-              grid: { color: 'rgba(255, 255, 255, 0.06)' },
-              ticks: { color: '#c084fc', font: { size: 8 } }
-            },
-            y: {
-              grid: { color: 'rgba(0, 242, 254, 0.12)' },
-              ticks: { color: '#00f2fe', font: { size: 8 } }
-            }
-          }
+      // Area Fill Gradien
+      const grad = ctx.createLinearGradient(0, padTop, 0, padTop + plotH);
+      grad.addColorStop(0, fillColor);
+      grad.addColorStop(1, 'rgba(0,0,0,0)');
+
+      ctx.beginPath();
+      ctx.moveTo(points[0].x, padTop + plotH);
+      points.forEach(p => ctx.lineTo(p.x, p.y));
+      ctx.lineTo(points[points.length - 1].x, padTop + plotH);
+      ctx.closePath();
+      ctx.fillStyle = grad;
+      ctx.fill();
+
+      // Garis Kurva
+      ctx.beginPath();
+      ctx.strokeStyle = strokeColor;
+      ctx.lineWidth = 2.2;
+      ctx.shadowColor = strokeColor;
+      ctx.shadowBlur = 8;
+      points.forEach((p, i) => {
+        if (i === 0) ctx.moveTo(p.x, p.y);
+        else ctx.lineTo(p.x, p.y);
+      });
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+
+      // Titik Lingkaran & Label Jam Bawah
+      ctx.fillStyle = strokeColor;
+      points.forEach((p, idx) => {
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 3, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Label jam
+        ctx.fillStyle = '#c084fc';
+        ctx.font = '8px sans-serif';
+        ctx.textAlign = 'center';
+        if (idx % 2 === 0 || idx === points.length - 1) {
+          ctx.fillText(labels[idx], p.x, h - 5);
         }
+        ctx.fillStyle = strokeColor;
       });
     }
 
-    // FUNGSI KUNCI: Update tombol yang boleh diklik (1 s/d currentAllowedMaxDay)
+    function renderAllCharts() {
+      const activeData = historyDatabase[selectedDayView] || historyDatabase[1];
+      drawOfflineLineChart('saltChart', hoursLabels, activeData.salt, '#ff2a85', 'rgba(255, 42, 133, 0.25)');
+      drawOfflineLineChart('tempChart', hoursLabels, activeData.temp, '#00f2fe', 'rgba(0, 242, 254, 0.25)');
+    }
+
+    // FUNGSI PENGUNCIAN HARI
     function updateDayButtonsAccessibility(activeDay) {
       currentAllowedMaxDay = Math.min(Math.max(activeDay, 1), 7);
 
@@ -898,14 +915,12 @@
         }
       }
 
-      // Jika hari yang sedang tampil melebihi hari berjalan, kembalikan ke hari maksimal yang sah
       if (selectedDayView > currentAllowedMaxDay) {
         switchDayView(currentAllowedMaxDay);
       }
     }
 
     function switchDayView(dayNum) {
-      // PROTEKSI: Tolak jika mencoba klik hari masa depan
       if (dayNum > currentAllowedMaxDay) return;
 
       selectedDayView = dayNum;
@@ -918,13 +933,7 @@
       document.getElementById('lblChartSalt').innerText = `HARI ${dayNum} (%)`;
       document.getElementById('lblChartTemp').innerText = `HARI ${dayNum} (°C)`;
 
-      if (saltChartInstance && tempChartInstance && historyDatabase[dayNum]) {
-        saltChartInstance.data.datasets[0].data = historyDatabase[dayNum].salt;
-        saltChartInstance.update();
-
-        tempChartInstance.data.datasets[0].data = historyDatabase[dayNum].temp;
-        tempChartInstance.update();
-      }
+      renderAllCharts();
     }
 
     // --- 4. TRACKER WAKTU PENGASINAN ---
@@ -939,13 +948,13 @@
     }
 
     function updateTimerDisplay() {
-      const startTime = parseInt(localStorage.getItem('telur_start_time'));
+      const startTime = parseInt(localStorage.getItem('telur_start_time') || Date.now());
       const now = new Date().getTime();
-      const diffMs = now - startTime;
+      const diffMs = Math.max(0, now - startTime);
 
       const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
       const hours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-      const currentDayNumber = days + 1; // Hari ke-1 jika 0 hari x jam
+      const currentDayNumber = days + 1;
 
       document.getElementById('batchDayText').innerHTML = `${days} <span class="val-unit">Hari</span> ${hours} <span class="val-unit">Jam</span>`;
 
@@ -966,7 +975,6 @@
         warningBox.style.display = 'none';
       }
 
-      // Kunci tombol hari secara ketat sesuai hari berjalan
       updateDayButtonsAccessibility(currentDayNumber);
     }
 
@@ -988,78 +996,78 @@
     }
 
     // --- 5. KONEKSI MQTT EMQX CLOUD ---
-    const mqttOptions = {
-      clean: true,
-      connectTimeout: 4000,
-      clientId: 'web_box_3d_' + Math.random().toString(16).substring(2, 8),
-      username: 'mila',
-      password: 'Mila12345'
-    };
+    try {
+      const mqttOptions = {
+        clean: true,
+        connectTimeout: 4000,
+        clientId: 'web_box_3d_' + Math.random().toString(16).substring(2, 8),
+        username: 'mila',
+        password: 'Mila12345'
+      };
 
-    const client = mqtt.connect('wss://o110101d.ala.eu-central-1.emqxsl.com:8084/mqtt', mqttOptions);
+      const client = mqtt.connect('wss://o110101d.ala.eu-central-1.emqxsl.com:8084/mqtt', mqttOptions);
 
-    client.on('connect', () => {
-      updateNetworkStatus();
-      client.subscribe('telur/slave/#');
-      client.subscribe('telur/kontrol/#');
-    });
+      client.on('connect', () => {
+        updateNetworkStatus();
+        client.subscribe('telur/slave/#');
+        client.subscribe('telur/kontrol/#');
+      });
 
-    client.on('close', () => updateNetworkStatus());
-    client.on('offline', () => updateNetworkStatus());
+      client.on('close', () => updateNetworkStatus());
+      client.on('offline', () => updateNetworkStatus());
 
-    client.on('message', (topic, message) => {
-      const val = message.toString();
-      const startTime = parseInt(localStorage.getItem('telur_start_time') || Date.now());
-      const currentDay = Math.min(Math.max(Math.floor((Date.now() - startTime) / (1000 * 60 * 60 * 24)) + 1, 1), 7);
+      client.on('message', (topic, message) => {
+        const val = message.toString();
+        const startTime = parseInt(localStorage.getItem('telur_start_time') || Date.now());
+        const currentDay = Math.min(Math.max(Math.floor((Date.now() - startTime) / (1000 * 60 * 60 * 24)) + 1, 1), 7);
 
-      if (topic === 'telur/slave/1') {
-        const numVal = parseFloat(val);
-        document.getElementById('valGaram').innerText = val;
-        
-        if (historyDatabase[currentDay]) {
-          const arr = historyDatabase[currentDay].salt;
-          arr[arr.length - 1] = numVal;
-          saveHistoryDatabase();
-          if (selectedDayView === currentDay && saltChartInstance) {
-            saltChartInstance.data.datasets[0].data = arr;
-            saltChartInstance.update('none');
+        if (topic === 'telur/slave/1') {
+          const numVal = parseFloat(val);
+          document.getElementById('valGaram').innerText = val;
+          
+          if (historyDatabase[currentDay]) {
+            const arr = historyDatabase[currentDay].salt;
+            arr[arr.length - 1] = numVal;
+            saveHistoryDatabase();
+            if (selectedDayView === currentDay) renderAllCharts();
           }
-        }
-      } else if (topic === 'telur/slave/water') {
-        document.getElementById('valWater').innerText = val;
-      } else if (topic === 'telur/slave/2' || topic === 'telur/slave/suhu') {
-        const numVal = parseFloat(val);
-        document.getElementById('valSuhuRuang').innerText = val;
+        } else if (topic === 'telur/slave/water') {
+          document.getElementById('valWater').innerText = val;
+        } else if (topic === 'telur/slave/2' || topic === 'telur/slave/suhu') {
+          const numVal = parseFloat(val);
+          document.getElementById('valSuhuRuang').innerText = val;
 
-        if (historyDatabase[currentDay]) {
-          const arr = historyDatabase[currentDay].temp;
-          arr[arr.length - 1] = numVal;
-          saveHistoryDatabase();
-          if (selectedDayView === currentDay && tempChartInstance) {
-            tempChartInstance.data.datasets[0].data = arr;
-            tempChartInstance.update('none');
+          if (historyDatabase[currentDay]) {
+            const arr = historyDatabase[currentDay].temp;
+            arr[arr.length - 1] = numVal;
+            saveHistoryDatabase();
+            if (selectedDayView === currentDay) renderAllCharts();
           }
+        } else if (topic === 'telur/slave/hum') {
+          document.getElementById('valHum').innerText = val + '%';
+        } else if (topic === 'telur/kontrol/heater') {
+          const isNyala = val === 'ON';
+          document.getElementById('btnToggleLampu').checked = isNyala;
+          heaterLight.intensity = isNyala ? 3.8 : 0.0;
+          bulbMat.color.setHex(isNyala ? 0xffaa00 : 0x555555);
         }
-      } else if (topic === 'telur/slave/hum') {
-        document.getElementById('valHum').innerText = val + '%';
-      } else if (topic === 'telur/kontrol/heater') {
-        const isNyala = val === 'ON';
-        document.getElementById('btnToggleLampu').checked = isNyala;
-        heaterLight.intensity = isNyala ? 3.8 : 0.0;
-        bulbMat.color.setHex(isNyala ? 0xffaa00 : 0x555555);
-      }
-    });
+      });
 
-    function toggleLampu(state) {
-      if (navigator.onLine && client.connected) {
-        client.publish('telur/kontrol/heater', state ? 'ON' : 'OFF');
-      }
-      heaterLight.intensity = state ? 3.8 : 0.0;
-      bulbMat.color.setHex(state ? 0xffaa00 : 0x555555);
+      window.toggleLampu = function(state) {
+        if (navigator.onLine && client.connected) {
+          client.publish('telur/kontrol/heater', state ? 'ON' : 'OFF');
+        }
+        heaterLight.intensity = state ? 3.8 : 0.0;
+        bulbMat.color.setHex(state ? 0xffaa00 : 0x555555);
+      };
+    } catch (e) {
+      console.warn("MQTT offline mode aktif:", e);
     }
 
-    initCharts();
+    // Jalankan inisialisasi awal
+    initHistoryDatabase();
     initBatchTimer();
+    renderAllCharts();
     updateNetworkStatus();
   </script>
 </body>
