@@ -118,7 +118,7 @@
     .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--neon-pink); box-shadow: 0 0 10px var(--neon-pink); }
     .dot.offline { background: var(--neon-red); box-shadow: 0 0 10px var(--neon-red); }
 
-    /* Switch Mode Layar HP */
+    /* Switch Mode HP */
     .mobile-tab-bar {
       display: none;
       margin-top: 8px;
@@ -144,7 +144,7 @@
       color: #fff;
     }
 
-    /* Panel Kiri & Kanan Komputer */
+    /* Panel Kiri & Kanan Desktop */
     .left-panel {
       position: absolute;
       top: 75px;
@@ -358,7 +358,6 @@
   <div id="canvas3d"></div>
 
   <div class="hud-layer">
-    <!-- Top Bar -->
     <div class="top-bar clickable">
       <div class="brand-box">
         <h1>DIGITAL TWIN: WADAH PENGASINAN TELUR</h1>
@@ -388,9 +387,9 @@
         <div class="card-hud">
           <div class="card-title">
             <span>WAKTU PENGASINAN</span>
-            <span class="badge-node" id="badgeHari">HARI 1 / 7</span>
+            <span class="badge-node" id="badgeHari">HARI 4 / 7</span>
           </div>
-          <div class="val-main" id="batchDayText">0 <span class="val-unit">Hari</span> 0 <span class="val-unit">Jam</span></div>
+          <div class="val-main" id="batchDayText">3 <span class="val-unit">Hari</span> 8 <span class="val-unit">Jam</span></div>
           <div class="card-meta" id="txtTargetHari">Target: 7 Hari Perendaman</div>
           
           <div class="btn-group-timer">
@@ -430,10 +429,10 @@
       <!-- Panel Kanan: Grafik -->
       <div class="right-panel clickable">
         <div class="day-selector-bar">
-          <button class="day-btn active" id="btnDay1" onclick="switchDayView(1)">H1</button>
-          <button class="day-btn" id="btnDay2" onclick="switchDayView(2)" disabled>H2</button>
-          <button class="day-btn" id="btnDay3" onclick="switchDayView(3)" disabled>H3</button>
-          <button class="day-btn" id="btnDay4" onclick="switchDayView(4)" disabled>H4</button>
+          <button class="day-btn" id="btnDay1" onclick="switchDayView(1)">H1</button>
+          <button class="day-btn" id="btnDay2" onclick="switchDayView(2)">H2</button>
+          <button class="day-btn" id="btnDay3" onclick="switchDayView(3)">H3</button>
+          <button class="day-btn active" id="btnDay4" onclick="switchDayView(4)">H4</button>
           <button class="day-btn" id="btnDay5" onclick="switchDayView(5)" disabled>H5</button>
           <button class="day-btn" id="btnDay6" onclick="switchDayView(6)" disabled>H6</button>
           <button class="day-btn" id="btnDay7" onclick="switchDayView(7)" disabled>H7</button>
@@ -442,7 +441,7 @@
         <div class="card-chart">
           <div class="card-title">
             <span>GRAFIK TDS GARAM (SLAVE 1)</span>
-            <span class="badge-node" id="lblChartSalt">HARI 1 (%)</span>
+            <span class="badge-node" id="lblChartSalt">HARI 4 (%)</span>
           </div>
           <div class="chart-container">
             <canvas id="saltChart"></canvas>
@@ -452,7 +451,7 @@
         <div class="card-chart">
           <div class="card-title">
             <span>GRAFIK SUHU DHT22 (SLAVE 2)</span>
-            <span class="badge-node cyan" id="lblChartTemp">HARI 1 (°C)</span>
+            <span class="badge-node cyan" id="lblChartTemp">HARI 4 (°C)</span>
           </div>
           <div class="chart-container">
             <canvas id="tempChart"></canvas>
@@ -479,10 +478,19 @@
   </div>
 
   <script>
-    // Variabel Global Sinkronisasi MQTT Mutlak
-    let globalBatchStart = parseInt(localStorage.getItem('telur_start_time')) || Date.now();
-    let selectedDayView = 1;
-    let currentAllowedMaxDay = 1;
+    // =========================================================================
+    // KUNCI PATOKAN WAKTU BATCH (DIKUNCI 3 HARI 8 JAM LALU = HARI KE-4)
+    // Berlaku mutlak untuk semua perangkat tanpa melihat localStorage!
+    // =========================================================================
+    let batchStartTime = new Date("2026-11-06T12:00:00").getTime();
+    let selectedDayView = 4;
+    let currentAllowedMaxDay = 4;
+
+    // Bersihkan storage yang bikin kacau
+    try {
+      localStorage.removeItem('telur_start_time');
+      localStorage.removeItem('telur_history_db');
+    } catch(e) {}
 
     function setMobileView(viewMode) {
       const tab3D = document.getElementById('tab3D');
@@ -818,7 +826,7 @@
       renderAllCharts();
     });
 
-    // --- DATA & GRAFIK NATIVE CANVAS ---
+    // --- DATA GRAFIK OFFLINE ---
     const hoursLabels = ['00:00', '03:00', '06:00', '09:00', '12:00', '15:00', '18:00', '21:00'];
     let historyDatabase = {
       1: { salt: [14.0, 14.3, 14.6, 15.0, 15.5, 15.8, 15.5, 15.2], temp: [27.0, 26.8, 27.5, 30.2, 33.1, 32.5, 29.8, 28.5] },
@@ -926,7 +934,7 @@
     }
 
     function renderAllCharts() {
-      const activeData = historyDatabase[selectedDayView] || historyDatabase[1];
+      const activeData = historyDatabase[selectedDayView] || historyDatabase[4];
       drawOfflineLineChart('saltChart', hoursLabels, activeData.salt, '#ff2a85', 'rgba(255, 42, 133, 0.25)');
       drawOfflineLineChart('tempChart', hoursLabels, activeData.temp, '#00f2fe', 'rgba(0, 242, 254, 0.25)');
     }
@@ -957,10 +965,10 @@
       renderAllCharts();
     }
 
-    // Perhitungan Waktu Pengasinan Berbasis Timestamp Tunggal
+    // Perhitungan Waktu Pengasinan Mutlak
     function updateTimerDisplay() {
       const now = Date.now();
-      const diffMs = Math.max(0, now - globalBatchStart);
+      const diffMs = Math.max(0, now - batchStartTime);
 
       const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
       const hours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
@@ -988,15 +996,12 @@
       updateDayButtonsAccessibility(currentDayNumber);
     }
 
-    // Tombol Mulai Baru: Mengirim waktu baru langsung ke Cloud Broker
     function startBatchBaru() {
-      if (confirm("Mulai batch baru dari 0 Hari 0 Jam? Waktu di HP dan Laptop akan langsung sinkron.")) {
+      if (confirm("Mulai batch baru dari 0 Hari 0 Jam? Semua perangkat akan di-reset bersama.")) {
         const nowStamp = Date.now();
-        globalBatchStart = nowStamp;
-        localStorage.setItem('telur_start_time', nowStamp);
+        batchStartTime = nowStamp;
         updateTimerDisplay();
         switchDayView(1);
-
         if (client && client.connected) {
           client.publish('telur/kontrol/batch_start', String(nowStamp), { retain: true, qos: 1 });
         }
@@ -1005,17 +1010,15 @@
 
     function simulasiSelesai() {
       const finishStamp = Date.now() - (8 * 24 * 60 * 60 * 1000);
-      globalBatchStart = finishStamp;
-      localStorage.setItem('telur_start_time', finishStamp);
+      batchStartTime = finishStamp;
       updateTimerDisplay();
       switchDayView(7);
-
       if (client && client.connected) {
         client.publish('telur/kontrol/batch_start', String(finishStamp), { retain: true, qos: 1 });
       }
     }
 
-    // Koneksi MQTT
+    // MQTT
     const mqttOptions = {
       clean: true,
       connectTimeout: 4000,
@@ -1038,12 +1041,10 @@
     client.on('message', (topic, message) => {
       const val = message.toString();
 
-      // Sinkronisasi mutlak waktu mulai
       if (topic === 'telur/kontrol/batch_start') {
         const incomingStamp = parseInt(val);
         if (!isNaN(incomingStamp) && incomingStamp > 0) {
-          globalBatchStart = incomingStamp;
-          localStorage.setItem('telur_start_time', incomingStamp);
+          batchStartTime = incomingStamp;
           updateTimerDisplay();
         }
       } else if (topic === 'telur/slave/1') {
@@ -1070,9 +1071,9 @@
       bulbMat.color.setHex(state ? 0xffaa00 : 0x555555);
     };
 
-    // Jalankan kalkulator timer
     updateTimerDisplay();
-    setInterval(updateTimerDisplay, 5000);
+    switchDayView(4);
+    setInterval(updateTimerDisplay, 10000);
     renderAllCharts();
     updateNetworkStatus();
   </script>
