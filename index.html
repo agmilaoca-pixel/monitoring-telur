@@ -523,7 +523,7 @@
     scene.add(cyanRimLight);
 
     // Sumber Cahaya Lampu Pemanas 3D
-    const heaterLight = new THREE.PointLight(0xffaa22, 0.0, 16);
+    const heaterLight = new THREE.PointLight(0xffaa22, 0.0, 18);
     heaterLight.position.set(0, 1.8, 0);
     scene.add(heaterLight);
 
@@ -948,7 +948,7 @@
       switchDayView(7);
     }
 
-    // --- FUNGSI TAMPILAN CAHAYA & BOHLAM LAMPU ---
+    // --- SINKRONISASI VISUAL LAMPU 3D DUA ARAH ---
     function setLampuVisual(isNyala) {
       const checkbox = document.getElementById('btnToggleLampu');
       if (checkbox) checkbox.checked = isNyala;
@@ -962,21 +962,27 @@
       }
     }
 
-    // Tombol saklar diklik pengguna
+    // Dijalankan saat tombol saklar disentuh/diklik di layar HP atau Laptop
     function userToggleLampu(state) {
       setLampuVisual(state);
 
       if (client && client.connected) {
-        const payload = state ? 'ON' : 'OFF';
-        client.publish('telur/kontrol/heater', payload, { qos: 1, retain: true });
+        const textPayload = state ? 'ON' : 'OFF';
+        const numPayload = state ? '1' : '0';
+
+        // Siarkan serentak ke semua topik kontrol lampu dengan retain: true
+        client.publish('telur/kontrol/heater', textPayload, { qos: 1, retain: true });
+        client.publish('telur/kontrol/lampu', textPayload, { qos: 1, retain: true });
+        client.publish('telur/slave/lampu', numPayload, { qos: 1, retain: true });
       }
     }
 
     // --- KONEKSI MQTT CLOUD EMQX SINKRON REAL-TIME ---
     const mqttOptions = {
       clean: true,
-      connectTimeout: 4000,
-      clientId: 'telur_node_' + Math.random().toString(16).substring(2, 8),
+      connectTimeout: 5000,
+      keepalive: 60,
+      clientId: 'telur_client_' + Math.random().toString(16).substring(2, 10),
       username: 'mila',
       password: 'Mila12345'
     };
@@ -985,19 +991,20 @@
 
     client.on('connect', () => {
       updateNetworkStatus();
-      client.subscribe('telur/slave/#', { qos: 1 });
       client.subscribe('telur/kontrol/#', { qos: 1 });
+      client.subscribe('telur/slave/#', { qos: 1 });
     });
 
     client.on('close', () => updateNetworkStatus());
     client.on('offline', () => updateNetworkStatus());
+    client.on('error', (err) => console.error('MQTT Error:', err));
 
     client.on('message', (topic, message) => {
-      const val = message.toString();
+      const val = message.toString().trim();
 
-      // Sinkronisasi status saklar & lampu 3D
-      if (topic === 'telur/kontrol/heater') {
-        const isNyala = (val === 'ON');
+      // Deteksi sinyal saklar dari semua topik dan format (ON, 1, true)
+      if (topic === 'telur/kontrol/heater' || topic === 'telur/kontrol/lampu' || topic === 'telur/slave/lampu') {
+        const isNyala = (val === 'ON' || val === '1' || val === 'true');
         setLampuVisual(isNyala);
       } else if (topic === 'telur/slave/1') {
         document.getElementById('valGaram').innerText = val;
