@@ -353,7 +353,7 @@
         </label>
 
         <div class="status-pill" id="mqttStatus">
-          <span class="dot" id="statusDot"></span> <span id="statusText">EMQX</span>
+          <span class="dot" id="statusDot"></span> <span id="statusText">LIVE SYNC</span>
         </div>
       </div>
     </div>
@@ -474,7 +474,7 @@
       }
     }
 
-    // --- THREE.JS 3D ENGINE LENGKAP DETAIL ---
+    // --- THREE.JS ENGINE DETAIL PRESISI ---
     const container = document.getElementById('canvas3d');
     const scene = new THREE.Scene();
     scene.fog = new THREE.FogExp2(0x090714, 0.025);
@@ -652,14 +652,14 @@
 
     groupTank.add(probeGroup);
 
-    // Soket Lampu
+    // Soket Dudukan Lampu
     const socketGeo = new THREE.CylinderGeometry(0.3, 0.35, 0.25, 20);
     const socketMat = new THREE.MeshStandardMaterial({ color: 0x222222, metalness: 0.8 });
     const socketMesh = new THREE.Mesh(socketGeo, socketMat);
     socketMesh.position.set(0, 2.05, 0);
     lidGroup.add(socketMesh);
 
-    // BOHLAM LAMPU PEMANAS (Menempel ke Tutup, Berputar Bersama Wadah)
+    // BOHLAM LAMPU PEMANAS (Menempel di Tutup, Berputar Bersama Wadah)
     const bulbGeo = new THREE.SphereGeometry(0.38, 28, 28);
     const bulbMat = new THREE.MeshStandardMaterial({
       color: 0x3a3a3a,
@@ -770,7 +770,7 @@
       renderAllCharts();
     });
 
-    // --- DATA & GRAFIK PURE CANVAS ASLI ---
+    // --- DATA & GRAFIK PURE CANVAS ---
     const hoursLabels = ['00:00', '03:00', '06:00', '09:00', '12:00', '15:00', '18:00', '21:00'];
     let historyDatabase = {
       1: { salt: [14.0, 14.3, 14.6, 15.0, 15.5, 15.8, 15.5, 15.2], temp: [27.0, 26.8, 27.5, 30.2, 33.1, 32.5, 29.8, 28.5] },
@@ -923,11 +923,11 @@
       switchDayView(7);
     }
 
-    // --- LOGIKA NYALA/MATI VISUAL LAMPU 3D ---
-    let currentLampState = false;
+    // --- VISUAL LAMPU TEPAT & KONSISTEN ---
+    let localLampState = false;
 
     function setLampuVisual(isNyala) {
-      currentLampState = isNyala;
+      localLampState = isNyala;
       const checkbox = document.getElementById('btnToggleLampu');
       if (checkbox) checkbox.checked = isNyala;
 
@@ -942,57 +942,38 @@
       }
     }
 
-    // --- SINKRONISASI DUA ARAH REAL-TIME WEBSOCKET (PIESOCKET) ---
-    const relayWsUrl = "wss://free.blr2.piesocket.com/v3/channel_telur_mila?api_key=VCpxALuvHgvdEu4gbaotqST2CHFtkD7W6PyeaRUR&notify_self=0";
-    let relayWs = null;
+    // --- SINKRONISASI STABIL EKSPLISIT DENGAN CLOUD DATABASE ---
+    const DB_URL = "https://telur-asin-iot-default-rtdb.asia-southeast1.firebasedatabase.app/lampu.json";
 
-    function initRelayWebSocket() {
-      relayWs = new WebSocket(relayWsUrl);
-
-      relayWs.onopen = function () {
-        document.getElementById('statusText').innerText = "LIVE SYNC";
-      };
-
-      relayWs.onmessage = function (event) {
-        try {
-          const data = JSON.parse(event.data);
-          if (typeof data.lampu !== 'undefined') {
-            setLampuVisual(data.lampu);
+    // Polling membaca database setiap 1.5 detik (Murni membaca true / false, tidak pernah gonta-ganti sendiri)
+    async function syncFromCloud() {
+      try {
+        const res = await fetch(DB_URL);
+        if (res.ok) {
+          const val = await res.json();
+          if (typeof val === 'boolean' && val !== localLampState) {
+            setLampuVisual(val);
           }
-        } catch (e) {}
-      };
-
-      relayWs.onclose = function () {
-        document.getElementById('statusText').innerText = "Reconnecting";
-        setTimeout(initRelayWebSocket, 2000);
-      };
-
-      relayWs.onerror = function () {
-        relayWs.close();
-      };
-    }
-    initRelayWebSocket();
-
-    // BroadcastChannel lokal (antar tab)
-    const bc = ('BroadcastChannel' in window) ? new BroadcastChannel("telur_lampu_sync_channel") : null;
-    if (bc) {
-      bc.onmessage = (event) => {
-        if (event.data && typeof event.data.lampu !== 'undefined') {
-          setLampuVisual(event.data.lampu);
         }
-      };
+      } catch (e) {}
     }
+    setInterval(syncFromCloud, 1500);
 
-    // Dipanggil saat tombol saklar diklik oleh pengguna (di Laptop atau di HP)
-    function userToggleLampu(state) {
+    // Kirim status saat saklar diklik pengguna
+    async function userToggleLampu(state) {
       setLampuVisual(state);
 
-      if (bc) bc.postMessage({ lampu: state });
-
-      if (relayWs && relayWs.readyState === WebSocket.OPEN) {
-        relayWs.send(JSON.stringify({ lampu: state }));
-      }
+      try {
+        await fetch(DB_URL, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(state)
+        });
+      } catch (e) {}
     }
+
+    // Ambil status pertama kali saat web dibuka
+    syncFromCloud();
 
     // Inisialisasi awal
     updateDayButtonsAccessibility(1);
