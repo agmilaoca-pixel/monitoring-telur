@@ -145,7 +145,7 @@
       color: #fff;
     }
 
-    /* Panel Kiri & Kanan di Komputer / Laptop */
+    /* Panel Kiri & Kanan Desktop */
     .left-panel {
       position: absolute;
       top: 75px;
@@ -210,31 +210,23 @@
 
     .btn-group-timer {
       display: flex;
-      gap: 6px;
+      gap: 5px;
       margin-top: 6px;
     }
-    .btn-start {
+    .btn-timer-action {
       flex: 1;
-      background: linear-gradient(135deg, var(--neon-pink), #a855f7);
       border: none;
       color: white;
-      padding: 5px 6px;
+      padding: 5px 4px;
       border-radius: 6px;
-      font-size: 9.5px;
+      font-size: 9px;
       font-weight: 700;
       cursor: pointer;
+      text-align: center;
     }
-    .btn-selesai {
-      flex: 1;
-      background: linear-gradient(135deg, #ef4444, #b91c1c);
-      border: 1px solid #f87171;
-      color: white;
-      padding: 5px 6px;
-      border-radius: 6px;
-      font-size: 9.5px;
-      font-weight: 700;
-      cursor: pointer;
-    }
+    .btn-start { background: linear-gradient(135deg, var(--neon-pink), #a855f7); }
+    .btn-selesai { background: linear-gradient(135deg, #ef4444, #b91c1c); border: 1px solid #f87171; }
+    .btn-setday { background: rgba(0, 242, 254, 0.18); border: 1px solid var(--neon-cyan); color: var(--neon-cyan); }
 
     .day-selector-bar {
       background: var(--card-bg);
@@ -292,7 +284,7 @@
       display: block;
     }
 
-    /* Bottom Bar (Kontrol Kamera & Lampu) */
+    /* Bottom Bar */
     .bottom-bar {
       position: absolute;
       bottom: 12px;
@@ -334,20 +326,13 @@
       color: #fff;
     }
 
-    /* ======================================================== */
-    /* ATURAN RESPONSIF KHUSUS HP (MAX-WIDTH 768px)             */
-    /* ======================================================== */
     @media (max-width: 768px) {
-      .hud-layer {
-        padding: 8px 10px;
-      }
+      .hud-layer { padding: 8px 10px; }
       .brand-box h1 { font-size: 11.5px; }
       .brand-box p { font-size: 8px; }
       .status-pill { font-size: 8.5px; padding: 4px 8px; }
 
-      .mobile-tab-bar {
-        display: flex;
-      }
+      .mobile-tab-bar { display: flex; }
 
       .left-panel, .right-panel {
         position: static;
@@ -361,32 +346,20 @@
         gap: 8px;
         max-height: calc(100vh - 165px);
         overflow-y: auto;
-        padding-bottom: 60px; /* Ruang agar tidak tertutup kontrol lampu di bawah */
+        padding-bottom: 60px;
       }
 
-      /* Saat Mode 3D dipilih di HP: Sembunyikan panel data */
-      body.view-3d-active .mobile-data-scroll {
-        display: none !important;
-      }
+      body.view-3d-active .mobile-data-scroll { display: none !important; }
 
-      /* Bottom Bar di HP selalu tampil dan pas di bagian bawah */
       .bottom-bar {
         bottom: 8px;
         left: 10px;
         right: 10px;
         gap: 6px;
       }
-      .action-hud {
-        padding: 5px 8px;
-        gap: 6px;
-      }
-      .btn-cam {
-        padding: 4px 6px;
-        font-size: 9px;
-      }
-      .chart-container {
-        height: 110px;
-      }
+      .action-hud { padding: 5px 8px; gap: 6px; }
+      .btn-cam { padding: 4px 6px; font-size: 9px; }
+      .chart-container { height: 110px; }
     }
   </style>
 </head>
@@ -411,7 +384,7 @@
       </div>
     </div>
 
-    <!-- Tombol Pilihan Mode Layar di HP -->
+    <!-- Tombol Mode Layar di HP -->
     <div class="mobile-tab-bar clickable">
       <button class="mobile-tab-btn active" id="tab3D" onclick="setMobileView('3d')">🧊 Lihat Wadah 3D</button>
       <button class="mobile-tab-btn" id="tabData" onclick="setMobileView('data')">📊 Lihat Data &amp; Grafik</button>
@@ -430,8 +403,9 @@
           <div class="card-meta" id="txtTargetHari">Target: 7 Hari Perendaman</div>
           
           <div class="btn-group-timer">
-            <button class="btn-start" onclick="startBatchBaru()">▶ Mulai Baru</button>
-            <button class="btn-selesai" onclick="simulasiSelesai()">⚠️ Selesai</button>
+            <button class="btn-timer-action btn-start" onclick="startBatchBaru()">▶ Mulai Baru</button>
+            <button class="btn-timer-action btn-setday" onclick="aturHariManual()">⚙️ Atur Hari</button>
+            <button class="btn-timer-action btn-selesai" onclick="simulasiSelesai()">⚠️ Selesai</button>
           </div>
         </div>
 
@@ -497,7 +471,7 @@
       </div>
     </div>
 
-    <!-- Bottom Bar (Selalu Tampil di HP Maupun Laptop) -->
+    <!-- Bottom Bar (Selalu Tampil di HP & Laptop) -->
     <div class="bottom-bar clickable">
       <div class="action-hud">
         <button class="btn-cam" onclick="setCamTop()">Top</button>
@@ -552,12 +526,6 @@
     }
     window.addEventListener('online', updateNetworkStatus);
     window.addEventListener('offline', updateNetworkStatus);
-
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js').catch(() => {});
-      });
-    }
 
     // --- 3. THREE.JS ENGINE 3D ---
     const container = document.getElementById('canvas3d');
@@ -633,7 +601,6 @@
     handleMesh.position.set(-1.0, 2.44, 0);
     lidGroup.add(handleMesh);
 
-    // Sensor DHT22 Berdiri Tegak
     const dhtGroup = new THREE.Group();
     dhtGroup.position.set(0.85, 2.33, 0.6);
 
@@ -677,7 +644,6 @@
     }
     lidGroup.add(dhtGroup);
 
-    // Port Tutup & Sensor TDS
     const portX = 0.85;
     const portZ = -0.95;
 
@@ -1036,8 +1002,16 @@
       renderAllCharts();
     }
 
-    // --- 5. TRACKER WAKTU & SINKRONISASI MQTT ---
+    // --- 5. TRACKER WAKTU PENGASINAN (DENGAN DUKUNGAN URL PARAMETER) ---
     function initBatchTimer() {
+      // 1. Cek jika ada parameter di URL: contoh ?hari=4
+      const urlParams = new URLSearchParams(window.location.search);
+      const urlHari = parseInt(urlParams.get('hari'));
+      if (urlHari && urlHari >= 1 && urlHari <= 7) {
+        const fakeStart = new Date().getTime() - ((urlHari - 1) * 24 * 60 * 60 * 1000) - (7 * 60 * 60 * 1000);
+        localStorage.setItem('telur_start_time', fakeStart);
+      }
+
       let startTime = localStorage.getItem('telur_start_time');
       if (!startTime) {
         startTime = new Date().getTime();
@@ -1078,8 +1052,23 @@
       updateDayButtonsAccessibility(currentDayNumber);
     }
 
+    function aturHariManual() {
+      const inputHari = prompt("Masukkan target hari pengasinan (1 - 7):", "4");
+      const h = parseInt(inputHari);
+      if (h >= 1 && h <= 7) {
+        const targetStart = new Date().getTime() - ((h - 1) * 24 * 60 * 60 * 1000) - (7 * 60 * 60 * 1000);
+        localStorage.setItem('telur_start_time', targetStart);
+        updateTimerDisplay();
+        switchDayView(h);
+
+        if (client && client.connected) {
+          client.publish('telur/kontrol/batch_start', String(targetStart), { retain: true });
+        }
+      }
+    }
+
     function startBatchBaru() {
-      if (confirm("Mulai batch baru pengasinan telur? Hari akan diatur ulang ke Hari 1 di Laptop dan HP.")) {
+      if (confirm("Mulai batch baru pengasinan telur? Hari akan diatur ulang ke Hari 1.")) {
         const newStart = new Date().getTime();
         localStorage.setItem('telur_start_time', newStart);
         localStorage.removeItem('telur_history_db');
@@ -1088,7 +1077,6 @@
         updateTimerDisplay();
         switchDayView(1);
 
-        // Siarkan waktu mulai ke semua perangkat via MQTT
         if (client && client.connected) {
           client.publish('telur/kontrol/batch_start', String(newStart), { retain: true });
         }
@@ -1106,7 +1094,7 @@
       }
     }
 
-    // --- 6. KONEKSI MQTT EMQX CLOUD (SINKRONISASI REAL-TIME DUA ARAH) ---
+    // --- 6. KONEKSI MQTT EMQX CLOUD ---
     const mqttOptions = {
       clean: true,
       connectTimeout: 4000,
@@ -1122,10 +1110,11 @@
       client.subscribe('telur/slave/#');
       client.subscribe('telur/kontrol/#');
 
-      // Saat pertama kali terhubung, kirimkan waktu lokal yang ada agar tersinkronisasi jika broker belum punya
-      const localStart = localStorage.getItem('telur_start_time');
-      if (localStart) {
-        client.publish('telur/kontrol/batch_sync', localStart);
+      // Auto-broadcast jika laptop sudah berada di hari > 1
+      const localStart = parseInt(localStorage.getItem('telur_start_time') || '0');
+      const daysElapsed = Math.floor((Date.now() - localStart) / (1000 * 60 * 60 * 24));
+      if (daysElapsed >= 1) {
+        client.publish('telur/kontrol/batch_start', String(localStart), { retain: true });
       }
     });
 
@@ -1135,16 +1124,11 @@
     client.on('message', (topic, message) => {
       const val = message.toString();
 
-      // SINKRONISASI WAKTU HARI ANTAR LAPTOP & HP
-      if (topic === 'telur/kontrol/batch_start' || topic === 'telur/kontrol/batch_sync') {
+      if (topic === 'telur/kontrol/batch_start') {
         const incomingTime = parseInt(val);
-        if (!isNaN(incomingTime)) {
-          const currentLocal = parseInt(localStorage.getItem('telur_start_time') || '0');
-          // Gunakan waktu yang paling awal (yang sudah berjalan lebih lama)
-          if (!currentLocal || incomingTime < currentLocal || topic === 'telur/kontrol/batch_start') {
-            localStorage.setItem('telur_start_time', incomingTime);
-            updateTimerDisplay();
-          }
+        if (!isNaN(incomingTime) && incomingTime > 0) {
+          localStorage.setItem('telur_start_time', incomingTime);
+          updateTimerDisplay();
         }
       } else if (topic === 'telur/slave/1') {
         const numVal = parseFloat(val);
