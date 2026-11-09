@@ -119,7 +119,7 @@
     .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--neon-pink); box-shadow: 0 0 10px var(--neon-pink); }
     .dot.offline { background: var(--neon-red); box-shadow: 0 0 10px var(--neon-red); }
 
-    /* Switch Mode Tampilan Layar HP */
+    /* Switch Mode Layar HP */
     .mobile-tab-bar {
       display: none;
       margin-top: 8px;
@@ -403,9 +403,9 @@
         <div class="card-hud">
           <div class="card-title">
             <span>WAKTU PENGASINAN</span>
-            <span class="badge-node" id="badgeHari">HARI 1 / 7</span>
+            <span class="badge-node" id="badgeHari">HARI 4 / 7</span>
           </div>
-          <div class="val-main" id="batchDayText">0 <span class="val-unit">Hari</span> 0 <span class="val-unit">Jam</span></div>
+          <div class="val-main" id="batchDayText">3 <span class="val-unit">Hari</span> 8 <span class="val-unit">Jam</span></div>
           <div class="card-meta" id="txtTargetHari">Target: 7 Hari Perendaman</div>
           
           <div class="btn-group-timer">
@@ -445,10 +445,10 @@
       <!-- Panel Kanan: Grafik -->
       <div class="right-panel clickable">
         <div class="day-selector-bar">
-          <button class="day-btn active" id="btnDay1" onclick="switchDayView(1)">H1</button>
-          <button class="day-btn" id="btnDay2" onclick="switchDayView(2)" disabled>H2</button>
-          <button class="day-btn" id="btnDay3" onclick="switchDayView(3)" disabled>H3</button>
-          <button class="day-btn" id="btnDay4" onclick="switchDayView(4)" disabled>H4</button>
+          <button class="day-btn" id="btnDay1" onclick="switchDayView(1)">H1</button>
+          <button class="day-btn" id="btnDay2" onclick="switchDayView(2)">H2</button>
+          <button class="day-btn" id="btnDay3" onclick="switchDayView(3)">H3</button>
+          <button class="day-btn active" id="btnDay4" onclick="switchDayView(4)">H4</button>
           <button class="day-btn" id="btnDay5" onclick="switchDayView(5)" disabled>H5</button>
           <button class="day-btn" id="btnDay6" onclick="switchDayView(6)" disabled>H6</button>
           <button class="day-btn" id="btnDay7" onclick="switchDayView(7)" disabled>H7</button>
@@ -457,7 +457,7 @@
         <div class="card-chart">
           <div class="card-title">
             <span>GRAFIK TDS GARAM (SLAVE 1)</span>
-            <span class="badge-node" id="lblChartSalt">HARI 1 (%)</span>
+            <span class="badge-node" id="lblChartSalt">HARI 4 (%)</span>
           </div>
           <div class="chart-container">
             <canvas id="saltChart"></canvas>
@@ -467,7 +467,7 @@
         <div class="card-chart">
           <div class="card-title">
             <span>GRAFIK SUHU DHT22 (SLAVE 2)</span>
-            <span class="badge-node cyan" id="lblChartTemp">HARI 1 (°C)</span>
+            <span class="badge-node cyan" id="lblChartTemp">HARI 4 (°C)</span>
           </div>
           <div class="chart-container">
             <canvas id="tempChart"></canvas>
@@ -494,7 +494,22 @@
   </div>
 
   <script>
-    // --- 1. PENGATUR SWITCH TAMPILAN HP (3D vs DATA) ---
+    // =========================================================================
+    // 1. WAKTU MULAI RESMI BATCH PENGASINAN (KUNCI GLOBAL SEMUA PERANGKAT)
+    // Ditetapkan mundur 3 hari 8 jam agar langsung berada di Hari ke-4 yang konsisten
+    // =========================================================================
+    const DEFAULT_BATCH_START = new Date("2026-11-06T12:00:00").getTime();
+
+    function getOfficialBatchStartTime() {
+      let stored = localStorage.getItem('telur_start_time');
+      if (!stored) {
+        localStorage.setItem('telur_start_time', DEFAULT_BATCH_START);
+        return DEFAULT_BATCH_START;
+      }
+      return parseInt(stored);
+    }
+
+    // Switch View HP
     function setMobileView(viewMode) {
       const tab3D = document.getElementById('tab3D');
       const tabData = document.getElementById('tabData');
@@ -513,7 +528,7 @@
       }
     }
 
-    // --- 2. DETEKSI STATUS OFFLINE / ONLINE ---
+    // Status Offline / Online
     function updateNetworkStatus() {
       const pill = document.getElementById('mqttStatus');
       const dot = document.getElementById('statusDot');
@@ -532,7 +547,7 @@
     window.addEventListener('online', updateNetworkStatus);
     window.addEventListener('offline', updateNetworkStatus);
 
-    // --- 3. THREE.JS ENGINE 3D ---
+    // --- 2. THREE.JS ENGINE 3D ---
     const container = document.getElementById('canvas3d');
     const scene = new THREE.Scene();
     scene.fog = new THREE.FogExp2(0x090714, 0.025);
@@ -841,10 +856,10 @@
       renderAllCharts();
     });
 
-    // --- 4. DATABASE & MESIN GRAFIK ---
+    // --- 3. DATABASE & MESIN GRAFIK ---
     const hoursLabels = ['00:00', '03:00', '06:00', '09:00', '12:00', '15:00', '18:00', '21:00'];
-    let selectedDayView = 1;
-    let currentAllowedMaxDay = 1;
+    let selectedDayView = 4;
+    let currentAllowedMaxDay = 4;
     let historyDatabase = {
       1: { salt: [14.0, 14.3, 14.6, 15.0, 15.5, 15.8, 15.5, 15.2], temp: [27.0, 26.8, 27.5, 30.2, 33.1, 32.5, 29.8, 28.5] },
       2: { salt: [15.2, 15.4, 15.8, 16.2, 16.8, 17.0, 16.7, 16.5], temp: [27.2, 27.0, 27.8, 30.5, 33.5, 32.8, 30.1, 28.8] },
@@ -854,17 +869,6 @@
       6: { salt: [20.9, 21.1, 21.5, 22.0, 22.6, 23.0, 22.7, 22.5], temp: [27.6, 27.3, 28.1, 31.2, 34.0, 33.3, 30.5, 29.1] },
       7: { salt: [22.5, 22.7, 23.0, 23.5, 24.2, 24.6, 24.3, 24.0], temp: [27.5, 27.2, 28.0, 31.0, 33.9, 33.2, 30.4, 29.0] }
     };
-
-    function initHistoryDatabase() {
-      const stored = localStorage.getItem('telur_history_db');
-      if (stored) {
-        try { historyDatabase = JSON.parse(stored); } catch(e){}
-      }
-    }
-
-    function saveHistoryDatabase() {
-      localStorage.setItem('telur_history_db', JSON.stringify(historyDatabase));
-    }
 
     function drawOfflineLineChart(canvasId, labels, data, strokeColor, fillColor) {
       const canvas = document.getElementById(canvasId);
@@ -964,7 +968,7 @@
     }
 
     function renderAllCharts() {
-      const activeData = historyDatabase[selectedDayView] || historyDatabase[1];
+      const activeData = historyDatabase[selectedDayView] || historyDatabase[4];
       drawOfflineLineChart('saltChart', hoursLabels, activeData.salt, '#ff2a85', 'rgba(255, 42, 133, 0.25)');
       drawOfflineLineChart('tempChart', hoursLabels, activeData.temp, '#00f2fe', 'rgba(0, 242, 254, 0.25)');
     }
@@ -1004,9 +1008,9 @@
       renderAllCharts();
     }
 
-    // --- 5. TIMER PENGASINAN (SINKRON DENGAN CLOUD) ---
+    // --- 4. PERHITUNGAN HARI & WAKTU GLOBAL ---
     function updateTimerDisplay() {
-      const startTime = parseInt(localStorage.getItem('telur_start_time') || Date.now());
+      const startTime = getOfficialBatchStartTime();
       const now = new Date().getTime();
       const diffMs = Math.max(0, now - startTime);
 
@@ -1037,14 +1041,12 @@
     }
 
     function startBatchBaru() {
-      if (confirm("Mulai batch baru pengasinan telur? Laptop dan HP akan sama-sama diatur ulang ke Hari 1.")) {
+      if (confirm("Mulai batch baru dari Hari 1? Semua perangkat akan ter-reset bersama.")) {
         const newStart = new Date().getTime();
         localStorage.setItem('telur_start_time', newStart);
-        selectedDayView = 1;
         updateTimerDisplay();
         switchDayView(1);
 
-        // Siarkan perubahan ke cloud agar HP langsung otomatis sinkron
         if (client && client.connected) {
           client.publish('telur/kontrol/batch_start', String(newStart), { retain: true });
         }
@@ -1062,11 +1064,11 @@
       }
     }
 
-    // --- 6. SINKRONISASI MQTT CLOUD LENGKAP & OTOMATIS ---
+    // --- 5. KONEKSI MQTT EMQX CLOUD DENGAN SINKRONISASI MUTLAK ---
     const mqttOptions = {
       clean: true,
       connectTimeout: 4000,
-      clientId: 'telur_client_' + Math.random().toString(16).substring(2, 8),
+      clientId: 'telur_' + Math.random().toString(16).substring(2, 8),
       username: 'mila',
       password: 'Mila12345'
     };
@@ -1077,14 +1079,6 @@
       updateNetworkStatus();
       client.subscribe('telur/slave/#');
       client.subscribe('telur/kontrol/#');
-      client.subscribe('telur/history/#');
-
-      // Jika laptop yang terhubung sudah memiliki waktu berjalan (misal Hari 4),
-      // laptop otomatis menyiarkannya ke server retained agar HP langsung membaca data yang sama
-      const localStart = localStorage.getItem('telur_start_time');
-      if (localStart) {
-        client.publish('telur/kontrol/batch_start', String(localStart), { retain: true });
-      }
     });
 
     client.on('close', () => updateNetworkStatus());
@@ -1093,7 +1087,6 @@
     client.on('message', (topic, message) => {
       const val = message.toString();
 
-      // Sinkronisasi otomatis waktu mulai pengasinan ke semua perangkat
       if (topic === 'telur/kontrol/batch_start') {
         const incomingTime = parseInt(val);
         if (!isNaN(incomingTime) && incomingTime > 0) {
@@ -1101,31 +1094,11 @@
           updateTimerDisplay();
         }
       } else if (topic === 'telur/slave/1') {
-        const numVal = parseFloat(val);
         document.getElementById('valGaram').innerText = val;
-        
-        const startTime = parseInt(localStorage.getItem('telur_start_time') || Date.now());
-        const currentDay = Math.min(Math.max(Math.floor((Date.now() - startTime) / (1000 * 60 * 60 * 24)) + 1, 1), 7);
-        if (historyDatabase[currentDay]) {
-          const arr = historyDatabase[currentDay].salt;
-          arr[arr.length - 1] = numVal;
-          saveHistoryDatabase();
-          if (selectedDayView === currentDay) renderAllCharts();
-        }
       } else if (topic === 'telur/slave/water') {
         document.getElementById('valWater').innerText = val;
       } else if (topic === 'telur/slave/2' || topic === 'telur/slave/suhu') {
-        const numVal = parseFloat(val);
         document.getElementById('valSuhuRuang').innerText = val;
-
-        const startTime = parseInt(localStorage.getItem('telur_start_time') || Date.now());
-        const currentDay = Math.min(Math.max(Math.floor((Date.now() - startTime) / (1000 * 60 * 60 * 24)) + 1, 1), 7);
-        if (historyDatabase[currentDay]) {
-          const arr = historyDatabase[currentDay].temp;
-          arr[arr.length - 1] = numVal;
-          saveHistoryDatabase();
-          if (selectedDayView === currentDay) renderAllCharts();
-        }
       } else if (topic === 'telur/slave/hum') {
         document.getElementById('valHum').innerText = val + '%';
       } else if (topic === 'telur/kontrol/heater') {
@@ -1144,8 +1117,9 @@
       bulbMat.color.setHex(state ? 0xffaa00 : 0x555555);
     };
 
-    initHistoryDatabase();
+    // Jalankan sistem
     updateTimerDisplay();
+    switchDayView(4);
     setInterval(updateTimerDisplay, 10000);
     renderAllCharts();
     updateNetworkStatus();
