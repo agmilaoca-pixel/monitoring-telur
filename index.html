@@ -5,7 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Dashboard Monitoring Telur Asin</title>
   
-  <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+  <!-- Library MQTT Browser Build Stabil & Three.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 
   <style>
@@ -84,12 +85,12 @@
     .lamp-dock {
       background: var(--card-bg);
       border: 2px solid var(--neon-pink);
-      padding: 6px 14px;
+      padding: 6px 12px;
       border-radius: 999px;
       display: flex;
       align-items: center;
       gap: 8px;
-      box-shadow: 0 0 14px rgba(255, 42, 133, 0.6);
+      box-shadow: 0 0 12px rgba(255, 42, 133, 0.4);
       cursor: pointer;
     }
     .lamp-dock span {
@@ -309,17 +310,17 @@
     <div class="top-bar clickable">
       <div class="brand-box">
         <h1>DIGITAL TWIN: WADAH PENGASINAN TELUR</h1>
-        <p>● SINKRONISASI REAL-TIME CLOUD LAMPU &amp; SENSOR</p>
+        <p>● SENSOR DHT22 &amp; PROBE TDS → H1 - H SEKARANG</p>
       </div>
 
       <div class="top-right-controls">
         <label class="lamp-dock" for="btnToggleLampu">
-          <span>LAMPU PENGASINAN</span>
-          <input type="checkbox" id="btnToggleLampu" onchange="triggerLampu(this.checked)" style="transform: scale(1.4); cursor: pointer; accent-color: var(--neon-pink);">
+          <span>Lampu</span>
+          <input type="checkbox" id="btnToggleLampu" onchange="userToggleLampu(this.checked)" style="transform: scale(1.3); cursor: pointer; accent-color: var(--neon-pink);">
         </label>
 
-        <div class="status-pill">
-          <span class="dot"></span> <span id="statusText">LIVE SYNC</span>
+        <div class="status-pill" id="mqttStatus">
+          <span class="dot" id="statusDot"></span> <span id="statusText">EMQX</span>
         </div>
       </div>
     </div>
@@ -448,10 +449,14 @@
     cyanRimLight.position.set(6, 6, -5);
     scene.add(cyanRimLight);
 
-    // LAMPU PEMANAS 3D
+    // Cahaya Pemanas 3D
     const heaterLight = new THREE.PointLight(0xffaa00, 0.0, 25);
     heaterLight.position.set(0, 1.8, 0);
     scene.add(heaterLight);
+
+    const grid = new THREE.GridHelper(30, 30, 0xff2a85, 0x1f1435);
+    grid.position.y = -2;
+    scene.add(grid);
 
     const groupTank = new THREE.Group();
     scene.add(groupTank);
@@ -460,6 +465,7 @@
     const boxMat = new THREE.MeshPhysicalMaterial({
       color: 0x00f2fe,
       transmission: 0.95,
+      opacity: 1,
       transparent: true,
       roughness: 0.06
     });
@@ -468,12 +474,16 @@
 
     // BOHLAM LAMPU 3D
     const bulbGeo = new THREE.SphereGeometry(0.38, 24, 24);
-    const bulbMat = new THREE.MeshBasicMaterial({ color: 0x444444 });
+    const bulbMat = new THREE.MeshStandardMaterial({
+      color: 0x444444,
+      emissive: 0x000000,
+      roughness: 0.2
+    });
     const bulbMesh = new THREE.Mesh(bulbGeo, bulbMat);
-    bulbMesh.position.set(0, 1.85, 0);
+    bulbMesh.position.set(0, 1.82, 0);
     groupTank.add(bulbMesh);
 
-    // Telur
+    // Wadah Telur, Garam, dan Air
     const eggGeo = new THREE.SphereGeometry(0.55, 24, 20);
     eggGeo.scale(1, 1.35, 1);
     const eggMat = new THREE.MeshStandardMaterial({ color: 0x7da48d, roughness: 0.65 });
@@ -490,7 +500,6 @@
       groupTank.add(e);
     });
 
-    // Air & Garam
     const saltBed = new THREE.Mesh(new THREE.BoxGeometry(4.0, 1.8, 4.0), new THREE.MeshStandardMaterial({ color: 0xf3f4f6, transparent: true, opacity: 0.88 }));
     saltBed.position.set(0, -0.9, 0);
     groupTank.add(saltBed);
@@ -517,86 +526,88 @@
       renderer.setSize(window.innerWidth, window.innerHeight);
     });
 
-    // --- LOGIKA UTAMA SINKRONISASI LAMPU (DUAL-CHANNEL: HTTP RELAY + MQTT BROADCAST) ---
-    function updateLampuVisual(isNyala) {
+    // --- FUNGSI TAMPILAN CAHAYA & BOHLAM LAMPU ---
+    function setLampuVisual(isNyala) {
       const checkbox = document.getElementById('btnToggleLampu');
       if (checkbox) checkbox.checked = isNyala;
 
       if (isNyala) {
-        heaterLight.intensity = 6.0;
+        heaterLight.intensity = 5.5;
         bulbMat.color.setHex(0xffaa00);
+        bulbMat.emissive.setHex(0xffaa00);
       } else {
         heaterLight.intensity = 0.0;
         bulbMat.color.setHex(0x444444);
+        bulbMat.emissive.setHex(0x000000);
       }
     }
 
-    // Channel Sinkronisasi Publik Instan (Pasti Terkirim ke Semua HP & Laptop yang Buka Link)
-    const SYNC_CHANNEL = "telur_lampu_sync_channel";
-    const bc = ('BroadcastChannel' in window) ? new BroadcastChannel(SYNC_CHANNEL) : null;
-    if (bc) {
-      bc.onmessage = (event) => {
-        if (event.data && typeof event.data.lampu !== 'undefined') {
-          updateLampuVisual(event.data.lampu);
-        }
-      };
-    }
+    // --- SINKRONISASI MQTT CLOUD EMQX MENGGUNAKAN PAHO WEBSOCKET ---
+    const hostname = "o110101d.ala.eu-central-1.emqxsl.com";
+    const port = 8084;
+    const clientId = "client_" + Date.now() + "_" + Math.floor(Math.random() * 1000);
 
-    // Otomatis Polling via Server State Relay Publik yang Bebas CORS
-    async function checkCloudLamp() {
-      try {
-        const res = await fetch('https://api.counterapi.dev/v1/telur-mila/lampu-state');
-        const data = await res.json();
-        // Ganjil = ON, Genap = OFF
-        const isNyala = (data.count % 2 !== 0);
-        const curCheckbox = document.getElementById('btnToggleLampu').checked;
-        if (curCheckbox !== isNyala) {
-          updateLampuVisual(isNyala);
-        }
-      } catch (e) {}
-    }
-    setInterval(checkCloudLamp, 1500); // Sinkronisasi setiap 1.5 detik tanpa delay
+    const client = new Paho.MQTT.Client(hostname, Number(port), clientId);
 
-    async function triggerLampu(state) {
-      updateLampuVisual(state);
+    client.onConnectionLost = function (responseObject) {
+      const pill = document.getElementById('mqttStatus');
+      pill.style.borderColor = "var(--neon-red)";
+      document.getElementById('statusText').innerText = "Offline";
+    };
 
-      if (bc) bc.postMessage({ lampu: state });
+    client.onMessageArrived = function (message) {
+      const topic = message.destinationName;
+      const val = message.payloadString.trim();
 
-      // Kirim via MQTT jika client terhubung
-      if (window.mqttClient && window.mqttClient.connected) {
-        window.mqttClient.publish('telur/kontrol/lampu', state ? 'ON' : 'OFF');
-        window.mqttClient.publish('telur/kontrol/heater', state ? 'ON' : 'OFF');
+      if (topic === "telur/kontrol/lampu" || topic === "telur/kontrol/heater") {
+        const isNyala = (val === "ON" || val === "1");
+        setLampuVisual(isNyala);
+      } else if (topic === "telur/slave/1") {
+        document.getElementById('valGaram').innerText = val;
+      } else if (topic === "telur/slave/water") {
+        document.getElementById('valWater').innerText = val;
+      } else if (topic === "telur/slave/2" || topic === "telur/slave/suhu") {
+        document.getElementById('valSuhuRuang').innerText = val;
+      } else if (topic === "telur/slave/hum") {
+        document.getElementById('valHum').innerText = val + "%";
       }
+    };
 
-      // Kirim ke Cloud Relay agar HP dan Laptop seketika membaca status yang sama
-      try {
-        await fetch('https://api.counterapi.dev/v1/telur-mila/lampu-state/up');
-      } catch (e) {}
-    }
+    client.connect({
+      useSSL: true,
+      userName: "mila",
+      password: "Mila12345",
+      timeout: 5,
+      onSuccess: function () {
+        const pill = document.getElementById('mqttStatus');
+        pill.style.borderColor = "rgba(255, 42, 133, 0.4)";
+        document.getElementById('statusText').innerText = "EMQX";
+        client.subscribe("telur/kontrol/#");
+        client.subscribe("telur/slave/#");
+      },
+      onFailure: function (e) {
+        document.getElementById('statusText').innerText = "Gagal Konek";
+      }
+    });
 
-    // --- KONEKSI MQTT BROKER PUBLIK (HIVE / EMQX GLOBAL) ---
-    try {
-      const client = mqtt.connect('wss://broker.hivemq.com:8884/mqtt', {
-        clientId: 'telur_' + Math.random().toString(16).substring(2, 9),
-        keepalive: 60
-      });
-      window.mqttClient = client;
+    window.userToggleLampu = function(state) {
+      setLampuVisual(state);
 
-      client.on('connect', () => {
-        client.subscribe('telur/kontrol/#');
-        client.subscribe('telur/slave/#');
-      });
+      if (client.isConnected()) {
+        const payload = state ? "ON" : "OFF";
+        const msg1 = new Paho.MQTT.Message(payload);
+        msg1.destinationName = "telur/kontrol/lampu";
+        msg1.retained = true;
+        client.send(msg1);
 
-      client.on('message', (topic, msg) => {
-        const val = msg.toString().trim();
-        if (topic.includes('lampu') || topic.includes('heater')) {
-          const isNyala = (val === 'ON' || val === '1' || val === 'true');
-          updateLampuVisual(isNyala);
-        }
-      });
-    } catch(e) {}
+        const msg2 = new Paho.MQTT.Message(payload);
+        msg2.destinationName = "telur/kontrol/heater";
+        msg2.retained = true;
+        client.send(msg2);
+      }
+    };
 
-    // Gambar Grafik Statis
+    // Render Gambar Garis Grafik
     function drawChart(id, color) {
       const c = document.getElementById(id);
       if (!c) return;
