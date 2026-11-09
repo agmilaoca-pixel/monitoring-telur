@@ -81,19 +81,19 @@
     .top-right-controls {
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 8px;
     }
 
-    /* Saklar Lampu di Header Atas (Akses Cepat di HP & Laptop) */
+    /* Saklar Lampu di Header Atas */
     .lamp-dock {
       background: var(--card-bg);
       border: 1px solid var(--neon-pink);
-      padding: 5px 12px;
+      padding: 6px 12px;
       border-radius: 999px;
       display: flex;
       align-items: center;
       gap: 8px;
-      box-shadow: 0 0 10px rgba(255, 42, 133, 0.4);
+      box-shadow: 0 0 12px rgba(255, 42, 133, 0.4);
     }
     .lamp-dock span {
       font-size: 11px;
@@ -356,7 +356,7 @@
       <div class="top-right-controls">
         <div class="lamp-dock">
           <span>Lampu</span>
-          <input type="checkbox" id="btnToggleLampu" onchange="toggleLampu(this.checked)" style="transform: scale(1.3); cursor: pointer; accent-color: var(--neon-pink);">
+          <input type="checkbox" id="btnToggleLampu" onchange="userToggleLampu(this.checked)" style="transform: scale(1.3); cursor: pointer; accent-color: var(--neon-pink);">
         </div>
 
         <div class="status-pill" id="mqttStatus">
@@ -373,14 +373,13 @@
 
     <!-- Kontainer Data -->
     <div class="mobile-data-scroll">
-      <!-- Panel Kiri: Telemetri -->
       <div class="left-panel clickable">
         <div class="card-hud">
           <div class="card-title">
             <span>WAKTU PENGASINAN</span>
-            <span class="badge-node" id="badgeHari">HARI 4 / 7</span>
+            <span class="badge-node" id="badgeHari">HARI 1 / 7</span>
           </div>
-          <div class="val-main" id="batchDayText">3 <span class="val-unit">Hari</span> 9 <span class="val-unit">Jam</span></div>
+          <div class="val-main" id="batchDayText">0 <span class="val-unit">Hari</span> 0 <span class="val-unit">Jam</span></div>
           <div class="card-meta">Target: 7 Hari Perendaman</div>
           
           <div class="btn-group-timer">
@@ -417,13 +416,12 @@
         </div>
       </div>
 
-      <!-- Panel Kanan: Grafik -->
       <div class="right-panel clickable">
         <div class="day-selector-bar">
-          <button class="day-btn" id="btnDay1" onclick="switchDayView(1)">H1</button>
-          <button class="day-btn" id="btnDay2" onclick="switchDayView(2)">H2</button>
-          <button class="day-btn" id="btnDay3" onclick="switchDayView(3)">H3</button>
-          <button class="day-btn active" id="btnDay4" onclick="switchDayView(4)">H4</button>
+          <button class="day-btn active" id="btnDay1" onclick="switchDayView(1)">H1</button>
+          <button class="day-btn" id="btnDay2" onclick="switchDayView(2)" disabled>H2</button>
+          <button class="day-btn" id="btnDay3" onclick="switchDayView(3)" disabled>H3</button>
+          <button class="day-btn" id="btnDay4" onclick="switchDayView(4)" disabled>H4</button>
           <button class="day-btn" id="btnDay5" onclick="switchDayView(5)" disabled>H5</button>
           <button class="day-btn" id="btnDay6" onclick="switchDayView(6)" disabled>H6</button>
           <button class="day-btn" id="btnDay7" onclick="switchDayView(7)" disabled>H7</button>
@@ -432,7 +430,7 @@
         <div class="card-chart">
           <div class="card-title">
             <span>GRAFIK TDS GARAM (SLAVE 1)</span>
-            <span class="badge-node" id="lblChartSalt">HARI 4 (%)</span>
+            <span class="badge-node" id="lblChartSalt">HARI 1 (%)</span>
           </div>
           <div class="chart-container">
             <canvas id="saltChart"></canvas>
@@ -442,7 +440,7 @@
         <div class="card-chart">
           <div class="card-title">
             <span>GRAFIK SUHU DHT22 (SLAVE 2)</span>
-            <span class="badge-node cyan" id="lblChartTemp">HARI 4 (°C)</span>
+            <span class="badge-node cyan" id="lblChartTemp">HARI 1 (°C)</span>
           </div>
           <div class="chart-container">
             <canvas id="tempChart"></canvas>
@@ -462,13 +460,8 @@
   </div>
 
   <script>
-    // KUNCI MATI STATIS: Tepat 3 Hari 9 Jam (Hari ke-4) untuk semua perangkat!
-    const CURRENT_DISPLAY_DAYS = 3;
-    const CURRENT_DISPLAY_HOURS = 9;
-    const CURRENT_ACTIVE_DAY = 4;
-
-    let selectedDayView = CURRENT_ACTIVE_DAY;
-    let currentAllowedMaxDay = CURRENT_ACTIVE_DAY;
+    let selectedDayView = 1;
+    let currentAllowedMaxDay = 1;
 
     function setMobileView(viewMode) {
       const tab3D = document.getElementById('tab3D');
@@ -529,6 +522,7 @@
     cyanRimLight.position.set(6, 6, -5);
     scene.add(cyanRimLight);
 
+    // Sumber Cahaya Lampu Pemanas 3D
     const heaterLight = new THREE.PointLight(0xffaa22, 0.0, 16);
     heaterLight.position.set(0, 1.8, 0);
     scene.add(heaterLight);
@@ -695,6 +689,7 @@
     socketMesh.position.set(0, 2.05, 0);
     lidGroup.add(socketMesh);
 
+    // Bohlam Lampu Pemanas 3D
     const bulbGeo = new THREE.SphereGeometry(0.32, 20, 20);
     const bulbMat = new THREE.MeshBasicMaterial({ color: 0x555555 });
     const bulbMesh = new THREE.Mesh(bulbGeo, bulbMat);
@@ -800,7 +795,7 @@
       renderAllCharts();
     });
 
-    // --- DATA & GRAFIK NATIVE CANVAS ---
+    // --- DATA & GRAFIK PURE CANVAS ---
     const hoursLabels = ['00:00', '03:00', '06:00', '09:00', '12:00', '15:00', '18:00', '21:00'];
     let historyDatabase = {
       1: { salt: [14.0, 14.3, 14.6, 15.0, 15.5, 15.8, 15.5, 15.2], temp: [27.0, 26.8, 27.5, 30.2, 33.1, 32.5, 29.8, 28.5] },
@@ -908,7 +903,7 @@
     }
 
     function renderAllCharts() {
-      const activeData = historyDatabase[selectedDayView] || historyDatabase[CURRENT_ACTIVE_DAY];
+      const activeData = historyDatabase[selectedDayView] || historyDatabase[1];
       drawOfflineLineChart('saltChart', hoursLabels, activeData.salt, '#ff2a85', 'rgba(255, 42, 133, 0.25)');
       drawOfflineLineChart('tempChart', hoursLabels, activeData.temp, '#00f2fe', 'rgba(0, 242, 254, 0.25)');
     }
@@ -937,15 +932,12 @@
       renderAllCharts();
     }
 
-    // Tombol Mulai Baru & Selesai Tetap Siap Dipakai
     function startBatchBaru() {
-      if (confirm("Reset ulang batch ke 0 Hari 0 Jam?")) {
-        document.getElementById('batchDayText').innerHTML = `0 <span class="val-unit">Hari</span> 0 <span class="val-unit">Jam</span>`;
-        document.getElementById('badgeHari').innerText = `HARI 1 / 7`;
-        currentAllowedMaxDay = 1;
-        updateDayButtonsAccessibility(1);
-        switchDayView(1);
-      }
+      document.getElementById('batchDayText').innerHTML = `0 <span class="val-unit">Hari</span> 0 <span class="val-unit">Jam</span>`;
+      document.getElementById('badgeHari').innerText = `HARI 1 / 7`;
+      currentAllowedMaxDay = 1;
+      updateDayButtonsAccessibility(1);
+      switchDayView(1);
     }
 
     function simulasiSelesai() {
@@ -956,11 +948,35 @@
       switchDayView(7);
     }
 
-    // MQTT REALTIME SYNC UNTUK SENSOR & SAKLAR LAMPU
+    // --- FUNGSI TAMPILAN CAHAYA & BOHLAM LAMPU ---
+    function setLampuVisual(isNyala) {
+      const checkbox = document.getElementById('btnToggleLampu');
+      if (checkbox) checkbox.checked = isNyala;
+
+      if (isNyala) {
+        heaterLight.intensity = 4.0;
+        bulbMat.color.setHex(0xffaa00);
+      } else {
+        heaterLight.intensity = 0.0;
+        bulbMat.color.setHex(0x555555);
+      }
+    }
+
+    // Dijalankan saat tombol saklar diklik oleh pengguna di HP atau Laptop
+    function userToggleLampu(state) {
+      setLampuVisual(state);
+
+      if (client && client.connected) {
+        const payload = state ? 'ON' : 'OFF';
+        client.publish('telur/kontrol/heater', payload, { qos: 1, retain: true });
+      }
+    }
+
+    // --- KONEKSI MQTT CLOUD EMQX ---
     const mqttOptions = {
       clean: true,
       connectTimeout: 4000,
-      clientId: 'telur_' + Math.random().toString(16).substring(2, 8),
+      clientId: 'telur_client_' + Math.random().toString(16).substring(2, 8),
       username: 'mila',
       password: 'Mila12345'
     };
@@ -979,7 +995,11 @@
     client.on('message', (topic, message) => {
       const val = message.toString();
 
-      if (topic === 'telur/slave/1') {
+      // Penerimaan status lampu dari broker MQTT
+      if (topic === 'telur/kontrol/heater') {
+        const isNyala = (val === 'ON');
+        setLampuVisual(isNyala);
+      } else if (topic === 'telur/slave/1') {
         document.getElementById('valGaram').innerText = val;
       } else if (topic === 'telur/slave/water') {
         document.getElementById('valWater').innerText = val;
@@ -987,29 +1007,12 @@
         document.getElementById('valSuhuRuang').innerText = val;
       } else if (topic === 'telur/slave/hum') {
         document.getElementById('valHum').innerText = val + '%';
-      } else if (topic === 'telur/kontrol/heater') {
-        // Sinkronisasi Lampu Dua Arah Realtime Antar Perangkat
-        const isNyala = val === 'ON';
-        document.getElementById('btnToggleLampu').checked = isNyala;
-        heaterLight.intensity = isNyala ? 3.8 : 0.0;
-        bulbMat.color.setHex(isNyala ? 0xffaa00 : 0x555555);
       }
     });
 
-    // Fungsi Klik Lampu (Menyiarkan Perintah ke Cloud MQTT Secara Instan)
-    window.toggleLampu = function(state) {
-      if (client && client.connected) {
-        client.publish('telur/kontrol/heater', state ? 'ON' : 'OFF', { retain: true, qos: 1 });
-      }
-      heaterLight.intensity = state ? 3.8 : 0.0;
-      bulbMat.color.setHex(state ? 0xffaa00 : 0x555555);
-    };
-
-    // Eksekusi Tampilan Awal: Kunci Langsung di Hari 4 (3 Hari 9 Jam)
-    document.getElementById('batchDayText').innerHTML = `${CURRENT_DISPLAY_DAYS} <span class="val-unit">Hari</span> ${CURRENT_DISPLAY_HOURS} <span class="val-unit">Jam</span>`;
-    document.getElementById('badgeHari').innerText = `HARI ${CURRENT_ACTIVE_DAY} / 7`;
-    updateDayButtonsAccessibility(CURRENT_ACTIVE_DAY);
-    switchDayView(CURRENT_ACTIVE_DAY);
+    // Inisialisasi awal
+    updateDayButtonsAccessibility(1);
+    switchDayView(1);
     updateNetworkStatus();
   </script>
 </body>
