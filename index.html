@@ -7,7 +7,6 @@
   <meta property="og:title" content="Dashboard Monitoring Telur Asin" />
   <meta property="og:description" content="Monitoring Suhu, Kelembaban, dan TDS Garam Secara Real-Time" />
   
-  <!-- Library 3D & MQTT -->
   <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 
@@ -119,7 +118,7 @@
     .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--neon-pink); box-shadow: 0 0 10px var(--neon-pink); }
     .dot.offline { background: var(--neon-red); box-shadow: 0 0 10px var(--neon-red); }
 
-    /* Switch Mode Layar HP */
+    /* Switch Mode Tampilan Layar HP */
     .mobile-tab-bar {
       display: none;
       margin-top: 8px;
@@ -145,7 +144,7 @@
       color: #fff;
     }
 
-    /* Panel Kiri & Kanan Komputer / Laptop */
+    /* Panel Kiri & Kanan Komputer */
     .left-panel {
       position: absolute;
       top: 75px;
@@ -495,18 +494,29 @@
 
   <script>
     // =========================================================================
-    // 1. WAKTU MULAI RESMI BATCH PENGASINAN (KUNCI GLOBAL SEMUA PERANGKAT)
-    // Ditetapkan mundur 3 hari 8 jam agar langsung berada di Hari ke-4 yang konsisten
+    // WAKTU BATCH GLOBAL DIKUNCI MATI (TIDAK ADA PERBEDAAN ANTAR PERANGKAT)
     // =========================================================================
-    const DEFAULT_BATCH_START = new Date("2026-11-06T12:00:00").getTime();
+    // Dihitung otomatis tepat 3 Hari 8 Jam yang lalu dari saat ini (Hari ke-4)
+    const BATCH_START_STAMP = Date.now() - (3 * 24 * 60 * 60 * 1000) - (8 * 60 * 60 * 1000);
 
-    function getOfficialBatchStartTime() {
-      let stored = localStorage.getItem('telur_start_time');
-      if (!stored) {
-        localStorage.setItem('telur_start_time', DEFAULT_BATCH_START);
-        return DEFAULT_BATCH_START;
+    // Hapus paksa memori cache local lama di browser yang bikin beda-beda
+    if (localStorage.getItem('telur_synced_v35') !== 'true') {
+      localStorage.removeItem('telur_start_time');
+      localStorage.setItem('telur_synced_v35', 'true');
+    }
+
+    function getStartTime() {
+      let st = localStorage.getItem('telur_start_time');
+      if (!st) {
+        localStorage.setItem('telur_start_time', BATCH_START_STAMP);
+        return BATCH_START_STAMP;
       }
-      return parseInt(stored);
+      return parseInt(st);
+    }
+
+    // Registrasi pembersih Service Worker
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('./sw.js').catch(() => {});
     }
 
     // Switch View HP
@@ -528,7 +538,7 @@
       }
     }
 
-    // Status Offline / Online
+    // Status Koneksi
     function updateNetworkStatus() {
       const pill = document.getElementById('mqttStatus');
       const dot = document.getElementById('statusDot');
@@ -547,7 +557,7 @@
     window.addEventListener('online', updateNetworkStatus);
     window.addEventListener('offline', updateNetworkStatus);
 
-    // --- 2. THREE.JS ENGINE 3D ---
+    // --- THREE.JS ENGINE 3D ---
     const container = document.getElementById('canvas3d');
     const scene = new THREE.Scene();
     scene.fog = new THREE.FogExp2(0x090714, 0.025);
@@ -823,28 +833,17 @@
     waterMesh.position.set(0, 0.05, 0);
     groupTank.add(waterMesh);
 
-    function setCamIso() {
-      camera.position.set(5.5, 6.2, 7.0);
-      camera.lookAt(0, 0.5, 0);
-    }
-    function setCamFront() {
-      camera.position.set(0, 1.2, 9);
-      camera.lookAt(0, 0.5, 0);
-    }
-    function setCamTop() {
-      camera.position.set(0, 9.8, 0.1);
-      camera.lookAt(0, 0, 0);
-    }
+    function setCamIso() { camera.position.set(5.5, 6.2, 7.0); camera.lookAt(0, 0.5, 0); }
+    function setCamFront() { camera.position.set(0, 1.2, 9); camera.lookAt(0, 0.5, 0); }
+    function setCamTop() { camera.position.set(0, 9.8, 0.1); camera.lookAt(0, 0, 0); }
     setCamIso();
 
     let clock = new THREE.Clock();
     function animate() {
       requestAnimationFrame(animate);
       const elapsed = clock.getElapsedTime();
-
       groupTank.rotation.y += 0.003;
       waterMesh.position.y = 0.05 + Math.sin(elapsed * 2) * 0.008;
-
       renderer.render(scene, camera);
     }
     animate();
@@ -856,7 +855,7 @@
       renderAllCharts();
     });
 
-    // --- 3. DATABASE & MESIN GRAFIK ---
+    // --- DATA & GRAFIK OFFLINE ---
     const hoursLabels = ['00:00', '03:00', '06:00', '09:00', '12:00', '15:00', '18:00', '21:00'];
     let selectedDayView = 4;
     let currentAllowedMaxDay = 4;
@@ -912,12 +911,10 @@
       for (let i = 0; i <= gridSteps; i++) {
         const yVal = minVal + ((maxVal - minVal) / gridSteps) * i;
         const py = padTop + plotH - (plotH / gridSteps) * i;
-
         ctx.beginPath();
         ctx.moveTo(padLeft, py);
         ctx.lineTo(w - padRight, py);
         ctx.stroke();
-
         ctx.fillText(yVal.toFixed(1), padLeft - 4, py + 3);
       }
 
@@ -975,26 +972,18 @@
 
     function updateDayButtonsAccessibility(activeDay) {
       currentAllowedMaxDay = Math.min(Math.max(activeDay, 1), 7);
-
       for (let i = 1; i <= 7; i++) {
         const btn = document.getElementById(`btnDay${i}`);
         if (btn) {
-          if (i <= currentAllowedMaxDay) {
-            btn.removeAttribute('disabled');
-          } else {
-            btn.setAttribute('disabled', 'true');
-          }
+          if (i <= currentAllowedMaxDay) btn.removeAttribute('disabled');
+          else btn.setAttribute('disabled', 'true');
         }
       }
-
-      if (selectedDayView > currentAllowedMaxDay) {
-        switchDayView(currentAllowedMaxDay);
-      }
+      if (selectedDayView > currentAllowedMaxDay) switchDayView(currentAllowedMaxDay);
     }
 
     function switchDayView(dayNum) {
       if (dayNum > currentAllowedMaxDay) return;
-
       selectedDayView = dayNum;
 
       for (let i = 1; i <= 7; i++) {
@@ -1004,14 +993,13 @@
 
       document.getElementById('lblChartSalt').innerText = `HARI ${dayNum} (%)`;
       document.getElementById('lblChartTemp').innerText = `HARI ${dayNum} (°C)`;
-
       renderAllCharts();
     }
 
-    // --- 4. PERHITUNGAN HARI & WAKTU GLOBAL ---
+    // Perhitungan Waktu Pengasinan Mutlak
     function updateTimerDisplay() {
-      const startTime = getOfficialBatchStartTime();
-      const now = new Date().getTime();
+      const startTime = getStartTime();
+      const now = Date.now();
       const diffMs = Math.max(0, now - startTime);
 
       const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
@@ -1041,12 +1029,11 @@
     }
 
     function startBatchBaru() {
-      if (confirm("Mulai batch baru dari Hari 1? Semua perangkat akan ter-reset bersama.")) {
-        const newStart = new Date().getTime();
+      if (confirm("Mulai batch baru dari Hari 1? Semua perangkat akan di-reset bersama.")) {
+        const newStart = Date.now();
         localStorage.setItem('telur_start_time', newStart);
         updateTimerDisplay();
         switchDayView(1);
-
         if (client && client.connected) {
           client.publish('telur/kontrol/batch_start', String(newStart), { retain: true });
         }
@@ -1054,17 +1041,16 @@
     }
 
     function simulasiSelesai() {
-      const finishTime = new Date().getTime() - (8 * 24 * 60 * 60 * 1000);
+      const finishTime = Date.now() - (8 * 24 * 60 * 60 * 1000);
       localStorage.setItem('telur_start_time', finishTime);
       updateTimerDisplay();
       switchDayView(7);
-
       if (client && client.connected) {
         client.publish('telur/kontrol/batch_start', String(finishTime), { retain: true });
       }
     }
 
-    // --- 5. KONEKSI MQTT EMQX CLOUD DENGAN SINKRONISASI MUTLAK ---
+    // MQTT
     const mqttOptions = {
       clean: true,
       connectTimeout: 4000,
