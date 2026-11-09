@@ -84,20 +84,20 @@
       gap: 6px;
     }
 
-    /* Saklar Lampu di Atas (Selalu Terlihat di HP & Laptop) */
+    /* Saklar Lampu di Header Atas (Akses Cepat di HP & Laptop) */
     .lamp-dock {
       background: var(--card-bg);
       border: 1px solid var(--neon-pink);
-      padding: 5px 10px;
+      padding: 5px 12px;
       border-radius: 999px;
       display: flex;
       align-items: center;
-      gap: 6px;
-      box-shadow: 0 0 10px rgba(255, 42, 133, 0.3);
+      gap: 8px;
+      box-shadow: 0 0 10px rgba(255, 42, 133, 0.4);
     }
     .lamp-dock span {
-      font-size: 10px;
-      font-weight: 700;
+      font-size: 11px;
+      font-weight: 800;
       color: #fff;
     }
 
@@ -378,9 +378,9 @@
         <div class="card-hud">
           <div class="card-title">
             <span>WAKTU PENGASINAN</span>
-            <span class="badge-node" id="badgeHari">HARI 1 / 7</span>
+            <span class="badge-node" id="badgeHari">HARI 4 / 7</span>
           </div>
-          <div class="val-main" id="batchDayText">0 <span class="val-unit">Hari</span> 0 <span class="val-unit">Jam</span></div>
+          <div class="val-main" id="batchDayText">3 <span class="val-unit">Hari</span> 9 <span class="val-unit">Jam</span></div>
           <div class="card-meta">Target: 7 Hari Perendaman</div>
           
           <div class="btn-group-timer">
@@ -420,10 +420,10 @@
       <!-- Panel Kanan: Grafik -->
       <div class="right-panel clickable">
         <div class="day-selector-bar">
-          <button class="day-btn active" id="btnDay1" onclick="switchDayView(1)">H1</button>
-          <button class="day-btn" id="btnDay2" onclick="switchDayView(2)" disabled>H2</button>
-          <button class="day-btn" id="btnDay3" onclick="switchDayView(3)" disabled>H3</button>
-          <button class="day-btn" id="btnDay4" onclick="switchDayView(4)" disabled>H4</button>
+          <button class="day-btn" id="btnDay1" onclick="switchDayView(1)">H1</button>
+          <button class="day-btn" id="btnDay2" onclick="switchDayView(2)">H2</button>
+          <button class="day-btn" id="btnDay3" onclick="switchDayView(3)">H3</button>
+          <button class="day-btn active" id="btnDay4" onclick="switchDayView(4)">H4</button>
           <button class="day-btn" id="btnDay5" onclick="switchDayView(5)" disabled>H5</button>
           <button class="day-btn" id="btnDay6" onclick="switchDayView(6)" disabled>H6</button>
           <button class="day-btn" id="btnDay7" onclick="switchDayView(7)" disabled>H7</button>
@@ -432,7 +432,7 @@
         <div class="card-chart">
           <div class="card-title">
             <span>GRAFIK TDS GARAM (SLAVE 1)</span>
-            <span class="badge-node" id="lblChartSalt">HARI 1 (%)</span>
+            <span class="badge-node" id="lblChartSalt">HARI 4 (%)</span>
           </div>
           <div class="chart-container">
             <canvas id="saltChart"></canvas>
@@ -442,7 +442,7 @@
         <div class="card-chart">
           <div class="card-title">
             <span>GRAFIK SUHU DHT22 (SLAVE 2)</span>
-            <span class="badge-node cyan" id="lblChartTemp">HARI 1 (°C)</span>
+            <span class="badge-node cyan" id="lblChartTemp">HARI 4 (°C)</span>
           </div>
           <div class="chart-container">
             <canvas id="tempChart"></canvas>
@@ -462,10 +462,13 @@
   </div>
 
   <script>
-    // Membaca waktu dari storage lokal perangkat
-    let batchStartTime = parseInt(localStorage.getItem('telur_start_time')) || Date.now();
-    let selectedDayView = 1;
-    let currentAllowedMaxDay = 1;
+    // KUNCI MATI STATIS: Tepat 3 Hari 9 Jam (Hari ke-4) untuk semua perangkat!
+    const CURRENT_DISPLAY_DAYS = 3;
+    const CURRENT_DISPLAY_HOURS = 9;
+    const CURRENT_ACTIVE_DAY = 4;
+
+    let selectedDayView = CURRENT_ACTIVE_DAY;
+    let currentAllowedMaxDay = CURRENT_ACTIVE_DAY;
 
     function setMobileView(viewMode) {
       const tab3D = document.getElementById('tab3D');
@@ -797,7 +800,7 @@
       renderAllCharts();
     });
 
-    // --- DATA & GRAFIK PURE CANVAS ---
+    // --- DATA & GRAFIK NATIVE CANVAS ---
     const hoursLabels = ['00:00', '03:00', '06:00', '09:00', '12:00', '15:00', '18:00', '21:00'];
     let historyDatabase = {
       1: { salt: [14.0, 14.3, 14.6, 15.0, 15.5, 15.8, 15.5, 15.2], temp: [27.0, 26.8, 27.5, 30.2, 33.1, 32.5, 29.8, 28.5] },
@@ -905,17 +908,16 @@
     }
 
     function renderAllCharts() {
-      const activeData = historyDatabase[selectedDayView] || historyDatabase[1];
+      const activeData = historyDatabase[selectedDayView] || historyDatabase[CURRENT_ACTIVE_DAY];
       drawOfflineLineChart('saltChart', hoursLabels, activeData.salt, '#ff2a85', 'rgba(255, 42, 133, 0.25)');
       drawOfflineLineChart('tempChart', hoursLabels, activeData.temp, '#00f2fe', 'rgba(0, 242, 254, 0.25)');
     }
 
     function updateDayButtonsAccessibility(activeDay) {
-      currentAllowedMaxDay = Math.min(Math.max(activeDay, 1), 7);
       for (let i = 1; i <= 7; i++) {
         const btn = document.getElementById(`btnDay${i}`);
         if (btn) {
-          if (i <= currentAllowedMaxDay) btn.removeAttribute('disabled');
+          if (i <= activeDay) btn.removeAttribute('disabled');
           else btn.setAttribute('disabled', 'true');
         }
       }
@@ -935,54 +937,30 @@
       renderAllCharts();
     }
 
-    // Perhitungan Waktu Pengasinan
-    function updateTimerDisplay() {
-      const now = Date.now();
-      const diffMs = Math.max(0, now - batchStartTime);
-
-      const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-      const hours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-      const currentDayNumber = Math.min(days + 1, 7);
-
-      document.getElementById('batchDayText').innerHTML = `${days} <span class="val-unit">Hari</span> ${hours} <span class="val-unit">Jam</span>`;
-
-      const badgeHari = document.getElementById('badgeHari');
-      badgeHari.innerText = `HARI ${currentDayNumber} / 7`;
-
-      updateDayButtonsAccessibility(currentDayNumber);
-    }
-
-    // Tombol Mulai Baru: Reset ke 0 Hari 0 Jam & Siarkan Langsung ke Cloud Broker
+    // Tombol Mulai Baru & Selesai Tetap Siap Dipakai
     function startBatchBaru() {
-      if (confirm("Mulai batch baru dari 0 Hari 0 Jam? HP dan Laptop akan langsung sinkron.")) {
-        const nowStamp = Date.now();
-        batchStartTime = nowStamp;
-        localStorage.setItem('telur_start_time', nowStamp);
-        updateTimerDisplay();
+      if (confirm("Reset ulang batch ke 0 Hari 0 Jam?")) {
+        document.getElementById('batchDayText').innerHTML = `0 <span class="val-unit">Hari</span> 0 <span class="val-unit">Jam</span>`;
+        document.getElementById('badgeHari').innerText = `HARI 1 / 7`;
+        currentAllowedMaxDay = 1;
+        updateDayButtonsAccessibility(1);
         switchDayView(1);
-
-        if (client && client.connected) {
-          client.publish('telur/kontrol/batch_start', String(nowStamp), { retain: true, qos: 1 });
-        }
       }
     }
 
     function simulasiSelesai() {
-      const finishStamp = Date.now() - (8 * 24 * 60 * 60 * 1000);
-      batchStartTime = finishStamp;
-      localStorage.setItem('telur_start_time', finishStamp);
-      updateTimerDisplay();
+      document.getElementById('batchDayText').innerHTML = `7 <span class="val-unit">Hari</span> 0 <span class="val-unit">Jam</span>`;
+      document.getElementById('badgeHari').innerText = `SELESAI (HARI KE-7)`;
+      currentAllowedMaxDay = 7;
+      updateDayButtonsAccessibility(7);
       switchDayView(7);
-      if (client && client.connected) {
-        client.publish('telur/kontrol/batch_start', String(finishStamp), { retain: true, qos: 1 });
-      }
     }
 
-    // MQTT Realtime Broadcast
+    // MQTT REALTIME SYNC UNTUK SENSOR & SAKLAR LAMPU
     const mqttOptions = {
       clean: true,
       connectTimeout: 4000,
-      clientId: 'telur_node_' + Math.random().toString(16).substring(2, 8),
+      clientId: 'telur_' + Math.random().toString(16).substring(2, 8),
       username: 'mila',
       password: 'Mila12345'
     };
@@ -1001,17 +979,7 @@
     client.on('message', (topic, message) => {
       const val = message.toString();
 
-      // Sinkronisasi Waktu Mulai Otomatis ke HP & Laptop
-      if (topic === 'telur/kontrol/batch_start') {
-        const incomingStamp = parseInt(val);
-        if (!isNaN(incomingStamp) && incomingStamp > 0) {
-          batchStartTime = incomingStamp;
-          localStorage.setItem('telur_start_time', incomingStamp);
-          updateTimerDisplay();
-          const curDay = Math.min(Math.floor((Date.now() - batchStartTime) / (1000 * 60 * 60 * 24)) + 1, 7);
-          switchDayView(curDay);
-        }
-      } else if (topic === 'telur/slave/1') {
+      if (topic === 'telur/slave/1') {
         document.getElementById('valGaram').innerText = val;
       } else if (topic === 'telur/slave/water') {
         document.getElementById('valWater').innerText = val;
@@ -1020,6 +988,7 @@
       } else if (topic === 'telur/slave/hum') {
         document.getElementById('valHum').innerText = val + '%';
       } else if (topic === 'telur/kontrol/heater') {
+        // Sinkronisasi Lampu Dua Arah Realtime Antar Perangkat
         const isNyala = val === 'ON';
         document.getElementById('btnToggleLampu').checked = isNyala;
         heaterLight.intensity = isNyala ? 3.8 : 0.0;
@@ -1027,6 +996,7 @@
       }
     });
 
+    // Fungsi Klik Lampu (Menyiarkan Perintah ke Cloud MQTT Secara Instan)
     window.toggleLampu = function(state) {
       if (client && client.connected) {
         client.publish('telur/kontrol/heater', state ? 'ON' : 'OFF', { retain: true, qos: 1 });
@@ -1035,9 +1005,11 @@
       bulbMat.color.setHex(state ? 0xffaa00 : 0x555555);
     };
 
-    updateTimerDisplay();
-    setInterval(updateTimerDisplay, 5000);
-    renderAllCharts();
+    // Eksekusi Tampilan Awal: Kunci Langsung di Hari 4 (3 Hari 9 Jam)
+    document.getElementById('batchDayText').innerHTML = `${CURRENT_DISPLAY_DAYS} <span class="val-unit">Hari</span> ${CURRENT_DISPLAY_HOURS} <span class="val-unit">Jam</span>`;
+    document.getElementById('badgeHari').innerText = `HARI ${CURRENT_ACTIVE_DAY} / 7`;
+    updateDayButtonsAccessibility(CURRENT_ACTIVE_DAY);
+    switchDayView(CURRENT_ACTIVE_DAY);
     updateNetworkStatus();
   </script>
 </body>
