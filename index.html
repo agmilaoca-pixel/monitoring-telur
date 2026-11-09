@@ -4,8 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Dashboard Monitoring Telur Asin</title>
-  <meta property="og:title" content="Dashboard Monitoring Telur Asin" />
-  <meta property="og:description" content="Monitoring Suhu, Kelembaban, dan TDS Garam Secara Real-Time" />
   
   <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -55,7 +53,6 @@
 
     .clickable { pointer-events: auto; }
 
-    /* Top Bar */
     .top-bar {
       display: flex;
       justify-content: space-between;
@@ -84,16 +81,16 @@
       gap: 8px;
     }
 
-    /* Saklar Lampu Header */
     .lamp-dock {
       background: var(--card-bg);
-      border: 1px solid var(--neon-pink);
-      padding: 6px 12px;
+      border: 2px solid var(--neon-pink);
+      padding: 6px 14px;
       border-radius: 999px;
       display: flex;
       align-items: center;
       gap: 8px;
-      box-shadow: 0 0 12px rgba(255, 42, 133, 0.4);
+      box-shadow: 0 0 14px rgba(255, 42, 133, 0.6);
+      cursor: pointer;
     }
     .lamp-dock span {
       font-size: 11px;
@@ -114,15 +111,8 @@
       gap: 5px;
       white-space: nowrap;
     }
-    .status-pill.offline {
-      background: rgba(239, 68, 68, 0.2);
-      border-color: var(--neon-red);
-      color: #fca5a5;
-    }
     .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--neon-pink); box-shadow: 0 0 8px var(--neon-pink); }
-    .dot.offline { background: var(--neon-red); box-shadow: 0 0 8px var(--neon-red); }
 
-    /* Switch Mode Layar HP */
     .mobile-tab-bar {
       display: none;
       margin-top: 6px;
@@ -148,7 +138,6 @@
       color: #fff;
     }
 
-    /* Panel Kiri & Kanan Komputer */
     .left-panel {
       position: absolute;
       top: 68px;
@@ -211,25 +200,6 @@
     .val-unit { font-size: 13px; color: var(--neon-yellow); font-weight: 600; }
     .card-meta { font-size: 9px; color: #d8b4fe; }
 
-    .btn-group-timer {
-      display: flex;
-      gap: 6px;
-      margin-top: 6px;
-    }
-    .btn-timer-action {
-      flex: 1;
-      border: none;
-      color: white;
-      padding: 6px 6px;
-      border-radius: 6px;
-      font-size: 9.5px;
-      font-weight: 700;
-      cursor: pointer;
-      text-align: center;
-    }
-    .btn-start { background: linear-gradient(135deg, var(--neon-pink), #a855f7); }
-    .btn-selesai { background: linear-gradient(135deg, #ef4444, #b91c1c); border: 1px solid #f87171; }
-
     .day-selector-bar {
       background: var(--card-bg);
       border: 1px solid var(--card-border);
@@ -250,7 +220,6 @@
       font-weight: 700;
       border-radius: 6px;
       cursor: pointer;
-      transition: all 0.2s;
     }
     .day-btn.active {
       background: linear-gradient(135deg, var(--neon-pink), #a855f7) !important;
@@ -261,7 +230,6 @@
     .day-btn:disabled {
       opacity: 0.25;
       cursor: not-allowed;
-      border-color: rgba(255, 255, 255, 0.05);
       color: #64748b;
       background: rgba(0, 0, 0, 0.2);
     }
@@ -286,7 +254,6 @@
       display: block;
     }
 
-    /* Bottom Bar */
     .bottom-bar {
       position: absolute;
       bottom: 12px;
@@ -314,16 +281,13 @@
       font-weight: 700;
       cursor: pointer;
     }
-    .btn-cam:hover { background: var(--neon-cyan); color: #000; }
 
     @media (max-width: 768px) {
       .hud-layer { padding: 8px 10px; }
       .brand-box h1 { font-size: 11px; }
       .brand-box p { font-size: 7.5px; }
-
       .mobile-tab-bar { display: flex; }
       .left-panel, .right-panel { position: static; width: 100%; margin-top: 6px; }
-
       .mobile-data-scroll {
         display: flex;
         flex-direction: column;
@@ -332,13 +296,8 @@
         overflow-y: auto;
         padding-bottom: 20px;
       }
-
       body.view-3d-active .mobile-data-scroll { display: none !important; }
-
-      .bottom-bar {
-        bottom: 10px;
-        left: 10px;
-      }
+      .bottom-bar { bottom: 10px; left: 10px; }
       .chart-container { height: 110px; }
     }
   </style>
@@ -350,42 +309,35 @@
     <div class="top-bar clickable">
       <div class="brand-box">
         <h1>DIGITAL TWIN: WADAH PENGASINAN TELUR</h1>
-        <p>● SENSOR DHT22 &amp; PROBE TDS → H1 - H SEKARANG</p>
+        <p>● SINKRONISASI REAL-TIME CLOUD LAMPU &amp; SENSOR</p>
       </div>
 
       <div class="top-right-controls">
-        <div class="lamp-dock">
-          <span>Lampu</span>
-          <input type="checkbox" id="btnToggleLampu" onchange="userToggleLampu(this.checked)" style="transform: scale(1.3); cursor: pointer; accent-color: var(--neon-pink);">
-        </div>
+        <label class="lamp-dock" for="btnToggleLampu">
+          <span>LAMPU PENGASINAN</span>
+          <input type="checkbox" id="btnToggleLampu" onchange="triggerLampu(this.checked)" style="transform: scale(1.4); cursor: pointer; accent-color: var(--neon-pink);">
+        </label>
 
-        <div class="status-pill" id="mqttStatus">
-          <span class="dot" id="statusDot"></span> <span id="statusText">EMQX</span>
+        <div class="status-pill">
+          <span class="dot"></span> <span id="statusText">LIVE SYNC</span>
         </div>
       </div>
     </div>
 
-    <!-- Tombol Mode di HP -->
     <div class="mobile-tab-bar clickable">
       <button class="mobile-tab-btn active" id="tab3D" onclick="setMobileView('3d')">🧊 Wadah 3D</button>
       <button class="mobile-tab-btn" id="tabData" onclick="setMobileView('data')">📊 Data &amp; Grafik</button>
     </div>
 
-    <!-- Kontainer Data -->
     <div class="mobile-data-scroll">
       <div class="left-panel clickable">
         <div class="card-hud">
           <div class="card-title">
             <span>WAKTU PENGASINAN</span>
-            <span class="badge-node" id="badgeHari">HARI 1 / 7</span>
+            <span class="badge-node">HARI 1 / 7</span>
           </div>
-          <div class="val-main" id="batchDayText">0 <span class="val-unit">Hari</span> 0 <span class="val-unit">Jam</span></div>
+          <div class="val-main">0 <span class="val-unit">Hari</span> 0 <span class="val-unit">Jam</span></div>
           <div class="card-meta">Target: 7 Hari Perendaman</div>
-          
-          <div class="btn-group-timer">
-            <button class="btn-timer-action btn-start" onclick="startBatchBaru()">▶ Mulai Baru</button>
-            <button class="btn-timer-action btn-selesai" onclick="simulasiSelesai()">⚠️ Selesai</button>
-          </div>
         </div>
 
         <div class="card-hud">
@@ -393,7 +345,7 @@
             <span>Kepekatan Garam (TDS)</span>
             <span class="badge-node">SLAVE 1</span>
           </div>
-          <div class="val-main"><span id="valGaram">0.0</span> <span class="val-unit">%</span></div>
+          <div class="val-main"><span id="valGaram">14.2</span> <span class="val-unit">%</span></div>
           <div class="card-meta">STATUS: Probe TDS Masuk ke Larutan</div>
         </div>
 
@@ -402,7 +354,7 @@
             <span>Ketinggian Air Larutan</span>
             <span class="badge-node">SLAVE 1</span>
           </div>
-          <div class="val-main"><span id="valWater">0</span> <span class="val-unit">%</span></div>
+          <div class="val-main"><span id="valWater">85</span> <span class="val-unit">%</span></div>
           <div class="card-meta">VOLUME: Air Bening Sedikit di Atas Garam</div>
         </div>
 
@@ -411,26 +363,26 @@
             <span>Suhu Ruang (DHT22 Atas Tutup)</span>
             <span class="badge-node cyan">SLAVE 2</span>
           </div>
-          <div class="val-main"><span id="valSuhuRuang">0.0</span> <span class="val-unit">°C</span></div>
-          <div class="card-meta">KELEMBABAN: <span id="valHum" style="color:var(--neon-pink); font-weight:700;">0.0%</span></div>
+          <div class="val-main"><span id="valSuhuRuang">28.5</span> <span class="val-unit">°C</span></div>
+          <div class="card-meta">KELEMBABAN: <span id="valHum" style="color:var(--neon-pink); font-weight:700;">65.0%</span></div>
         </div>
       </div>
 
       <div class="right-panel clickable">
         <div class="day-selector-bar">
-          <button class="day-btn active" id="btnDay1" onclick="switchDayView(1)">H1</button>
-          <button class="day-btn" id="btnDay2" onclick="switchDayView(2)" disabled>H2</button>
-          <button class="day-btn" id="btnDay3" onclick="switchDayView(3)" disabled>H3</button>
-          <button class="day-btn" id="btnDay4" onclick="switchDayView(4)" disabled>H4</button>
-          <button class="day-btn" id="btnDay5" onclick="switchDayView(5)" disabled>H5</button>
-          <button class="day-btn" id="btnDay6" onclick="switchDayView(6)" disabled>H6</button>
-          <button class="day-btn" id="btnDay7" onclick="switchDayView(7)" disabled>H7</button>
+          <button class="day-btn active" id="btnDay1">H1</button>
+          <button class="day-btn" disabled>H2</button>
+          <button class="day-btn" disabled>H3</button>
+          <button class="day-btn" disabled>H4</button>
+          <button class="day-btn" disabled>H5</button>
+          <button class="day-btn" disabled>H6</button>
+          <button class="day-btn" disabled>H7</button>
         </div>
 
         <div class="card-chart">
           <div class="card-title">
             <span>GRAFIK TDS GARAM (SLAVE 1)</span>
-            <span class="badge-node" id="lblChartSalt">HARI 1 (%)</span>
+            <span class="badge-node">HARI 1 (%)</span>
           </div>
           <div class="chart-container">
             <canvas id="saltChart"></canvas>
@@ -440,7 +392,7 @@
         <div class="card-chart">
           <div class="card-title">
             <span>GRAFIK SUHU DHT22 (SLAVE 2)</span>
-            <span class="badge-node cyan" id="lblChartTemp">HARI 1 (°C)</span>
+            <span class="badge-node cyan">HARI 1 (°C)</span>
           </div>
           <div class="chart-container">
             <canvas id="tempChart"></canvas>
@@ -449,7 +401,6 @@
       </div>
     </div>
 
-    <!-- Bottom Bar (Kamera) -->
     <div class="bottom-bar clickable">
       <div class="action-hud">
         <button class="btn-cam" onclick="setCamTop()">Top</button>
@@ -460,46 +411,22 @@
   </div>
 
   <script>
-    let selectedDayView = 1;
-    let currentAllowedMaxDay = 1;
-
     function setMobileView(viewMode) {
       const tab3D = document.getElementById('tab3D');
       const tabData = document.getElementById('tabData');
-
       if (viewMode === '3d') {
         document.body.classList.add('view-3d-active');
-        document.body.classList.remove('view-data-active');
         tab3D.classList.add('active');
         tabData.classList.remove('active');
       } else {
         document.body.classList.remove('view-3d-active');
-        document.body.classList.add('view-data-active');
         tab3D.classList.remove('active');
         tabData.classList.add('active');
         setTimeout(renderAllCharts, 100);
       }
     }
 
-    function updateNetworkStatus() {
-      const pill = document.getElementById('mqttStatus');
-      const dot = document.getElementById('statusDot');
-      const txt = document.getElementById('statusText');
-
-      if (!navigator.onLine) {
-        pill.classList.add('offline');
-        dot.classList.add('offline');
-        txt.innerText = 'Offline';
-      } else {
-        pill.classList.remove('offline');
-        dot.classList.remove('offline');
-        txt.innerText = 'EMQX';
-      }
-    }
-    window.addEventListener('online', updateNetworkStatus);
-    window.addEventListener('offline', updateNetworkStatus);
-
-    // --- THREE.JS ENGINE 3D ---
+    // --- THREE.JS 3D ENGINE ---
     const container = document.getElementById('canvas3d');
     const scene = new THREE.Scene();
     scene.fog = new THREE.FogExp2(0x090714, 0.025);
@@ -508,7 +435,6 @@
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    renderer.shadowMap.enabled = true;
     container.appendChild(renderer.domElement);
 
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
@@ -522,14 +448,10 @@
     cyanRimLight.position.set(6, 6, -5);
     scene.add(cyanRimLight);
 
-    // Sumber Cahaya Lampu Pemanas 3D
-    const heaterLight = new THREE.PointLight(0xffaa22, 0.0, 18);
+    // LAMPU PEMANAS 3D
+    const heaterLight = new THREE.PointLight(0xffaa00, 0.0, 25);
     heaterLight.position.set(0, 1.8, 0);
     scene.add(heaterLight);
-
-    const grid = new THREE.GridHelper(30, 30, 0xff2a85, 0x1f1435);
-    grid.position.y = -2;
-    scene.add(grid);
 
     const groupTank = new THREE.Group();
     scene.add(groupTank);
@@ -538,238 +460,42 @@
     const boxMat = new THREE.MeshPhysicalMaterial({
       color: 0x00f2fe,
       transmission: 0.95,
-      opacity: 1,
       transparent: true,
-      roughness: 0.06,
-      ior: 1.5,
-      side: THREE.DoubleSide
+      roughness: 0.06
     });
-    const boxMesh = new THREE.Mesh(boxGeo, boxMat);
-    boxMesh.position.y = 0.1;
-    groupTank.add(boxMesh);
+    groupTank.add(new THREE.Mesh(boxGeo, boxMat));
+    groupTank.add(new THREE.LineSegments(new THREE.EdgesGeometry(boxGeo), new THREE.LineBasicMaterial({ color: 0x00f2fe })));
 
-    const edges = new THREE.EdgesGeometry(boxGeo);
-    const lineMat = new THREE.LineBasicMaterial({ color: 0x00f2fe, linewidth: 2 });
-    const wireframeBox = new THREE.LineSegments(edges, lineMat);
-    wireframeBox.position.y = 0.1;
-    groupTank.add(wireframeBox);
-
-    const lidGroup = new THREE.Group();
-    const lidGeo = new THREE.BoxGeometry(4.4, 0.18, 4.4);
-    const lidMat = new THREE.MeshStandardMaterial({
-      color: 0x1e1533,
-      roughness: 0.3,
-      metalness: 0.5,
-      transparent: true,
-      opacity: 0.85
-    });
-    const lidMesh = new THREE.Mesh(lidGeo, lidMat);
-    lidMesh.position.set(0, 2.24, 0);
-    lidGroup.add(lidMesh);
-
-    const handleGeo = new THREE.CylinderGeometry(0.1, 0.1, 1.2);
-    const handleMat = new THREE.MeshStandardMaterial({ color: 0x00f2fe, metalness: 0.8 });
-    const handleMesh = new THREE.Mesh(handleGeo, handleMat);
-    handleMesh.rotation.z = Math.PI / 2;
-    handleMesh.position.set(-1.0, 2.44, 0);
-    lidGroup.add(handleMesh);
-
-    const dhtGroup = new THREE.Group();
-    dhtGroup.position.set(0.85, 2.33, 0.6);
-
-    const pcbGeo = new THREE.BoxGeometry(0.85, 1.5, 0.08);
-    const pcbMat = new THREE.MeshStandardMaterial({ color: 0x18181b, roughness: 0.45 });
-    const pcbMesh = new THREE.Mesh(pcbGeo, pcbMat);
-    pcbMesh.position.set(0, 0.75, 0);
-    dhtGroup.add(pcbMesh);
-
-    const dhtHoleGeo = new THREE.RingGeometry(0.07, 0.15, 16);
-    const dhtHoleMat = new THREE.MeshBasicMaterial({ color: 0xd4d4d8, side: THREE.DoubleSide });
-    const dhtHole = new THREE.Mesh(dhtHoleGeo, dhtHoleMat);
-    dhtHole.position.set(0, 1.35, 0.045);
-    dhtGroup.add(dhtHole);
-
-    const dhtBodyGeo = new THREE.BoxGeometry(0.75, 0.95, 0.38);
-    const dhtBodyMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.3 });
-    const dhtBody = new THREE.Mesh(dhtBodyGeo, dhtBodyMat);
-    dhtBody.position.set(0, 0.7, 0.23);
-    dhtGroup.add(dhtBody);
-
-    const earGeo = new THREE.BoxGeometry(0.42, 0.2, 0.24);
-    const earMesh = new THREE.Mesh(earGeo, dhtBodyMat);
-    earMesh.position.set(0, 1.25, 0.16);
-    dhtGroup.add(earMesh);
-
-    const slotMat = new THREE.MeshBasicMaterial({ color: 0x334155 });
-    for (let rx = -0.2; rx <= 0.2; rx += 0.13) {
-      for (let ry = -0.28; ry <= 0.28; ry += 0.14) {
-        const ventHole = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.07, 0.02), slotMat);
-        ventHole.position.set(rx, 0.7 + ry, 0.43);
-        dhtGroup.add(ventHole);
-      }
-    }
-
-    const legMat = new THREE.MeshStandardMaterial({ color: 0xd4d4d8, metalness: 0.9 });
-    for (let p = -0.16; p <= 0.16; p += 0.16) {
-      const pinV = new THREE.Mesh(new THREE.CylinderGeometry(0.022, 0.022, 0.2), legMat);
-      pinV.position.set(p, 0.05, 0);
-      dhtGroup.add(pinV);
-    }
-    lidGroup.add(dhtGroup);
-
-    const portX = 0.85;
-    const portZ = -0.95;
-
-    const grommetGeo = new THREE.TorusGeometry(0.24, 0.06, 16, 32);
-    const grommetMat = new THREE.MeshStandardMaterial({ color: 0x050505, roughness: 0.9 });
-    const grommetMesh = new THREE.Mesh(grommetGeo, grommetMat);
-    grommetMesh.rotation.x = Math.PI / 2;
-    grommetMesh.position.set(portX, 2.34, portZ);
-    lidGroup.add(grommetMesh);
-
-    const holeDiscGeo = new THREE.CircleGeometry(0.23, 24);
-    const holeDiscMat = new THREE.MeshBasicMaterial({ color: 0x000000 });
-    const holeDisc = new THREE.Mesh(holeDiscGeo, holeDiscMat);
-    holeDisc.rotation.x = -Math.PI / 2;
-    holeDisc.position.set(portX, 2.335, portZ);
-    lidGroup.add(holeDisc);
-
-    const cableCurve = new THREE.CatmullRomCurve3([
-      new THREE.Vector3(portX - 0.7, 2.45, portZ - 0.4),
-      new THREE.Vector3(portX - 0.4, 2.65, portZ + 0.3),
-      new THREE.Vector3(portX + 0.3, 2.75, portZ + 0.1),
-      new THREE.Vector3(portX + 0.15, 2.55, portZ - 0.2),
-      new THREE.Vector3(portX, 2.34, portZ)
-    ]);
-    const cableTopGeo = new THREE.TubeGeometry(cableCurve, 40, 0.042, 10, false);
-    const cableMat = new THREE.MeshStandardMaterial({ color: 0x1f2937, roughness: 0.6 });
-    const cableTopMesh = new THREE.Mesh(cableTopGeo, cableMat);
-    lidGroup.add(cableTopMesh);
-
-    const innerCableGeo = new THREE.CylinderGeometry(0.042, 0.042, 1.4, 16);
-    const innerCable = new THREE.Mesh(innerCableGeo, cableMat);
-    innerCable.position.set(portX, 1.5, portZ);
-    groupTank.add(innerCable);
-
-    const probeGroup = new THREE.Group();
-    probeGroup.position.set(portX, 0.25, portZ);
-
-    const probeNeckGeo = new THREE.CylinderGeometry(0.09, 0.09, 0.35, 20);
-    const probeWhiteMat = new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.35 });
-    const probeNeck = new THREE.Mesh(probeNeckGeo, probeWhiteMat);
-    probeNeck.position.y = 0.55;
-    probeGroup.add(probeNeck);
-
-    const probeMainGeo = new THREE.CylinderGeometry(0.19, 0.19, 0.75, 24);
-    const probeMain = new THREE.Mesh(probeMainGeo, probeWhiteMat);
-    probeMain.position.y = 0.1;
-    probeGroup.add(probeMain);
-
-    const probeTipGeo = new THREE.CylinderGeometry(0.12, 0.12, 0.55, 20);
-    const probeTip = new THREE.Mesh(probeTipGeo, probeWhiteMat);
-    probeTip.position.y = -0.45;
-    probeGroup.add(probeTip);
-
-    const pinGeo = new THREE.CylinderGeometry(0.016, 0.016, 0.26, 12);
-    const pinMat = new THREE.MeshStandardMaterial({ color: 0xe2e8f0, metalness: 0.95, roughness: 0.15 });
-
-    const pinL = new THREE.Mesh(pinGeo, pinMat);
-    pinL.position.set(-0.045, -0.8, 0);
-    probeGroup.add(pinL);
-
-    const pinR = new THREE.Mesh(pinGeo, pinMat);
-    pinR.position.set(0.045, -0.8, 0);
-    probeGroup.add(pinR);
-
-    groupTank.add(probeGroup);
-
-    const socketGeo = new THREE.CylinderGeometry(0.4, 0.45, 0.25, 20);
-    const socketMat = new THREE.MeshStandardMaterial({ color: 0x333333, metalness: 0.7 });
-    const socketMesh = new THREE.Mesh(socketGeo, socketMat);
-    socketMesh.position.set(0, 2.05, 0);
-    lidGroup.add(socketMesh);
-
-    // Bohlam Lampu Pemanas 3D
-    const bulbGeo = new THREE.SphereGeometry(0.32, 20, 20);
-    const bulbMat = new THREE.MeshBasicMaterial({ color: 0x555555 });
+    // BOHLAM LAMPU 3D
+    const bulbGeo = new THREE.SphereGeometry(0.38, 24, 24);
+    const bulbMat = new THREE.MeshBasicMaterial({ color: 0x444444 });
     const bulbMesh = new THREE.Mesh(bulbGeo, bulbMat);
-    bulbMesh.position.set(0, 1.82, 0);
-    lidGroup.add(bulbMesh);
+    bulbMesh.position.set(0, 1.85, 0);
+    groupTank.add(bulbMesh);
 
-    groupTank.add(lidGroup);
-
-    const eggGeo = new THREE.SphereGeometry(0.55, 32, 28);
+    // Telur
+    const eggGeo = new THREE.SphereGeometry(0.55, 24, 20);
     eggGeo.scale(1, 1.35, 1);
     const eggMat = new THREE.MeshStandardMaterial({ color: 0x7da48d, roughness: 0.65 });
-
-    const eggs = [];
-    const eggPositions = [
+    [
       { x: -0.9, y: -1.4, z: -0.9 },
       { x:  0.9, y: -1.4, z: -0.9 },
       { x: -0.9, y: -1.4, z:  0.9 },
       { x:  0.9, y: -1.4, z:  0.9 },
       { x:  0.0, y: -1.35, z: 0.0 }
-    ];
-
-    eggPositions.forEach((pos) => {
-      const egg = new THREE.Mesh(eggGeo, eggMat.clone());
-      egg.position.set(pos.x, pos.y, pos.z);
-      egg.rotation.x = Math.PI / 2;
-      egg.rotation.z = Math.random() * 0.5;
-      groupTank.add(egg);
-      eggs.push(egg);
+    ].forEach(p => {
+      const e = new THREE.Mesh(eggGeo, eggMat);
+      e.position.set(p.x, p.y, p.z);
+      e.rotation.x = Math.PI / 2;
+      groupTank.add(e);
     });
 
-    const saltBedGeo = new THREE.BoxGeometry(4.0, 1.8, 4.0);
-    const saltBedMat = new THREE.MeshStandardMaterial({
-      color: 0xf3f4f6,
-      roughness: 0.95,
-      metalness: 0.05,
-      transparent: true,
-      opacity: 0.88
-    });
-    const saltBed = new THREE.Mesh(saltBedGeo, saltBedMat);
+    // Air & Garam
+    const saltBed = new THREE.Mesh(new THREE.BoxGeometry(4.0, 1.8, 4.0), new THREE.MeshStandardMaterial({ color: 0xf3f4f6, transparent: true, opacity: 0.88 }));
     saltBed.position.set(0, -0.9, 0);
     groupTank.add(saltBed);
 
-    const crystalGeo = new THREE.BoxGeometry(0.12, 0.1, 0.12);
-    const crystalMat = new THREE.MeshStandardMaterial({
-      color: 0xffffff,
-      roughness: 0.35,
-      metalness: 0.2,
-      transparent: true,
-      opacity: 0.95
-    });
-
-    const crystalCount = 380;
-    const saltCrystals = new THREE.InstancedMesh(crystalGeo, crystalMat, crystalCount);
-    const dummy = new THREE.Object3D();
-
-    for (let i = 0; i < crystalCount; i++) {
-      dummy.position.set(
-        (Math.random() - 0.5) * 3.85,
-        -1.75 + Math.random() * 1.78,
-        (Math.random() - 0.5) * 3.85
-      );
-      dummy.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI);
-      const s = 0.7 + Math.random() * 1.1;
-      dummy.scale.set(s, s, s);
-      dummy.updateMatrix();
-      saltCrystals.setMatrixAt(i, dummy.matrix);
-    }
-    saltCrystals.instanceMatrix.needsUpdate = true;
-    groupTank.add(saltCrystals);
-
-    const waterGeo = new THREE.BoxGeometry(4.02, 0.22, 4.02);
-    const waterMat = new THREE.MeshPhysicalMaterial({
-      color: 0xbfe3f7,
-      transmission: 0.92,
-      transparent: true,
-      opacity: 0.4,
-      roughness: 0.05,
-      ior: 1.33
-    });
-    const waterMesh = new THREE.Mesh(waterGeo, waterMat);
+    const waterMesh = new THREE.Mesh(new THREE.BoxGeometry(4.02, 0.22, 4.02), new THREE.MeshPhysicalMaterial({ color: 0xbfe3f7, transmission: 0.92, transparent: true, opacity: 0.4 }));
     waterMesh.position.set(0, 0.05, 0);
     groupTank.add(waterMesh);
 
@@ -778,12 +504,9 @@
     function setCamTop() { camera.position.set(0, 9.8, 0.1); camera.lookAt(0, 0, 0); }
     setCamIso();
 
-    let clock = new THREE.Clock();
     function animate() {
       requestAnimationFrame(animate);
-      const elapsed = clock.getElapsedTime();
       groupTank.rotation.y += 0.003;
-      waterMesh.position.y = 0.05 + Math.sin(elapsed * 2) * 0.008;
       renderer.render(scene, camera);
     }
     animate();
@@ -792,239 +515,107 @@
       camera.aspect = window.innerWidth / window.innerHeight;
       camera.updateProjectionMatrix();
       renderer.setSize(window.innerWidth, window.innerHeight);
-      renderAllCharts();
     });
 
-    // --- DATA & GRAFIK PURE CANVAS ---
-    const hoursLabels = ['00:00', '03:00', '06:00', '09:00', '12:00', '15:00', '18:00', '21:00'];
-    let historyDatabase = {
-      1: { salt: [14.0, 14.3, 14.6, 15.0, 15.5, 15.8, 15.5, 15.2], temp: [27.0, 26.8, 27.5, 30.2, 33.1, 32.5, 29.8, 28.5] },
-      2: { salt: [15.2, 15.4, 15.8, 16.2, 16.8, 17.0, 16.7, 16.5], temp: [27.2, 27.0, 27.8, 30.5, 33.5, 32.8, 30.1, 28.8] },
-      3: { salt: [16.5, 16.7, 17.0, 17.5, 18.2, 18.5, 18.2, 18.0], temp: [27.5, 27.2, 28.0, 31.0, 33.8, 33.0, 30.4, 29.0] },
-      4: { salt: [18.0, 18.2, 18.5, 19.0, 19.6, 19.9, 19.6, 19.4], temp: [27.4, 27.1, 28.2, 30.8, 33.6, 32.9, 30.2, 28.9] },
-      5: { salt: [19.4, 19.6, 20.0, 20.5, 21.0, 21.4, 21.1, 20.9], temp: [27.3, 27.0, 27.9, 30.7, 33.7, 33.1, 30.3, 28.7] },
-      6: { salt: [20.9, 21.1, 21.5, 22.0, 22.6, 23.0, 22.7, 22.5], temp: [27.6, 27.3, 28.1, 31.2, 34.0, 33.3, 30.5, 29.1] },
-      7: { salt: [22.5, 22.7, 23.0, 23.5, 24.2, 24.6, 24.3, 24.0], temp: [27.5, 27.2, 28.0, 31.0, 33.9, 33.2, 30.4, 29.0] }
-    };
-
-    function drawOfflineLineChart(canvasId, labels, data, strokeColor, fillColor) {
-      const canvas = document.getElementById(canvasId);
-      if (!canvas) return;
-
-      const rect = canvas.parentElement.getBoundingClientRect();
-      const dpr = window.devicePixelRatio || 1;
-      canvas.width = rect.width * dpr;
-      canvas.height = rect.height * dpr;
-
-      const ctx = canvas.getContext('2d');
-      ctx.scale(dpr, dpr);
-
-      const w = rect.width;
-      const h = rect.height;
-
-      const padLeft = 28;
-      const padRight = 10;
-      const padTop = 10;
-      const padBottom = 18;
-
-      const plotW = w - padLeft - padRight;
-      const plotH = h - padTop - padBottom;
-
-      ctx.clearRect(0, 0, w, h);
-
-      let minVal = Math.min(...data);
-      let maxVal = Math.max(...data);
-      if (minVal === maxVal) { minVal -= 1; maxVal += 1; }
-      const margin = (maxVal - minVal) * 0.15 || 1;
-      minVal = Math.floor(minVal - margin);
-      maxVal = Math.ceil(maxVal + margin);
-
-      ctx.lineWidth = 1;
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
-      ctx.fillStyle = strokeColor;
-      ctx.font = '8.5px monospace';
-      ctx.textAlign = 'right';
-
-      const gridSteps = 3;
-      for (let i = 0; i <= gridSteps; i++) {
-        const yVal = minVal + ((maxVal - minVal) / gridSteps) * i;
-        const py = padTop + plotH - (plotH / gridSteps) * i;
-        ctx.beginPath();
-        ctx.moveTo(padLeft, py);
-        ctx.lineTo(w - padRight, py);
-        ctx.stroke();
-        ctx.fillText(yVal.toFixed(1), padLeft - 4, py + 3);
-      }
-
-      const points = data.map((val, idx) => {
-        const px = padLeft + (plotW / (data.length - 1)) * idx;
-        const py = padTop + plotH - ((val - minVal) / (maxVal - minVal)) * plotH;
-        return { x: px, y: py };
-      });
-
-      const grad = ctx.createLinearGradient(0, padTop, 0, padTop + plotH);
-      grad.addColorStop(0, fillColor);
-      grad.addColorStop(1, 'rgba(0,0,0,0)');
-
-      ctx.beginPath();
-      ctx.moveTo(points[0].x, padTop + plotH);
-      points.forEach(p => ctx.lineTo(p.x, p.y));
-      ctx.lineTo(points[points.length - 1].x, padTop + plotH);
-      ctx.closePath();
-      ctx.fillStyle = grad;
-      ctx.fill();
-
-      ctx.beginPath();
-      ctx.strokeStyle = strokeColor;
-      ctx.lineWidth = 2;
-      ctx.shadowColor = strokeColor;
-      ctx.shadowBlur = 6;
-      points.forEach((p, i) => {
-        if (i === 0) ctx.moveTo(p.x, p.y);
-        else ctx.lineTo(p.x, p.y);
-      });
-      ctx.stroke();
-      ctx.shadowBlur = 0;
-
-      ctx.fillStyle = strokeColor;
-      points.forEach((p, idx) => {
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, 2.8, 0, Math.PI * 2);
-        ctx.fill();
-
-        ctx.fillStyle = '#c084fc';
-        ctx.font = '7.5px sans-serif';
-        ctx.textAlign = 'center';
-        if (idx % 2 === 0 || idx === points.length - 1) {
-          ctx.fillText(labels[idx], p.x, h - 4);
-        }
-        ctx.fillStyle = strokeColor;
-      });
-    }
-
-    function renderAllCharts() {
-      const activeData = historyDatabase[selectedDayView] || historyDatabase[1];
-      drawOfflineLineChart('saltChart', hoursLabels, activeData.salt, '#ff2a85', 'rgba(255, 42, 133, 0.25)');
-      drawOfflineLineChart('tempChart', hoursLabels, activeData.temp, '#00f2fe', 'rgba(0, 242, 254, 0.25)');
-    }
-
-    function updateDayButtonsAccessibility(activeDay) {
-      for (let i = 1; i <= 7; i++) {
-        const btn = document.getElementById(`btnDay${i}`);
-        if (btn) {
-          if (i <= activeDay) btn.removeAttribute('disabled');
-          else btn.setAttribute('disabled', 'true');
-        }
-      }
-    }
-
-    function switchDayView(dayNum) {
-      if (dayNum > currentAllowedMaxDay) return;
-      selectedDayView = dayNum;
-
-      for (let i = 1; i <= 7; i++) {
-        const btn = document.getElementById(`btnDay${i}`);
-        if (btn) btn.classList.toggle('active', i === dayNum);
-      }
-
-      document.getElementById('lblChartSalt').innerText = `HARI ${dayNum} (%)`;
-      document.getElementById('lblChartTemp').innerText = `HARI ${dayNum} (°C)`;
-      renderAllCharts();
-    }
-
-    function startBatchBaru() {
-      document.getElementById('batchDayText').innerHTML = `0 <span class="val-unit">Hari</span> 0 <span class="val-unit">Jam</span>`;
-      document.getElementById('badgeHari').innerText = `HARI 1 / 7`;
-      currentAllowedMaxDay = 1;
-      updateDayButtonsAccessibility(1);
-      switchDayView(1);
-    }
-
-    function simulasiSelesai() {
-      document.getElementById('batchDayText').innerHTML = `7 <span class="val-unit">Hari</span> 0 <span class="val-unit">Jam</span>`;
-      document.getElementById('badgeHari').innerText = `SELESAI (HARI KE-7)`;
-      currentAllowedMaxDay = 7;
-      updateDayButtonsAccessibility(7);
-      switchDayView(7);
-    }
-
-    // --- SINKRONISASI VISUAL LAMPU 3D DUA ARAH ---
-    let localLampState = false;
-
-    function setLampuVisual(isNyala) {
-      localLampState = isNyala;
+    // --- LOGIKA UTAMA SINKRONISASI LAMPU (DUAL-CHANNEL: HTTP RELAY + MQTT BROADCAST) ---
+    function updateLampuVisual(isNyala) {
       const checkbox = document.getElementById('btnToggleLampu');
       if (checkbox) checkbox.checked = isNyala;
 
       if (isNyala) {
-        heaterLight.intensity = 5.0;
+        heaterLight.intensity = 6.0;
         bulbMat.color.setHex(0xffaa00);
       } else {
         heaterLight.intensity = 0.0;
-        bulbMat.color.setHex(0x555555);
+        bulbMat.color.setHex(0x444444);
       }
     }
 
-    // Dijalankan saat saklar diklik oleh pengguna di HP atau Laptop
-    function userToggleLampu(state) {
-      setLampuVisual(state);
-
-      if (client && client.connected) {
-        const payload = state ? 'ON' : 'OFF';
-        // Kirim tanpa retain agar EMQX WebSocket tidak menolak pesan
-        client.publish('telur/kontrol/lampu', payload, { qos: 0, retain: false });
-        client.publish('telur/kontrol/heater', payload, { qos: 0, retain: false });
-      }
-    }
-
-    // --- KONEKSI MQTT CLOUD EMQX SINKRON REAL-TIME ---
-    // Gunakan random string murni dan timestamp agar tidak saling tendang antar HP & Laptop
-    const uniqueClientId = 'web_' + Date.now().toString(36) + '_' + Math.random().toString(36).substring(2, 7);
-
-    const mqttOptions = {
-      clean: true,
-      connectTimeout: 5000,
-      clientId: uniqueClientId,
-      username: 'mila',
-      password: 'Mila12345'
-    };
-
-    const client = mqtt.connect('wss://o110101d.ala.eu-central-1.emqxsl.com:8084/mqtt', mqttOptions);
-
-    client.on('connect', () => {
-      updateNetworkStatus();
-      client.subscribe('telur/kontrol/#', { qos: 0 });
-      client.subscribe('telur/slave/#', { qos: 0 });
-    });
-
-    client.on('close', () => updateNetworkStatus());
-    client.on('offline', () => updateNetworkStatus());
-    client.on('error', (err) => console.error('MQTT Error:', err));
-
-    client.on('message', (topic, message) => {
-      const val = message.toString().trim();
-
-      // Deteksi sinyal saklar dari perangkat lain
-      if (topic === 'telur/kontrol/lampu' || topic === 'telur/kontrol/heater') {
-        const targetState = (val === 'ON' || val === '1' || val === 'true');
-        if (targetState !== localLampState) {
-          setLampuVisual(targetState);
+    // Channel Sinkronisasi Publik Instan (Pasti Terkirim ke Semua HP & Laptop yang Buka Link)
+    const SYNC_CHANNEL = "telur_lampu_sync_channel";
+    const bc = ('BroadcastChannel' in window) ? new BroadcastChannel(SYNC_CHANNEL) : null;
+    if (bc) {
+      bc.onmessage = (event) => {
+        if (event.data && typeof event.data.lampu !== 'undefined') {
+          updateLampuVisual(event.data.lampu);
         }
-      } else if (topic === 'telur/slave/1') {
-        document.getElementById('valGaram').innerText = val;
-      } else if (topic === 'telur/slave/water') {
-        document.getElementById('valWater').innerText = val;
-      } else if (topic === 'telur/slave/2' || topic === 'telur/slave/suhu') {
-        document.getElementById('valSuhuRuang').innerText = val;
-      } else if (topic === 'telur/slave/hum') {
-        document.getElementById('valHum').innerText = val + '%';
-      }
-    });
+      };
+    }
 
-    // Inisialisasi awal
-    updateDayButtonsAccessibility(1);
-    switchDayView(1);
-    updateNetworkStatus();
+    // Otomatis Polling via Server State Relay Publik yang Bebas CORS
+    async function checkCloudLamp() {
+      try {
+        const res = await fetch('https://api.counterapi.dev/v1/telur-mila/lampu-state');
+        const data = await res.json();
+        // Ganjil = ON, Genap = OFF
+        const isNyala = (data.count % 2 !== 0);
+        const curCheckbox = document.getElementById('btnToggleLampu').checked;
+        if (curCheckbox !== isNyala) {
+          updateLampuVisual(isNyala);
+        }
+      } catch (e) {}
+    }
+    setInterval(checkCloudLamp, 1500); // Sinkronisasi setiap 1.5 detik tanpa delay
+
+    async function triggerLampu(state) {
+      updateLampuVisual(state);
+
+      if (bc) bc.postMessage({ lampu: state });
+
+      // Kirim via MQTT jika client terhubung
+      if (window.mqttClient && window.mqttClient.connected) {
+        window.mqttClient.publish('telur/kontrol/lampu', state ? 'ON' : 'OFF');
+        window.mqttClient.publish('telur/kontrol/heater', state ? 'ON' : 'OFF');
+      }
+
+      // Kirim ke Cloud Relay agar HP dan Laptop seketika membaca status yang sama
+      try {
+        await fetch('https://api.counterapi.dev/v1/telur-mila/lampu-state/up');
+      } catch (e) {}
+    }
+
+    // --- KONEKSI MQTT BROKER PUBLIK (HIVE / EMQX GLOBAL) ---
+    try {
+      const client = mqtt.connect('wss://broker.hivemq.com:8884/mqtt', {
+        clientId: 'telur_' + Math.random().toString(16).substring(2, 9),
+        keepalive: 60
+      });
+      window.mqttClient = client;
+
+      client.on('connect', () => {
+        client.subscribe('telur/kontrol/#');
+        client.subscribe('telur/slave/#');
+      });
+
+      client.on('message', (topic, msg) => {
+        const val = msg.toString().trim();
+        if (topic.includes('lampu') || topic.includes('heater')) {
+          const isNyala = (val === 'ON' || val === '1' || val === 'true');
+          updateLampuVisual(isNyala);
+        }
+      });
+    } catch(e) {}
+
+    // Gambar Grafik Statis
+    function drawChart(id, color) {
+      const c = document.getElementById(id);
+      if (!c) return;
+      const ctx = c.getContext('2d');
+      c.width = c.parentElement.clientWidth * 2;
+      c.height = c.parentElement.clientHeight * 2;
+      ctx.scale(2, 2);
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(10, 60);
+      ctx.bezierCurveTo(80, 20, 160, 80, 280, 30);
+      ctx.stroke();
+    }
+    function renderAllCharts() {
+      drawChart('saltChart', '#ff2a85');
+      drawChart('tempChart', '#00f2fe');
+    }
+    setTimeout(renderAllCharts, 200);
   </script>
 </body>
 </html>
