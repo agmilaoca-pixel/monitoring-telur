@@ -84,7 +84,7 @@
       gap: 8px;
     }
 
-    /* Saklar Lampu di Header Atas */
+    /* Saklar Lampu Header */
     .lamp-dock {
       background: var(--card-bg);
       border: 1px solid var(--neon-pink);
@@ -122,7 +122,7 @@
     .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--neon-pink); box-shadow: 0 0 8px var(--neon-pink); }
     .dot.offline { background: var(--neon-red); box-shadow: 0 0 8px var(--neon-red); }
 
-    /* Switch Mode Tampilan Layar HP */
+    /* Switch Mode Layar HP */
     .mobile-tab-bar {
       display: none;
       margin-top: 6px;
@@ -954,7 +954,7 @@
       if (checkbox) checkbox.checked = isNyala;
 
       if (isNyala) {
-        heaterLight.intensity = 4.0;
+        heaterLight.intensity = 4.5;
         bulbMat.color.setHex(0xffaa00);
       } else {
         heaterLight.intensity = 0.0;
@@ -962,7 +962,7 @@
       }
     }
 
-    // Dijalankan saat tombol saklar diklik oleh pengguna di HP atau Laptop
+    // Tombol saklar diklik pengguna
     function userToggleLampu(state) {
       setLampuVisual(state);
 
@@ -972,11 +972,11 @@
       }
     }
 
-    // --- KONEKSI MQTT CLOUD EMQX ---
+    // --- KONEKSI MQTT CLOUD EMQX SINKRON REAL-TIME ---
     const mqttOptions = {
       clean: true,
       connectTimeout: 4000,
-      clientId: 'telur_client_' + Math.random().toString(16).substring(2, 8),
+      clientId: 'telur_node_' + Math.random().toString(16).substring(2, 8),
       username: 'mila',
       password: 'Mila12345'
     };
@@ -995,7 +995,7 @@
     client.on('message', (topic, message) => {
       const val = message.toString();
 
-      // Penerimaan status lampu dari broker MQTT
+      // Sinkronisasi status saklar & lampu 3D
       if (topic === 'telur/kontrol/heater') {
         const isNyala = (val === 'ON');
         setLampuVisual(isNyala);
