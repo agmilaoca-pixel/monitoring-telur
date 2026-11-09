@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Dashboard Monitoring Telur Asin</title>
   <meta property="og:title" content="Dashboard Monitoring Telur Asin" />
   <meta property="og:description" content="Monitoring Suhu, Kelembaban, dan TDS Garam Secara Real-Time" />
@@ -51,7 +51,7 @@
       height: 100%;
       z-index: 10;
       pointer-events: none;
-      padding: 16px 20px;
+      padding: 14px 16px;
     }
 
     .clickable { pointer-events: auto; }
@@ -61,37 +61,37 @@
       display: flex;
       justify-content: space-between;
       align-items: flex-start;
-      gap: 15px;
+      gap: 10px;
     }
     .brand-box {
       background: var(--card-bg);
       border: 1px solid var(--card-border);
       backdrop-filter: blur(12px);
-      padding: 10px 16px;
-      border-radius: 14px;
+      padding: 8px 14px;
+      border-radius: 12px;
       box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
     }
     .brand-box h1 {
-      font-size: 16px;
+      font-size: 14px;
       font-weight: 800;
       background: linear-gradient(135deg, #fff 20%, #f472b6 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
     }
-    .brand-box p { font-size: 10.5px; color: var(--neon-cyan); margin-top: 2px; font-weight: 600; }
+    .brand-box p { font-size: 9.5px; color: var(--neon-cyan); margin-top: 2px; font-weight: 600; }
 
     .warning-box {
       display: none;
       background: linear-gradient(135deg, rgba(255, 51, 68, 0.35), rgba(255, 42, 133, 0.2));
       border: 2px solid var(--neon-red);
-      border-radius: 14px;
-      padding: 10px 18px;
+      border-radius: 12px;
+      padding: 8px 14px;
       box-shadow: 0 0 25px rgba(255, 51, 68, 0.6);
       animation: alertBlink 1.4s infinite ease-in-out;
-      max-width: 460px;
+      max-width: 380px;
     }
-    .warning-box h3 { font-size: 12.5px; font-weight: 800; color: #ff6677; }
-    .warning-box p { font-size: 10.5px; color: #ffe4e6; margin-top: 2px; }
+    .warning-box h3 { font-size: 11.5px; font-weight: 800; color: #ff6677; }
+    .warning-box p { font-size: 9.5px; color: #ffe4e6; margin-top: 2px; }
     @keyframes alertBlink {
       0%, 100% { border-color: rgba(255, 51, 68, 0.5); box-shadow: 0 0 12px rgba(255, 51, 68, 0.3); }
       50% { border-color: var(--neon-red); box-shadow: 0 0 28px rgba(255, 51, 68, 0.8); }
@@ -101,54 +101,93 @@
       background: rgba(255, 42, 133, 0.15);
       border: 1px solid rgba(255, 42, 133, 0.4);
       color: #ff77b4;
-      font-size: 11px;
+      font-size: 10px;
       font-weight: 700;
-      padding: 6px 14px;
+      padding: 5px 12px;
       border-radius: 999px;
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
       backdrop-filter: blur(8px);
+      white-space: nowrap;
     }
     .status-pill.offline {
       background: rgba(239, 68, 68, 0.2);
       border-color: var(--neon-red);
       color: #fca5a5;
     }
-    .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--neon-pink); box-shadow: 0 0 10px var(--neon-pink); }
+    .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--neon-pink); box-shadow: 0 0 10px var(--neon-pink); }
     .dot.offline { background: var(--neon-red); box-shadow: 0 0 10px var(--neon-red); }
 
-    /* Panel Kiri: Telemetri */
+    /* Switch Mode Tampilan Layar HP (Mobile View Switcher) */
+    .mobile-tab-bar {
+      display: none;
+      margin-top: 8px;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      padding: 4px;
+      gap: 6px;
+    }
+    .mobile-tab-btn {
+      flex: 1;
+      padding: 6px 0;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-muted);
+      background: transparent;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .mobile-tab-btn.active {
+      background: linear-gradient(135deg, var(--neon-pink), #a855f7);
+      color: #fff;
+    }
+
+    /* Panel Kiri (Telemetri) & Kanan (Grafik) di Desktop */
     .left-panel {
       position: absolute;
-      top: 80px;
-      left: 20px;
-      width: 285px;
+      top: 75px;
+      left: 16px;
+      width: 275px;
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 8px;
+      z-index: 12;
     }
+    .right-panel {
+      position: absolute;
+      top: 75px;
+      right: 16px;
+      width: 330px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      z-index: 12;
+    }
+
     .card-hud {
       background: var(--card-bg);
       border: 1px solid var(--card-border);
       backdrop-filter: blur(14px);
-      border-radius: 14px;
-      padding: 12px 14px;
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.45);
+      border-radius: 12px;
+      padding: 10px 12px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.45);
     }
     .card-title {
-      font-size: 10px;
+      font-size: 9.5px;
       font-weight: 800;
       color: var(--text-muted);
-      letter-spacing: 0.8px;
+      letter-spacing: 0.6px;
       text-transform: uppercase;
       display: flex;
       justify-content: space-between;
       align-items: center;
     }
     .badge-node {
-      font-size: 9px;
-      padding: 2px 6px;
+      font-size: 8.5px;
+      padding: 2px 5px;
       border-radius: 4px;
       background: rgba(255, 42, 133, 0.2);
       color: var(--neon-pink);
@@ -160,89 +199,70 @@
       border-color: rgba(0, 242, 254, 0.4);
     }
     .val-main {
-      font-size: 24px;
+      font-size: 20px;
       font-weight: 800;
       color: #fff;
-      margin: 4px 0 2px 0;
-      text-shadow: 0 0 16px rgba(255, 42, 133, 0.35);
+      margin: 2px 0;
+      text-shadow: 0 0 14px rgba(255, 42, 133, 0.35);
     }
-    .val-unit { font-size: 14px; color: var(--neon-yellow); font-weight: 600; }
-    .card-meta { font-size: 10px; color: #d8b4fe; }
+    .val-unit { font-size: 13px; color: var(--neon-yellow); font-weight: 600; }
+    .card-meta { font-size: 9px; color: #d8b4fe; }
 
     .btn-group-timer {
       display: flex;
-      gap: 8px;
-      margin-top: 8px;
+      gap: 6px;
+      margin-top: 6px;
     }
     .btn-start {
       flex: 1;
       background: linear-gradient(135deg, var(--neon-pink), #a855f7);
       border: none;
       color: white;
-      padding: 6px 8px;
-      border-radius: 8px;
-      font-size: 10.5px;
+      padding: 5px 6px;
+      border-radius: 6px;
+      font-size: 9.5px;
       font-weight: 700;
       cursor: pointer;
-      box-shadow: 0 0 10px rgba(255, 42, 133, 0.4);
     }
     .btn-selesai {
       flex: 1;
       background: linear-gradient(135deg, #ef4444, #b91c1c);
       border: 1px solid #f87171;
       color: white;
-      padding: 6px 8px;
-      border-radius: 8px;
-      font-size: 10.5px;
+      padding: 5px 6px;
+      border-radius: 6px;
+      font-size: 9.5px;
       font-weight: 700;
       cursor: pointer;
-      box-shadow: 0 0 10px rgba(239, 68, 68, 0.4);
-    }
-    .btn-start:hover, .btn-selesai:hover { filter: brightness(1.15); }
-
-    /* Panel Kanan: Grafik Mandiri */
-    .right-panel {
-      position: absolute;
-      top: 80px;
-      right: 20px;
-      width: 350px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
     }
 
     .day-selector-bar {
       background: var(--card-bg);
       border: 1px solid var(--card-border);
       backdrop-filter: blur(14px);
-      border-radius: 12px;
-      padding: 6px 8px;
+      border-radius: 10px;
+      padding: 5px 6px;
       display: flex;
       justify-content: space-between;
-      align-items: center;
-      gap: 5px;
+      gap: 4px;
     }
     .day-btn {
       flex: 1;
       background: rgba(255, 255, 255, 0.05);
       border: 1px solid rgba(255, 255, 255, 0.12);
       color: var(--text-muted);
-      padding: 6px 0;
-      font-size: 10px;
+      padding: 5px 0;
+      font-size: 9.5px;
       font-weight: 700;
       border-radius: 6px;
       cursor: pointer;
       transition: all 0.2s;
     }
-    .day-btn:hover:not(:disabled) {
-      background: rgba(0, 242, 254, 0.15);
-      color: #fff;
-    }
     .day-btn.active {
       background: linear-gradient(135deg, var(--neon-pink), #a855f7) !important;
       border-color: var(--neon-pink) !important;
       color: #fff !important;
-      box-shadow: 0 0 10px rgba(255, 42, 133, 0.5);
+      box-shadow: 0 0 8px rgba(255, 42, 133, 0.5);
     }
     .day-btn:disabled {
       opacity: 0.25;
@@ -256,15 +276,15 @@
       background: var(--card-bg);
       border: 1px solid var(--card-border);
       backdrop-filter: blur(14px);
-      border-radius: 14px;
-      padding: 10px 14px;
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.45);
+      border-radius: 12px;
+      padding: 8px 12px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.45);
     }
     .chart-container {
       position: relative;
-      height: 110px;
+      height: 95px;
       width: 100%;
-      margin-top: 6px;
+      margin-top: 4px;
     }
     .chart-container canvas {
       width: 100% !important;
@@ -275,57 +295,104 @@
     /* Bottom Bar */
     .bottom-bar {
       position: absolute;
-      bottom: 20px;
-      left: 20px;
-      right: 20px;
+      bottom: 14px;
+      left: 16px;
+      right: 16px;
       display: flex;
       justify-content: space-between;
       align-items: flex-end;
+      z-index: 12;
     }
     .action-hud {
       background: var(--card-bg);
       border: 1px solid var(--card-border);
       backdrop-filter: blur(12px);
-      border-radius: 12px;
-      padding: 8px 14px;
+      border-radius: 10px;
+      padding: 6px 10px;
       display: flex;
-      gap: 12px;
+      gap: 8px;
       align-items: center;
     }
     .btn-cam {
       background: rgba(255, 255, 255, 0.08);
       border: 1px solid rgba(255, 255, 255, 0.15);
       color: #fdf2f8;
-      padding: 6px 10px;
-      border-radius: 6px;
-      font-size: 10.5px;
+      padding: 5px 8px;
+      border-radius: 5px;
+      font-size: 9.5px;
       font-weight: 700;
       cursor: pointer;
     }
-    .btn-cam:hover { background: var(--neon-cyan); color: #000; }
     .switch-ui {
       display: flex;
       align-items: center;
-      gap: 10px;
-      font-size: 11.5px;
+      gap: 6px;
+      font-size: 10px;
       font-weight: 700;
+    }
+
+    /* ======================================================== */
+    /* ATURAN RESPONSIF KHUSUS HP LAYAR KECIL (MAX-WIDTH 768px)  */
+    /* ======================================================== */
+    @media (max-width: 768px) {
+      .hud-layer {
+        padding: 10px;
+      }
+      .brand-box h1 { font-size: 12px; }
+      .brand-box p { font-size: 8px; }
+      .status-pill { font-size: 8.5px; padding: 4px 8px; }
+
+      .mobile-tab-bar {
+        display: flex; /* Munculkan tab toggle khusus di HP */
+      }
+
+      /* Panel Kiri & Kanan diatur otomatis saat di HP */
+      .left-panel, .right-panel {
+        position: static;
+        width: 100%;
+        margin-top: 8px;
+      }
+
+      /* Wadah Scroll Khusus Data di Layar HP */
+      .mobile-data-scroll {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        max-height: calc(100vh - 170px);
+        overflow-y: auto;
+        padding-bottom: 70px;
+      }
+
+      /* Default HP: Mode 3D (Sembunyikan data agar wadah 3D terlihat jelas) */
+      body.view-3d-active .mobile-data-scroll {
+        display: none !important;
+      }
+
+      /* Mode Data Aktif: Sembunyikan kontrol bawah agar tidak menghalangi scroll */
+      body.view-data-active .bottom-bar {
+        display: none !important;
+      }
+
+      .chart-container {
+        height: 110px;
+      }
     }
   </style>
 </head>
-<body>
+<body class="view-3d-active">
   <div id="canvas3d"></div>
 
   <div class="hud-layer">
     <!-- Top Bar -->
     <div class="top-bar clickable">
       <div class="brand-box">
-        <h1>DIGITAL TWIN: WADAH KOTAK PENGASINAN TELUR</h1>
-        <p>● SENSOR DHT22 BERDIRI &amp; LUBANG PROBE TDS → RIWAYAT H1 - H SEKARANG</p>
+        <h1>DIGITAL TWIN: WADAH PENGASINAN TELUR</h1>
+        <p>● SENSOR DHT22 &amp; PROBE TDS → H1 - H SEKARANG</p>
       </div>
 
       <div class="warning-box" id="warningBox">
-        <h3>⚠️ PERINGATAN: PENGASINAN SELESAI (&gt; 7 HARI)!</h3>
-        <p>Batas optimal 7 hari tercapai. Angkat telur sekarang agar kualitas masir berminyak maksimal dan tidak terlalu asin!</p>
+        <h3>⚠️ PENGASINAN SELESAI (&gt; 7 HARI)!</h3>
+        <p>Batas 7 hari tercapai. Angkat telur sekarang!</p>
       </div>
 
       <div class="status-pill" id="mqttStatus">
@@ -333,102 +400,130 @@
       </div>
     </div>
 
-    <!-- Panel Kiri: Telemetri -->
-    <div class="left-panel clickable">
-      <div class="card-hud">
-        <div class="card-title">
-          <span>WAKTU PROSES PENGASINAN</span>
-          <span class="badge-node" id="badgeHari">HARI 1 / 7</span>
+    <!-- Tombol Tab Khusus HP: Pilih Mau Lihat Animasi 3D atau Data -->
+    <div class="mobile-tab-bar clickable">
+      <button class="mobile-tab-btn active" id="tab3D" onclick="setMobileView('3d')">🧊 Lihat Animasi 3D</button>
+      <button class="mobile-tab-btn" id="tabData" onclick="setMobileView('data')">📊 Lihat Data &amp; Grafik</button>
+    </div>
+
+    <!-- Kontainer Data & Panel -->
+    <div class="mobile-data-scroll">
+      <!-- Panel Kiri: Telemetri -->
+      <div class="left-panel clickable">
+        <div class="card-hud">
+          <div class="card-title">
+            <span>WAKTU PENGASINAN</span>
+            <span class="badge-node" id="badgeHari">HARI 1 / 7</span>
+          </div>
+          <div class="val-main" id="batchDayText">0 <span class="val-unit">Hari</span> 0 <span class="val-unit">Jam</span></div>
+          <div class="card-meta" id="txtTargetHari">Target: 7 Hari Perendaman</div>
+          
+          <div class="btn-group-timer">
+            <button class="btn-start" onclick="startBatchBaru()">▶ Mulai Baru</button>
+            <button class="btn-selesai" onclick="simulasiSelesai()">⚠️ Selesai</button>
+          </div>
         </div>
-        <div class="val-main" id="batchDayText">0 <span class="val-unit">Hari</span> 0 <span class="val-unit">Jam</span></div>
-        <div class="card-meta" id="txtTargetHari">Target: 7 Hari Perendaman</div>
-        
-        <div class="btn-group-timer">
-          <button class="btn-start" onclick="startBatchBaru()">▶ Mulai Baru</button>
-          <button class="btn-selesai" onclick="simulasiSelesai()">⚠️ Selesai</button>
+
+        <div class="card-hud">
+          <div class="card-title">
+            <span>Kepekatan Garam (TDS)</span>
+            <span class="badge-node">SLAVE 1</span>
+          </div>
+          <div class="val-main"><span id="valGaram">0.0</span> <span class="val-unit">%</span></div>
+          <div class="card-meta">STATUS: <span id="txtDifusi">Probe TDS Masuk ke Larutan</span></div>
+        </div>
+
+        <div class="card-hud">
+          <div class="card-title">
+            <span>Ketinggian Air Larutan</span>
+            <span class="badge-node">SLAVE 1</span>
+          </div>
+          <div class="val-main"><span id="valWater">0</span> <span class="val-unit">%</span></div>
+          <div class="card-meta">VOLUME: Air Bening Sedikit di Atas Garam</div>
+        </div>
+
+        <div class="card-hud">
+          <div class="card-title">
+            <span>Suhu Ruang (DHT22 Atas Tutup)</span>
+            <span class="badge-node cyan">SLAVE 2</span>
+          </div>
+          <div class="val-main"><span id="valSuhuRuang">0.0</span> <span class="val-unit">°C</span></div>
+          <div class="card-meta">KELEMBABAN: <span id="valHum" style="color:var(--neon-pink); font-weight:700;">0.0%</span></div>
         </div>
       </div>
 
-      <div class="card-hud">
-        <div class="card-title">
-          <span>Kepekatan Garam (TDS)</span>
-          <span class="badge-node">SLAVE 1</span>
+      <!-- Panel Kanan: Grafik -->
+      <div class="right-panel clickable">
+        <div class="day-selector-bar">
+          <button class="day-btn active" id="btnDay1" onclick="switchDayView(1)">H1</button>
+          <button class="day-btn" id="btnDay2" onclick="switchDayView(2)" disabled>H2</button>
+          <button class="day-btn" id="btnDay3" onclick="switchDayView(3)" disabled>H3</button>
+          <button class="day-btn" id="btnDay4" onclick="switchDayView(4)" disabled>H4</button>
+          <button class="day-btn" id="btnDay5" onclick="switchDayView(5)" disabled>H5</button>
+          <button class="day-btn" id="btnDay6" onclick="switchDayView(6)" disabled>H6</button>
+          <button class="day-btn" id="btnDay7" onclick="switchDayView(7)" disabled>H7</button>
         </div>
-        <div class="val-main"><span id="valGaram">0.0</span> <span class="val-unit">%</span></div>
-        <div class="card-meta">STATUS: <span id="txtDifusi">Probe TDS Masuk ke Larutan</span></div>
-      </div>
 
-      <div class="card-hud">
-        <div class="card-title">
-          <span>Ketinggian Air Larutan</span>
-          <span class="badge-node">SLAVE 1</span>
+        <div class="card-chart">
+          <div class="card-title">
+            <span>GRAFIK TDS GARAM (SLAVE 1)</span>
+            <span class="badge-node" id="lblChartSalt">HARI 1 (%)</span>
+          </div>
+          <div class="chart-container">
+            <canvas id="saltChart"></canvas>
+          </div>
         </div>
-        <div class="val-main"><span id="valWater">0</span> <span class="val-unit">%</span></div>
-        <div class="card-meta">VOLUME: Air Bening Sedikit di Atas Garam</div>
-      </div>
 
-      <div class="card-hud">
-        <div class="card-title">
-          <span>Suhu Ruang (DHT22 Atas Tutup)</span>
-          <span class="badge-node cyan">SLAVE 2</span>
+        <div class="card-chart">
+          <div class="card-title">
+            <span>GRAFIK SUHU DHT22 (SLAVE 2)</span>
+            <span class="badge-node cyan" id="lblChartTemp">HARI 1 (°C)</span>
+          </div>
+          <div class="chart-container">
+            <canvas id="tempChart"></canvas>
+          </div>
         </div>
-        <div class="val-main"><span id="valSuhuRuang">0.0</span> <span class="val-unit">°C</span></div>
-        <div class="card-meta">KELEMBABAN: <span id="valHum" style="color:var(--neon-pink); font-weight:700;">0.0%</span></div>
       </div>
     </div>
 
-    <!-- Panel Kanan: Filter Hari & Grafik -->
-    <div class="right-panel clickable">
-      <div class="day-selector-bar">
-        <button class="day-btn active" id="btnDay1" onclick="switchDayView(1)">H1</button>
-        <button class="day-btn" id="btnDay2" onclick="switchDayView(2)" disabled>H2</button>
-        <button class="day-btn" id="btnDay3" onclick="switchDayView(3)" disabled>H3</button>
-        <button class="day-btn" id="btnDay4" onclick="switchDayView(4)" disabled>H4</button>
-        <button class="day-btn" id="btnDay5" onclick="switchDayView(5)" disabled>H5</button>
-        <button class="day-btn" id="btnDay6" onclick="switchDayView(6)" disabled>H6</button>
-        <button class="day-btn" id="btnDay7" onclick="switchDayView(7)" disabled>H7</button>
-      </div>
-
-      <div class="card-chart">
-        <div class="card-title">
-          <span>GRAFIK TDS GARAM (SLAVE 1)</span>
-          <span class="badge-node" id="lblChartSalt">HARI 1 (%)</span>
-        </div>
-        <div class="chart-container">
-          <canvas id="saltChart"></canvas>
-        </div>
-      </div>
-
-      <div class="card-chart">
-        <div class="card-title">
-          <span>GRAFIK SUHU DHT22 (SLAVE 2)</span>
-          <span class="badge-node cyan" id="lblChartTemp">HARI 1 (°C)</span>
-        </div>
-        <div class="chart-container">
-          <canvas id="tempChart"></canvas>
-        </div>
-      </div>
-    </div>
-
-    <!-- Bottom Bar -->
+    <!-- Bottom Bar (Kontrol Kamera & Lampu) -->
     <div class="bottom-bar clickable">
       <div class="action-hud">
-        <button class="btn-cam" onclick="setCamTop()">Sudut Atas (Top)</button>
-        <button class="btn-cam" onclick="setCamFront()">Sudut Depan (Front)</button>
-        <button class="btn-cam" onclick="setCamIso()">Sudut Isometrik</button>
+        <button class="btn-cam" onclick="setCamTop()">Top</button>
+        <button class="btn-cam" onclick="setCamFront()">Front</button>
+        <button class="btn-cam" onclick="setCamIso()">Iso</button>
       </div>
 
       <div class="action-hud">
         <div class="switch-ui">
-          <span>Lampu ON/OFF</span>
-          <input type="checkbox" id="btnToggleLampu" onchange="toggleLampu(this.checked)" style="transform: scale(1.3); cursor: pointer;">
+          <span>Lampu</span>
+          <input type="checkbox" id="btnToggleLampu" onchange="toggleLampu(this.checked)" style="transform: scale(1.2); cursor: pointer;">
         </div>
       </div>
     </div>
   </div>
 
   <script>
-    // --- 1. DETEKSI STATUS OFFLINE / ONLINE ---
+    // --- 1. PENGATUR SWITCH TAMPILAN HP (3D vs DATA) ---
+    function setMobileView(viewMode) {
+      const tab3D = document.getElementById('tab3D');
+      const tabData = document.getElementById('tabData');
+
+      if (viewMode === '3d') {
+        document.body.classList.add('view-3d-active');
+        document.body.classList.remove('view-data-active');
+        tab3D.classList.add('active');
+        tabData.classList.remove('active');
+      } else {
+        document.body.classList.remove('view-3d-active');
+        document.body.classList.add('view-data-active');
+        tab3D.classList.remove('active');
+        tabData.classList.add('active');
+        setTimeout(renderAllCharts, 100);
+      }
+    }
+
+    // --- 2. DETEKSI STATUS OFFLINE / ONLINE ---
     function updateNetworkStatus() {
       const pill = document.getElementById('mqttStatus');
       const dot = document.getElementById('statusDot');
@@ -437,7 +532,7 @@
       if (!navigator.onLine) {
         pill.classList.add('offline');
         dot.classList.add('offline');
-        txt.innerText = 'Mode Offline (Tersimpan Lokal)';
+        txt.innerText = 'Offline (Lokal)';
       } else {
         pill.classList.remove('offline');
         dot.classList.remove('offline');
@@ -447,7 +542,13 @@
     window.addEventListener('online', updateNetworkStatus);
     window.addEventListener('offline', updateNetworkStatus);
 
-    // --- 2. THREE.JS ENGINE 3D ---
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js').catch(() => {});
+      });
+    }
+
+    // --- 3. THREE.JS ENGINE 3D ---
     const container = document.getElementById('canvas3d');
     const scene = new THREE.Scene();
     scene.fog = new THREE.FogExp2(0x090714, 0.025);
@@ -478,7 +579,6 @@
     grid.position.y = -2;
     scene.add(grid);
 
-    // Wadah 3D Digital Twin
     const groupTank = new THREE.Group();
     scene.add(groupTank);
 
@@ -566,7 +666,7 @@
     }
     lidGroup.add(dhtGroup);
 
-    // Lubang Port Tutup & Sensor TDS
+    // Port Tutup & Sensor TDS
     const portX = 0.85;
     const portZ = -0.95;
 
@@ -759,7 +859,7 @@
       renderAllCharts();
     });
 
-    // --- 3. DATABASE RIWAYAT H1 - H7 & MESIN GRAFIK PURE CANVAS (OFFLINE RESISTANT) ---
+    // --- 4. LOGIKA DATABASE & MESIN GRAFIK PURE CANVAS (OFFLINE RESISTANT) ---
     const hoursLabels = ['00:00', '03:00', '06:00', '09:00', '12:00', '15:00', '18:00', '21:00'];
     let selectedDayView = 1;
     let currentAllowedMaxDay = 1;
@@ -787,7 +887,6 @@
       localStorage.setItem('telur_history_db', JSON.stringify(historyDatabase));
     }
 
-    // FUNGSI MENGGAMBAR GRAFIK NATIVE (100% OFFLINE TANPA INTERNET)
     function drawOfflineLineChart(canvasId, labels, data, strokeColor, fillColor) {
       const canvas = document.getElementById(canvasId);
       if (!canvas) return;
@@ -803,17 +902,16 @@
       const w = rect.width;
       const h = rect.height;
 
-      const padLeft = 32;
-      const padRight = 14;
-      const padTop = 14;
-      const padBottom = 20;
+      const padLeft = 28;
+      const padRight = 10;
+      const padTop = 10;
+      const padBottom = 18;
 
       const plotW = w - padLeft - padRight;
       const plotH = h - padTop - padBottom;
 
       ctx.clearRect(0, 0, w, h);
 
-      // Hitung min & max
       let minVal = Math.min(...data);
       let maxVal = Math.max(...data);
       if (minVal === maxVal) { minVal -= 1; maxVal += 1; }
@@ -821,14 +919,13 @@
       minVal = Math.floor(minVal - margin);
       maxVal = Math.ceil(maxVal + margin);
 
-      // Garis Grid Horizontal & Angka Sumbu Y
       ctx.lineWidth = 1;
       ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
       ctx.fillStyle = strokeColor;
-      ctx.font = '9px monospace';
+      ctx.font = '8.5px monospace';
       ctx.textAlign = 'right';
 
-      const gridSteps = 4;
+      const gridSteps = 3;
       for (let i = 0; i <= gridSteps; i++) {
         const yVal = minVal + ((maxVal - minVal) / gridSteps) * i;
         const py = padTop + plotH - (plotH / gridSteps) * i;
@@ -838,17 +935,15 @@
         ctx.lineTo(w - padRight, py);
         ctx.stroke();
 
-        ctx.fillText(yVal.toFixed(1), padLeft - 6, py + 3);
+        ctx.fillText(yVal.toFixed(1), padLeft - 4, py + 3);
       }
 
-      // Hitung koordinat titik
       const points = data.map((val, idx) => {
         const px = padLeft + (plotW / (data.length - 1)) * idx;
         const py = padTop + plotH - ((val - minVal) / (maxVal - minVal)) * plotH;
         return { x: px, y: py };
       });
 
-      // Area Fill Gradien
       const grad = ctx.createLinearGradient(0, padTop, 0, padTop + plotH);
       grad.addColorStop(0, fillColor);
       grad.addColorStop(1, 'rgba(0,0,0,0)');
@@ -861,12 +956,11 @@
       ctx.fillStyle = grad;
       ctx.fill();
 
-      // Garis Kurva
       ctx.beginPath();
       ctx.strokeStyle = strokeColor;
-      ctx.lineWidth = 2.2;
+      ctx.lineWidth = 2;
       ctx.shadowColor = strokeColor;
-      ctx.shadowBlur = 8;
+      ctx.shadowBlur = 6;
       points.forEach((p, i) => {
         if (i === 0) ctx.moveTo(p.x, p.y);
         else ctx.lineTo(p.x, p.y);
@@ -874,19 +968,17 @@
       ctx.stroke();
       ctx.shadowBlur = 0;
 
-      // Titik Lingkaran & Label Jam Bawah
       ctx.fillStyle = strokeColor;
       points.forEach((p, idx) => {
         ctx.beginPath();
-        ctx.arc(p.x, p.y, 3, 0, Math.PI * 2);
+        ctx.arc(p.x, p.y, 2.8, 0, Math.PI * 2);
         ctx.fill();
 
-        // Label jam
         ctx.fillStyle = '#c084fc';
-        ctx.font = '8px sans-serif';
+        ctx.font = '7.5px sans-serif';
         ctx.textAlign = 'center';
         if (idx % 2 === 0 || idx === points.length - 1) {
-          ctx.fillText(labels[idx], p.x, h - 5);
+          ctx.fillText(labels[idx], p.x, h - 4);
         }
         ctx.fillStyle = strokeColor;
       });
@@ -898,7 +990,6 @@
       drawOfflineLineChart('tempChart', hoursLabels, activeData.temp, '#00f2fe', 'rgba(0, 242, 254, 0.25)');
     }
 
-    // FUNGSI PENGUNCIAN HARI
     function updateDayButtonsAccessibility(activeDay) {
       currentAllowedMaxDay = Math.min(Math.max(activeDay, 1), 7);
 
@@ -907,10 +998,8 @@
         if (btn) {
           if (i <= currentAllowedMaxDay) {
             btn.removeAttribute('disabled');
-            btn.title = `Buka data Hari ${i}`;
           } else {
             btn.setAttribute('disabled', 'true');
-            btn.title = `Hari ${i} belum berlangsung`;
           }
         }
       }
@@ -936,7 +1025,7 @@
       renderAllCharts();
     }
 
-    // --- 4. TRACKER WAKTU PENGASINAN ---
+    // --- 5. TRACKER WAKTU PENGASINAN ---
     function initBatchTimer() {
       let startTime = localStorage.getItem('telur_start_time');
       if (!startTime) {
@@ -995,7 +1084,7 @@
       switchDayView(7);
     }
 
-    // --- 5. KONEKSI MQTT EMQX CLOUD ---
+    // --- 6. KONEKSI MQTT EMQX CLOUD ---
     try {
       const mqttOptions = {
         clean: true,
@@ -1064,7 +1153,6 @@
       console.warn("MQTT offline mode aktif:", e);
     }
 
-    // Jalankan inisialisasi awal
     initHistoryDatabase();
     initBatchTimer();
     renderAllCharts();
