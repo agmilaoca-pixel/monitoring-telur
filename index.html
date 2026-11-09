@@ -118,7 +118,7 @@
     .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--neon-pink); box-shadow: 0 0 10px var(--neon-pink); }
     .dot.offline { background: var(--neon-red); box-shadow: 0 0 10px var(--neon-red); }
 
-    /* Switch Mode Tampilan Layar HP */
+    /* Switch Mode Layar HP */
     .mobile-tab-bar {
       display: none;
       margin-top: 8px;
@@ -336,15 +336,8 @@
       .brand-box h1 { font-size: 11.5px; }
       .brand-box p { font-size: 8px; }
       .status-pill { font-size: 8.5px; padding: 4px 8px; }
-
       .mobile-tab-bar { display: flex; }
-
-      .left-panel, .right-panel {
-        position: static;
-        width: 100%;
-        margin-top: 6px;
-      }
-
+      .left-panel, .right-panel { position: static; width: 100%; margin-top: 6px; }
       .mobile-data-scroll {
         display: flex;
         flex-direction: column;
@@ -353,15 +346,8 @@
         overflow-y: auto;
         padding-bottom: 60px;
       }
-
       body.view-3d-active .mobile-data-scroll { display: none !important; }
-
-      .bottom-bar {
-        bottom: 8px;
-        left: 10px;
-        right: 10px;
-        gap: 6px;
-      }
+      .bottom-bar { bottom: 8px; left: 10px; right: 10px; gap: 6px; }
       .action-hud { padding: 5px 8px; gap: 6px; }
       .btn-cam { padding: 4px 6px; font-size: 9px; }
       .chart-container { height: 110px; }
@@ -402,9 +388,9 @@
         <div class="card-hud">
           <div class="card-title">
             <span>WAKTU PENGASINAN</span>
-            <span class="badge-node" id="badgeHari">HARI 4 / 7</span>
+            <span class="badge-node" id="badgeHari">HARI 1 / 7</span>
           </div>
-          <div class="val-main" id="batchDayText">3 <span class="val-unit">Hari</span> 8 <span class="val-unit">Jam</span></div>
+          <div class="val-main" id="batchDayText">0 <span class="val-unit">Hari</span> 0 <span class="val-unit">Jam</span></div>
           <div class="card-meta" id="txtTargetHari">Target: 7 Hari Perendaman</div>
           
           <div class="btn-group-timer">
@@ -444,10 +430,10 @@
       <!-- Panel Kanan: Grafik -->
       <div class="right-panel clickable">
         <div class="day-selector-bar">
-          <button class="day-btn" id="btnDay1" onclick="switchDayView(1)">H1</button>
-          <button class="day-btn" id="btnDay2" onclick="switchDayView(2)">H2</button>
-          <button class="day-btn" id="btnDay3" onclick="switchDayView(3)">H3</button>
-          <button class="day-btn active" id="btnDay4" onclick="switchDayView(4)">H4</button>
+          <button class="day-btn active" id="btnDay1" onclick="switchDayView(1)">H1</button>
+          <button class="day-btn" id="btnDay2" onclick="switchDayView(2)" disabled>H2</button>
+          <button class="day-btn" id="btnDay3" onclick="switchDayView(3)" disabled>H3</button>
+          <button class="day-btn" id="btnDay4" onclick="switchDayView(4)" disabled>H4</button>
           <button class="day-btn" id="btnDay5" onclick="switchDayView(5)" disabled>H5</button>
           <button class="day-btn" id="btnDay6" onclick="switchDayView(6)" disabled>H6</button>
           <button class="day-btn" id="btnDay7" onclick="switchDayView(7)" disabled>H7</button>
@@ -456,7 +442,7 @@
         <div class="card-chart">
           <div class="card-title">
             <span>GRAFIK TDS GARAM (SLAVE 1)</span>
-            <span class="badge-node" id="lblChartSalt">HARI 4 (%)</span>
+            <span class="badge-node" id="lblChartSalt">HARI 1 (%)</span>
           </div>
           <div class="chart-container">
             <canvas id="saltChart"></canvas>
@@ -466,7 +452,7 @@
         <div class="card-chart">
           <div class="card-title">
             <span>GRAFIK SUHU DHT22 (SLAVE 2)</span>
-            <span class="badge-node cyan" id="lblChartTemp">HARI 4 (°C)</span>
+            <span class="badge-node cyan" id="lblChartTemp">HARI 1 (°C)</span>
           </div>
           <div class="chart-container">
             <canvas id="tempChart"></canvas>
@@ -493,33 +479,11 @@
   </div>
 
   <script>
-    // =========================================================================
-    // WAKTU BATCH GLOBAL DIKUNCI MATI (TIDAK ADA PERBEDAAN ANTAR PERANGKAT)
-    // =========================================================================
-    // Dihitung otomatis tepat 3 Hari 8 Jam yang lalu dari saat ini (Hari ke-4)
-    const BATCH_START_STAMP = Date.now() - (3 * 24 * 60 * 60 * 1000) - (8 * 60 * 60 * 1000);
+    // Variabel Global Sinkronisasi MQTT Mutlak
+    let globalBatchStart = parseInt(localStorage.getItem('telur_start_time')) || Date.now();
+    let selectedDayView = 1;
+    let currentAllowedMaxDay = 1;
 
-    // Hapus paksa memori cache local lama di browser yang bikin beda-beda
-    if (localStorage.getItem('telur_synced_v35') !== 'true') {
-      localStorage.removeItem('telur_start_time');
-      localStorage.setItem('telur_synced_v35', 'true');
-    }
-
-    function getStartTime() {
-      let st = localStorage.getItem('telur_start_time');
-      if (!st) {
-        localStorage.setItem('telur_start_time', BATCH_START_STAMP);
-        return BATCH_START_STAMP;
-      }
-      return parseInt(st);
-    }
-
-    // Registrasi pembersih Service Worker
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('./sw.js').catch(() => {});
-    }
-
-    // Switch View HP
     function setMobileView(viewMode) {
       const tab3D = document.getElementById('tab3D');
       const tabData = document.getElementById('tabData');
@@ -538,7 +502,6 @@
       }
     }
 
-    // Status Koneksi
     function updateNetworkStatus() {
       const pill = document.getElementById('mqttStatus');
       const dot = document.getElementById('statusDot');
@@ -855,10 +818,8 @@
       renderAllCharts();
     });
 
-    // --- DATA & GRAFIK OFFLINE ---
+    // --- DATA & GRAFIK NATIVE CANVAS ---
     const hoursLabels = ['00:00', '03:00', '06:00', '09:00', '12:00', '15:00', '18:00', '21:00'];
-    let selectedDayView = 4;
-    let currentAllowedMaxDay = 4;
     let historyDatabase = {
       1: { salt: [14.0, 14.3, 14.6, 15.0, 15.5, 15.8, 15.5, 15.2], temp: [27.0, 26.8, 27.5, 30.2, 33.1, 32.5, 29.8, 28.5] },
       2: { salt: [15.2, 15.4, 15.8, 16.2, 16.8, 17.0, 16.7, 16.5], temp: [27.2, 27.0, 27.8, 30.5, 33.5, 32.8, 30.1, 28.8] },
@@ -965,7 +926,7 @@
     }
 
     function renderAllCharts() {
-      const activeData = historyDatabase[selectedDayView] || historyDatabase[4];
+      const activeData = historyDatabase[selectedDayView] || historyDatabase[1];
       drawOfflineLineChart('saltChart', hoursLabels, activeData.salt, '#ff2a85', 'rgba(255, 42, 133, 0.25)');
       drawOfflineLineChart('tempChart', hoursLabels, activeData.temp, '#00f2fe', 'rgba(0, 242, 254, 0.25)');
     }
@@ -996,15 +957,14 @@
       renderAllCharts();
     }
 
-    // Perhitungan Waktu Pengasinan Mutlak
+    // Perhitungan Waktu Pengasinan Berbasis Timestamp Tunggal
     function updateTimerDisplay() {
-      const startTime = getStartTime();
       const now = Date.now();
-      const diffMs = Math.max(0, now - startTime);
+      const diffMs = Math.max(0, now - globalBatchStart);
 
       const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
       const hours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-      const currentDayNumber = days + 1;
+      const currentDayNumber = Math.min(days + 1, 7);
 
       document.getElementById('batchDayText').innerHTML = `${days} <span class="val-unit">Hari</span> ${hours} <span class="val-unit">Jam</span>`;
 
@@ -1012,7 +972,7 @@
       const warningBox = document.getElementById('warningBox');
 
       if (days >= 7) {
-        badgeHari.innerText = `SELESAI (HARI KE-${currentDayNumber})`;
+        badgeHari.innerText = `SELESAI (HARI KE-7)`;
         badgeHari.style.background = 'rgba(255, 51, 68, 0.3)';
         badgeHari.style.borderColor = 'var(--neon-red)';
         badgeHari.style.color = '#ff6677';
@@ -1028,33 +988,38 @@
       updateDayButtonsAccessibility(currentDayNumber);
     }
 
+    // Tombol Mulai Baru: Mengirim waktu baru langsung ke Cloud Broker
     function startBatchBaru() {
-      if (confirm("Mulai batch baru dari Hari 1? Semua perangkat akan di-reset bersama.")) {
-        const newStart = Date.now();
-        localStorage.setItem('telur_start_time', newStart);
+      if (confirm("Mulai batch baru dari 0 Hari 0 Jam? Waktu di HP dan Laptop akan langsung sinkron.")) {
+        const nowStamp = Date.now();
+        globalBatchStart = nowStamp;
+        localStorage.setItem('telur_start_time', nowStamp);
         updateTimerDisplay();
         switchDayView(1);
+
         if (client && client.connected) {
-          client.publish('telur/kontrol/batch_start', String(newStart), { retain: true });
+          client.publish('telur/kontrol/batch_start', String(nowStamp), { retain: true, qos: 1 });
         }
       }
     }
 
     function simulasiSelesai() {
-      const finishTime = Date.now() - (8 * 24 * 60 * 60 * 1000);
-      localStorage.setItem('telur_start_time', finishTime);
+      const finishStamp = Date.now() - (8 * 24 * 60 * 60 * 1000);
+      globalBatchStart = finishStamp;
+      localStorage.setItem('telur_start_time', finishStamp);
       updateTimerDisplay();
       switchDayView(7);
+
       if (client && client.connected) {
-        client.publish('telur/kontrol/batch_start', String(finishTime), { retain: true });
+        client.publish('telur/kontrol/batch_start', String(finishStamp), { retain: true, qos: 1 });
       }
     }
 
-    // MQTT
+    // Koneksi MQTT
     const mqttOptions = {
       clean: true,
       connectTimeout: 4000,
-      clientId: 'telur_' + Math.random().toString(16).substring(2, 8),
+      clientId: 'telur_node_' + Math.random().toString(16).substring(2, 8),
       username: 'mila',
       password: 'Mila12345'
     };
@@ -1073,10 +1038,12 @@
     client.on('message', (topic, message) => {
       const val = message.toString();
 
+      // Sinkronisasi mutlak waktu mulai
       if (topic === 'telur/kontrol/batch_start') {
-        const incomingTime = parseInt(val);
-        if (!isNaN(incomingTime) && incomingTime > 0) {
-          localStorage.setItem('telur_start_time', incomingTime);
+        const incomingStamp = parseInt(val);
+        if (!isNaN(incomingStamp) && incomingStamp > 0) {
+          globalBatchStart = incomingStamp;
+          localStorage.setItem('telur_start_time', incomingStamp);
           updateTimerDisplay();
         }
       } else if (topic === 'telur/slave/1') {
@@ -1103,10 +1070,9 @@
       bulbMat.color.setHex(state ? 0xffaa00 : 0x555555);
     };
 
-    // Jalankan sistem
+    // Jalankan kalkulator timer
     updateTimerDisplay();
-    switchDayView(4);
-    setInterval(updateTimerDisplay, 10000);
+    setInterval(updateTimerDisplay, 5000);
     renderAllCharts();
     updateNetworkStatus();
   </script>
