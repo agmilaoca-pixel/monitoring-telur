@@ -7,6 +7,7 @@
   <meta property="og:title" content="Dashboard Monitoring Telur Asin" />
   <meta property="og:description" content="Monitoring Suhu, Kelembaban, dan TDS Garam Secara Real-Time" />
   
+  <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 
   <style>
@@ -83,7 +84,6 @@
       gap: 8px;
     }
 
-    /* Saklar Lampu Asli Presisi */
     .lamp-dock {
       background: var(--card-bg);
       border: 1px solid var(--card-border);
@@ -142,7 +142,7 @@
       color: #fff;
     }
 
-    /* Panel Kiri & Kanan */
+    /* Panels */
     .left-panel {
       position: absolute;
       top: 68px;
@@ -280,7 +280,6 @@
       display: block;
     }
 
-    /* Bottom Bar */
     .bottom-bar {
       position: absolute;
       bottom: 12px;
@@ -359,7 +358,7 @@
       </div>
     </div>
 
-    <!-- Tombol Mode di HP -->
+    <!-- Mode Layar HP -->
     <div class="mobile-tab-bar clickable">
       <button class="mobile-tab-btn active" id="tab3D" onclick="setMobileView('3d')">🧊 Wadah 3D</button>
       <button class="mobile-tab-btn" id="tabData" onclick="setMobileView('data')">📊 Data &amp; Grafik</button>
@@ -475,7 +474,7 @@
       }
     }
 
-    // --- THREE.JS 3D ENGINE LENGKAP DETAIL ---
+    // --- THREE.JS 3D ENGINE (DETAIL LENGKAP PRESISI) ---
     const container = document.getElementById('canvas3d');
     const scene = new THREE.Scene();
     scene.fog = new THREE.FogExp2(0x090714, 0.025);
@@ -498,9 +497,9 @@
     cyanRimLight.position.set(6, 6, -5);
     scene.add(cyanRimLight);
 
-    // Sumber Cahaya Lampu Pemanas 3D
-    const heaterLight = new THREE.PointLight(0xffaa22, 0.0, 20);
-    heaterLight.position.set(0, 1.8, 0);
+    // Cahaya Lampu Pemanas (Menyinari Ruang Wadah)
+    const heaterLight = new THREE.PointLight(0xffaa00, 0.0, 25);
+    heaterLight.position.set(0, 1.2, 0);
     scene.add(heaterLight);
 
     const grid = new THREE.GridHelper(30, 30, 0xff2a85, 0x1f1435);
@@ -531,7 +530,7 @@
     wireframeBox.position.y = 0.1;
     groupTank.add(wireframeBox);
 
-    // Tutup Wadah
+    // Tutup Wadah Transparan Gelap
     const lidGroup = new THREE.Group();
     const lidGeo = new THREE.BoxGeometry(4.4, 0.18, 4.4);
     const lidMat = new THREE.MeshStandardMaterial({
@@ -539,13 +538,13 @@
       roughness: 0.3,
       metalness: 0.5,
       transparent: true,
-      opacity: 0.85
+      opacity: 0.75
     });
     const lidMesh = new THREE.Mesh(lidGeo, lidMat);
     lidMesh.position.set(0, 2.24, 0);
     lidGroup.add(lidMesh);
 
-    // Pegangan Tutup
+    // Pegangan Tutup Silinder Cyan
     const handleGeo = new THREE.CylinderGeometry(0.1, 0.1, 1.2);
     const handleMat = new THREE.MeshStandardMaterial({ color: 0x00f2fe, metalness: 0.8 });
     const handleMesh = new THREE.Mesh(handleGeo, handleMat);
@@ -553,7 +552,7 @@
     handleMesh.position.set(-1.0, 2.44, 0);
     lidGroup.add(handleMesh);
 
-    // Modul Sensor DHT22 Atas Tutup
+    // Modul Sensor DHT22 Presisi Lengkap
     const dhtGroup = new THREE.Group();
     dhtGroup.position.set(0.85, 2.33, 0.6);
 
@@ -597,7 +596,7 @@
     }
     lidGroup.add(dhtGroup);
 
-    // Kabel & Lubang Probe TDS
+    // Kabel & Jalur Sensor TDS
     const portX = 0.85;
     const portZ = -0.95;
 
@@ -625,7 +624,7 @@
     innerCable.position.set(portX, 1.5, portZ);
     groupTank.add(innerCable);
 
-    // Probe TDS Fisik
+    // Fisik Probe TDS Masuk ke Wadah
     const probeGroup = new THREE.Group();
     probeGroup.position.set(portX, 0.25, portZ);
 
@@ -653,27 +652,23 @@
 
     groupTank.add(probeGroup);
 
-    // Dudukan Lampu Soket
-    const socketGeo = new THREE.CylinderGeometry(0.4, 0.45, 0.25, 20);
-    const socketMat = new THREE.MeshStandardMaterial({ color: 0x333333, metalness: 0.7 });
+    // Dudukan Soket Lampu di Bawah Tutup
+    const socketGeo = new THREE.CylinderGeometry(0.3, 0.35, 0.3, 20);
+    const socketMat = new THREE.MeshStandardMaterial({ color: 0x222222, metalness: 0.8 });
     const socketMesh = new THREE.Mesh(socketGeo, socketMat);
-    socketMesh.position.set(0, 2.05, 0);
+    socketMesh.position.set(0, 2.0, 0);
     lidGroup.add(socketMesh);
 
-    // Bohlam Lampu Pemanas 3D
-    const bulbGeo = new THREE.SphereGeometry(0.35, 24, 24);
-    const bulbMat = new THREE.MeshStandardMaterial({
-      color: 0x444444,
-      emissive: 0x000000,
-      roughness: 0.2
-    });
+    // BOHLAM LAMPU PEMANAS (Posisinya Jelas Menggantung di Tengah Atas Wadah)
+    const bulbGeo = new THREE.SphereGeometry(0.42, 28, 28);
+    const bulbMat = new THREE.MeshBasicMaterial({ color: 0x333333 });
     const bulbMesh = new THREE.Mesh(bulbGeo, bulbMat);
-    bulbMesh.position.set(0, 1.82, 0);
-    lidGroup.add(bulbMesh);
+    bulbMesh.position.set(0, 1.45, 0);
+    groupTank.add(bulbMesh);
 
     groupTank.add(lidGroup);
 
-    // Model Telur
+    // Model 5 Telur
     const eggGeo = new THREE.SphereGeometry(0.55, 32, 28);
     eggGeo.scale(1, 1.35, 1);
     const eggMat = new THREE.MeshStandardMaterial({ color: 0x7da48d, roughness: 0.65 });
@@ -694,7 +689,7 @@
       groupTank.add(egg);
     });
 
-    // Hamparan Kristal Garam
+    // Hamparan Garam Kristal
     const saltBedGeo = new THREE.BoxGeometry(4.0, 1.8, 4.0);
     const saltBedMat = new THREE.MeshStandardMaterial({
       color: 0xf3f4f6,
@@ -771,7 +766,7 @@
       renderAllCharts();
     });
 
-    // --- DATA & GRAFIK PURE CANVAS ASLI ---
+    // --- DATA & GRAFIK PURE CANVAS ---
     const hoursLabels = ['00:00', '03:00', '06:00', '09:00', '12:00', '15:00', '18:00', '21:00'];
     let historyDatabase = {
       1: { salt: [14.0, 14.3, 14.6, 15.0, 15.5, 15.8, 15.5, 15.2], temp: [27.0, 26.8, 27.5, 30.2, 33.1, 32.5, 29.8, 28.5] },
@@ -924,23 +919,21 @@
       switchDayView(7);
     }
 
-    // --- FUNGSI TAMPILAN CAHAYA & BOHLAM LAMPU ---
+    // --- LOGIKA NYALA & SINKRONISASI BOHLAM LAMPU ---
     function setLampuVisual(isNyala) {
       const checkbox = document.getElementById('btnToggleLampu');
       if (checkbox) checkbox.checked = isNyala;
 
       if (isNyala) {
-        heaterLight.intensity = 5.5;
-        bulbMat.color.setHex(0xffaa00);
-        bulbMat.emissive.setHex(0xffaa00);
+        heaterLight.intensity = 6.0;
+        bulbMat.color.setHex(0xffaa00); // Kuning Oranye Menyala
       } else {
         heaterLight.intensity = 0.0;
-        bulbMat.color.setHex(0x444444);
-        bulbMat.emissive.setHex(0x000000);
+        bulbMat.color.setHex(0x333333); // Abu-abu Gelap (Mati)
       }
     }
 
-    // --- LOGIKA SINKRONISASI INSTAN (RELAY + BROADCAST) ---
+    // Sinkronisasi Instan Jalur Ganda (Cloud State + Broadcast)
     const SYNC_CHANNEL = "telur_lampu_sync_channel";
     const bc = ('BroadcastChannel' in window) ? new BroadcastChannel(SYNC_CHANNEL) : null;
     if (bc) {
@@ -962,7 +955,7 @@
         }
       } catch (e) {}
     }
-    setInterval(checkCloudLamp, 1500);
+    setInterval(checkCloudLamp, 1200);
 
     async function userToggleLampu(state) {
       setLampuVisual(state);
