@@ -949,12 +949,15 @@
     }
 
     // --- SINKRONISASI VISUAL LAMPU 3D DUA ARAH ---
+    let localLampState = false;
+
     function setLampuVisual(isNyala) {
+      localLampState = isNyala;
       const checkbox = document.getElementById('btnToggleLampu');
       if (checkbox) checkbox.checked = isNyala;
 
       if (isNyala) {
-        heaterLight.intensity = 4.5;
+        heaterLight.intensity = 5.0;
         bulbMat.color.setHex(0xffaa00);
       } else {
         heaterLight.intensity = 0.0;
@@ -962,27 +965,26 @@
       }
     }
 
-    // Dijalankan saat tombol saklar disentuh/diklik di layar HP atau Laptop
+    // Dijalankan saat saklar diklik oleh pengguna di HP atau Laptop
     function userToggleLampu(state) {
       setLampuVisual(state);
 
       if (client && client.connected) {
-        const textPayload = state ? 'ON' : 'OFF';
-        const numPayload = state ? '1' : '0';
-
-        // Siarkan serentak ke semua topik kontrol lampu dengan retain: true
-        client.publish('telur/kontrol/heater', textPayload, { qos: 1, retain: true });
-        client.publish('telur/kontrol/lampu', textPayload, { qos: 1, retain: true });
-        client.publish('telur/slave/lampu', numPayload, { qos: 1, retain: true });
+        const payload = state ? 'ON' : 'OFF';
+        // Kirim tanpa retain agar EMQX WebSocket tidak menolak pesan
+        client.publish('telur/kontrol/lampu', payload, { qos: 0, retain: false });
+        client.publish('telur/kontrol/heater', payload, { qos: 0, retain: false });
       }
     }
 
     // --- KONEKSI MQTT CLOUD EMQX SINKRON REAL-TIME ---
+    // Gunakan random string murni dan timestamp agar tidak saling tendang antar HP & Laptop
+    const uniqueClientId = 'web_' + Date.now().toString(36) + '_' + Math.random().toString(36).substring(2, 7);
+
     const mqttOptions = {
       clean: true,
       connectTimeout: 5000,
-      keepalive: 60,
-      clientId: 'telur_client_' + Math.random().toString(16).substring(2, 10),
+      clientId: uniqueClientId,
       username: 'mila',
       password: 'Mila12345'
     };
@@ -991,8 +993,8 @@
 
     client.on('connect', () => {
       updateNetworkStatus();
-      client.subscribe('telur/kontrol/#', { qos: 1 });
-      client.subscribe('telur/slave/#', { qos: 1 });
+      client.subscribe('telur/kontrol/#', { qos: 0 });
+      client.subscribe('telur/slave/#', { qos: 0 });
     });
 
     client.on('close', () => updateNetworkStatus());
@@ -1002,10 +1004,12 @@
     client.on('message', (topic, message) => {
       const val = message.toString().trim();
 
-      // Deteksi sinyal saklar dari semua topik dan format (ON, 1, true)
-      if (topic === 'telur/kontrol/heater' || topic === 'telur/kontrol/lampu' || topic === 'telur/slave/lampu') {
-        const isNyala = (val === 'ON' || val === '1' || val === 'true');
-        setLampuVisual(isNyala);
+      // Deteksi sinyal saklar dari perangkat lain
+      if (topic === 'telur/kontrol/lampu' || topic === 'telur/kontrol/heater') {
+        const targetState = (val === 'ON' || val === '1' || val === 'true');
+        if (targetState !== localLampState) {
+          setLampuVisual(targetState);
+        }
       } else if (topic === 'telur/slave/1') {
         document.getElementById('valGaram').innerText = val;
       } else if (topic === 'telur/slave/water') {
