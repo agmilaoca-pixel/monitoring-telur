@@ -84,7 +84,7 @@
       gap: 6px;
     }
 
-    /* Kotak Saklar Lampu di Top Bar agar Selalu Muncul di HP & Laptop */
+    /* Saklar Lampu di Atas (Selalu Terlihat di HP & Laptop) */
     .lamp-dock {
       background: var(--card-bg);
       border: 1px solid var(--neon-pink);
@@ -122,7 +122,7 @@
     .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--neon-pink); box-shadow: 0 0 8px var(--neon-pink); }
     .dot.offline { background: var(--neon-red); box-shadow: 0 0 8px var(--neon-red); }
 
-    /* Switch Mode HP */
+    /* Switch Mode Tampilan Layar HP */
     .mobile-tab-bar {
       display: none;
       margin-top: 6px;
@@ -286,7 +286,7 @@
       display: block;
     }
 
-    /* Bottom Bar: Kontrol Kamera */
+    /* Bottom Bar */
     .bottom-bar {
       position: absolute;
       bottom: 12px;
@@ -347,7 +347,6 @@
   <div id="canvas3d"></div>
 
   <div class="hud-layer">
-    <!-- Top Bar -->
     <div class="top-bar clickable">
       <div class="brand-box">
         <h1>DIGITAL TWIN: WADAH PENGASINAN TELUR</h1>
@@ -355,7 +354,6 @@
       </div>
 
       <div class="top-right-controls">
-        <!-- Saklar Lampu ON/OFF Selalu Muncul -->
         <div class="lamp-dock">
           <span>Lampu</span>
           <input type="checkbox" id="btnToggleLampu" onchange="toggleLampu(this.checked)" style="transform: scale(1.3); cursor: pointer; accent-color: var(--neon-pink);">
@@ -367,22 +365,22 @@
       </div>
     </div>
 
-    <!-- Tombol Tab Mode Layar di HP -->
+    <!-- Tombol Mode di HP -->
     <div class="mobile-tab-bar clickable">
       <button class="mobile-tab-btn active" id="tab3D" onclick="setMobileView('3d')">🧊 Wadah 3D</button>
       <button class="mobile-tab-btn" id="tabData" onclick="setMobileView('data')">📊 Data &amp; Grafik</button>
     </div>
 
-    <!-- Kontainer Panel Data -->
+    <!-- Kontainer Data -->
     <div class="mobile-data-scroll">
       <!-- Panel Kiri: Telemetri -->
       <div class="left-panel clickable">
         <div class="card-hud">
           <div class="card-title">
             <span>WAKTU PENGASINAN</span>
-            <span class="badge-node" id="badgeHari">HARI 4 / 7</span>
+            <span class="badge-node" id="badgeHari">HARI 1 / 7</span>
           </div>
-          <div class="val-main" id="batchDayText">3 <span class="val-unit">Hari</span> 9 <span class="val-unit">Jam</span></div>
+          <div class="val-main" id="batchDayText">0 <span class="val-unit">Hari</span> 0 <span class="val-unit">Jam</span></div>
           <div class="card-meta">Target: 7 Hari Perendaman</div>
           
           <div class="btn-group-timer">
@@ -422,10 +420,10 @@
       <!-- Panel Kanan: Grafik -->
       <div class="right-panel clickable">
         <div class="day-selector-bar">
-          <button class="day-btn" id="btnDay1" onclick="switchDayView(1)">H1</button>
-          <button class="day-btn" id="btnDay2" onclick="switchDayView(2)">H2</button>
-          <button class="day-btn" id="btnDay3" onclick="switchDayView(3)">H3</button>
-          <button class="day-btn active" id="btnDay4" onclick="switchDayView(4)">H4</button>
+          <button class="day-btn active" id="btnDay1" onclick="switchDayView(1)">H1</button>
+          <button class="day-btn" id="btnDay2" onclick="switchDayView(2)" disabled>H2</button>
+          <button class="day-btn" id="btnDay3" onclick="switchDayView(3)" disabled>H3</button>
+          <button class="day-btn" id="btnDay4" onclick="switchDayView(4)" disabled>H4</button>
           <button class="day-btn" id="btnDay5" onclick="switchDayView(5)" disabled>H5</button>
           <button class="day-btn" id="btnDay6" onclick="switchDayView(6)" disabled>H6</button>
           <button class="day-btn" id="btnDay7" onclick="switchDayView(7)" disabled>H7</button>
@@ -434,7 +432,7 @@
         <div class="card-chart">
           <div class="card-title">
             <span>GRAFIK TDS GARAM (SLAVE 1)</span>
-            <span class="badge-node" id="lblChartSalt">HARI 4 (%)</span>
+            <span class="badge-node" id="lblChartSalt">HARI 1 (%)</span>
           </div>
           <div class="chart-container">
             <canvas id="saltChart"></canvas>
@@ -444,7 +442,7 @@
         <div class="card-chart">
           <div class="card-title">
             <span>GRAFIK SUHU DHT22 (SLAVE 2)</span>
-            <span class="badge-node cyan" id="lblChartTemp">HARI 4 (°C)</span>
+            <span class="badge-node cyan" id="lblChartTemp">HARI 1 (°C)</span>
           </div>
           <div class="chart-container">
             <canvas id="tempChart"></canvas>
@@ -453,7 +451,7 @@
       </div>
     </div>
 
-    <!-- Bottom Bar (Sudut Kamera) -->
+    <!-- Bottom Bar (Kamera) -->
     <div class="bottom-bar clickable">
       <div class="action-hud">
         <button class="btn-cam" onclick="setCamTop()">Top</button>
@@ -464,10 +462,10 @@
   </div>
 
   <script>
-    // 1. KUNCI PATOKAN HARI: Langsung Hari ke-4 (3 Hari 9 Jam)
-    let batchStartTime = Date.now() - (3 * 24 * 60 * 60 * 1000) - (9 * 60 * 60 * 1000);
-    let selectedDayView = 4;
-    let currentAllowedMaxDay = 4;
+    // Membaca waktu dari storage lokal perangkat
+    let batchStartTime = parseInt(localStorage.getItem('telur_start_time')) || Date.now();
+    let selectedDayView = 1;
+    let currentAllowedMaxDay = 1;
 
     function setMobileView(viewMode) {
       const tab3D = document.getElementById('tab3D');
@@ -799,7 +797,7 @@
       renderAllCharts();
     });
 
-    // --- DATA & GRAFIK NATIVE CANVAS ---
+    // --- DATA & GRAFIK PURE CANVAS ---
     const hoursLabels = ['00:00', '03:00', '06:00', '09:00', '12:00', '15:00', '18:00', '21:00'];
     let historyDatabase = {
       1: { salt: [14.0, 14.3, 14.6, 15.0, 15.5, 15.8, 15.5, 15.2], temp: [27.0, 26.8, 27.5, 30.2, 33.1, 32.5, 29.8, 28.5] },
@@ -907,7 +905,7 @@
     }
 
     function renderAllCharts() {
-      const activeData = historyDatabase[selectedDayView] || historyDatabase[4];
+      const activeData = historyDatabase[selectedDayView] || historyDatabase[1];
       drawOfflineLineChart('saltChart', hoursLabels, activeData.salt, '#ff2a85', 'rgba(255, 42, 133, 0.25)');
       drawOfflineLineChart('tempChart', hoursLabels, activeData.temp, '#00f2fe', 'rgba(0, 242, 254, 0.25)');
     }
@@ -954,14 +952,17 @@
       updateDayButtonsAccessibility(currentDayNumber);
     }
 
+    // Tombol Mulai Baru: Reset ke 0 Hari 0 Jam & Siarkan Langsung ke Cloud Broker
     function startBatchBaru() {
-      if (confirm("Mulai batch baru dari Hari 1? HP dan Laptop akan langsung sinkron.")) {
+      if (confirm("Mulai batch baru dari 0 Hari 0 Jam? HP dan Laptop akan langsung sinkron.")) {
         const nowStamp = Date.now();
         batchStartTime = nowStamp;
+        localStorage.setItem('telur_start_time', nowStamp);
         updateTimerDisplay();
         switchDayView(1);
+
         if (client && client.connected) {
-          client.publish('telur/kontrol/batch_start', String(nowStamp), { retain: true });
+          client.publish('telur/kontrol/batch_start', String(nowStamp), { retain: true, qos: 1 });
         }
       }
     }
@@ -969,10 +970,11 @@
     function simulasiSelesai() {
       const finishStamp = Date.now() - (8 * 24 * 60 * 60 * 1000);
       batchStartTime = finishStamp;
+      localStorage.setItem('telur_start_time', finishStamp);
       updateTimerDisplay();
       switchDayView(7);
       if (client && client.connected) {
-        client.publish('telur/kontrol/batch_start', String(finishStamp), { retain: true });
+        client.publish('telur/kontrol/batch_start', String(finishStamp), { retain: true, qos: 1 });
       }
     }
 
@@ -989,8 +991,8 @@
 
     client.on('connect', () => {
       updateNetworkStatus();
-      client.subscribe('telur/slave/#');
-      client.subscribe('telur/kontrol/#');
+      client.subscribe('telur/slave/#', { qos: 1 });
+      client.subscribe('telur/kontrol/#', { qos: 1 });
     });
 
     client.on('close', () => updateNetworkStatus());
@@ -999,10 +1001,12 @@
     client.on('message', (topic, message) => {
       const val = message.toString();
 
+      // Sinkronisasi Waktu Mulai Otomatis ke HP & Laptop
       if (topic === 'telur/kontrol/batch_start') {
         const incomingStamp = parseInt(val);
         if (!isNaN(incomingStamp) && incomingStamp > 0) {
           batchStartTime = incomingStamp;
+          localStorage.setItem('telur_start_time', incomingStamp);
           updateTimerDisplay();
           const curDay = Math.min(Math.floor((Date.now() - batchStartTime) / (1000 * 60 * 60 * 24)) + 1, 7);
           switchDayView(curDay);
@@ -1025,16 +1029,14 @@
 
     window.toggleLampu = function(state) {
       if (client && client.connected) {
-        client.publish('telur/kontrol/heater', state ? 'ON' : 'OFF', { retain: true });
+        client.publish('telur/kontrol/heater', state ? 'ON' : 'OFF', { retain: true, qos: 1 });
       }
       heaterLight.intensity = state ? 3.8 : 0.0;
       bulbMat.color.setHex(state ? 0xffaa00 : 0x555555);
     };
 
-    // Inisialisasi awal: Langsung jalankan dan kunci di Hari 4
     updateTimerDisplay();
-    switchDayView(4); // Otomatis aktifkan H4 dan grafik Hari 4
-    setInterval(updateTimerDisplay, 10000);
+    setInterval(updateTimerDisplay, 5000);
     renderAllCharts();
     updateNetworkStatus();
   </script>
