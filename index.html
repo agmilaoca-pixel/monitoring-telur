@@ -942,26 +942,36 @@
       }
     }
 
-    // --- SINKRONISASI RELAY DUA ARAH (KEY-VALUE JSON CLOUD) ---
-    const SYNC_URL = "https://api.jsonbin.io/v3/b/66e07ad8e41b4d34e42e4785";
+    // --- SINKRONISASI BEBAS AKSES IZIN & BEBAS CORS VIA NTFY WEBSOCKET ---
+    const NTFY_TOPIC = "telur_asin_mila_2026";
+    let ntfyWs = null;
 
-    async function syncFromCloud() {
-      try {
-        const res = await fetch(SYNC_URL + "/latest", {
-          headers: { "X-Master-Key": "$2a$10$7z78zH.QzY7wZ6.YqFzN2.wT9J6sN9jYtV4mH7r1qV0gZ3kL2n4a." }
-        });
-        if (res.ok) {
-          const json = await res.json();
-          if (json.record && typeof json.record.lampu === 'boolean') {
-            if (json.record.lampu !== localLampState) {
-              setLampuVisual(json.record.lampu);
-            }
+    function connectNtfyWebSocket() {
+      ntfyWs = new WebSocket(`wss://ntfy.sh/${NTFY_TOPIC}/ws`);
+
+      ntfyWs.onopen = function() {
+        document.getElementById('statusText').innerText = "LIVE SYNC";
+      };
+
+      ntfyWs.onmessage = function(event) {
+        try {
+          const msg = JSON.parse(event.data);
+          if (msg.event === "message" && msg.message) {
+            const cmd = msg.message.trim();
+            if (cmd === "ON") setLampuVisual(true);
+            else if (cmd === "OFF") setLampuVisual(false);
           }
-        }
-      } catch (e) {}
-    }
+        } catch (e) {}
+      };
 
-    // BroadcastChannel untuk tab yang sama
+      ntfyWs.onclose = function() {
+        document.getElementById('statusText').innerText = "Reconnecting";
+        setTimeout(connectNtfyWebSocket, 2000);
+      };
+    }
+    connectNtfyWebSocket();
+
+    // BroadcastChannel lokal (antar tab di browser yang sama)
     const bc = ('BroadcastChannel' in window) ? new BroadcastChannel("telur_sync") : null;
     if (bc) {
       bc.onmessage = (ev) => {
@@ -971,29 +981,20 @@
       };
     }
 
-    // Polling setiap 1.5 detik membaca status dari cloud
-    setInterval(syncFromCloud, 1500);
-
-    // Kirim status saat saklar ditekan oleh pengguna (di HP atau Laptop)
+    // Fungsi saklar yang dipicu pengguna (di HP atau di Laptop)
     async function userToggleLampu(state) {
       setLampuVisual(state);
 
       if (bc) bc.postMessage({ lampu: state });
 
+      // Kirim pesan publik instan bebas izin
       try {
-        await fetch(SYNC_URL, {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            "X-Master-Key": "$2a$10$7z78zH.QzY7wZ6.YqFzN2.wT9J6sN9jYtV4mH7r1qV0gZ3kL2n4a."
-          },
-          body: JSON.stringify({ lampu: state })
+        await fetch(`https://ntfy.sh/${NTFY_TOPIC}`, {
+          method: "POST",
+          body: state ? "ON" : "OFF"
         });
       } catch (e) {}
     }
-
-    // Panggil saat awal web dimuat
-    syncFromCloud();
 
     // Inisialisasi awal UI
     updateDayButtonsAccessibility(1);
