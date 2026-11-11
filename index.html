@@ -942,40 +942,60 @@
       }
     }
 
-    // --- SINKRONISASI STABIL EKSPLISIT DENGAN CLOUD DATABASE ---
-    const DB_URL = "https://telur-asin-iot-default-rtdb.asia-southeast1.firebasedatabase.app/lampu.json";
+    // --- SINKRONISASI RELAY DUA ARAH (KEY-VALUE JSON CLOUD) ---
+    const SYNC_URL = "https://api.jsonbin.io/v3/b/66e07ad8e41b4d34e42e4785";
 
-    // Polling membaca database setiap 1.5 detik (Murni membaca true / false, tidak pernah gonta-ganti sendiri)
     async function syncFromCloud() {
       try {
-        const res = await fetch(DB_URL);
+        const res = await fetch(SYNC_URL + "/latest", {
+          headers: { "X-Master-Key": "$2a$10$7z78zH.QzY7wZ6.YqFzN2.wT9J6sN9jYtV4mH7r1qV0gZ3kL2n4a." }
+        });
         if (res.ok) {
-          const val = await res.json();
-          if (typeof val === 'boolean' && val !== localLampState) {
-            setLampuVisual(val);
+          const json = await res.json();
+          if (json.record && typeof json.record.lampu === 'boolean') {
+            if (json.record.lampu !== localLampState) {
+              setLampuVisual(json.record.lampu);
+            }
           }
         }
       } catch (e) {}
     }
+
+    // BroadcastChannel untuk tab yang sama
+    const bc = ('BroadcastChannel' in window) ? new BroadcastChannel("telur_sync") : null;
+    if (bc) {
+      bc.onmessage = (ev) => {
+        if (ev.data && typeof ev.data.lampu === 'boolean') {
+          setLampuVisual(ev.data.lampu);
+        }
+      };
+    }
+
+    // Polling setiap 1.5 detik membaca status dari cloud
     setInterval(syncFromCloud, 1500);
 
-    // Kirim status saat saklar diklik pengguna
+    // Kirim status saat saklar ditekan oleh pengguna (di HP atau Laptop)
     async function userToggleLampu(state) {
       setLampuVisual(state);
 
+      if (bc) bc.postMessage({ lampu: state });
+
       try {
-        await fetch(DB_URL, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(state)
+        await fetch(SYNC_URL, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Master-Key": "$2a$10$7z78zH.QzY7wZ6.YqFzN2.wT9J6sN9jYtV4mH7r1qV0gZ3kL2n4a."
+          },
+          body: JSON.stringify({ lampu: state })
         });
       } catch (e) {}
     }
 
-    // Ambil status pertama kali saat web dibuka
+    // Panggil saat awal web dimuat
     syncFromCloud();
 
-    // Inisialisasi awal
+    // Inisialisasi awal UI
     updateDayButtonsAccessibility(1);
     switchDayView(1);
     setTimeout(renderAllCharts, 250);
