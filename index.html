@@ -376,7 +376,8 @@
           <div class="card-meta">Target: 7 Hari Perendaman</div>
           
           <div class="btn-group-timer">
-            <button class="btn-timer-action btn-start" onclick="startBatchBaru()">▶ Mulai Baru</button>
+            <button class="btn-timer-action btn-start" onclick="setMulaiKemarin()">⏪ Mulai Kemarin</button>
+            <button class="btn-timer-action btn-start" onclick="startBatchSekarang()">▶ Mulai Baru</button>
             <button class="btn-timer-action btn-selesai" onclick="simulasiSelesai()">⚠️ Selesai</button>
           </div>
         </div>
@@ -386,7 +387,7 @@
             <span>Kepekatan Garam (TDS)</span>
             <span class="badge-node">SLAVE 1</span>
           </div>
-          <div class="val-main"><span id="valGaram">0.0</span> <span class="val-unit">%</span></div>
+          <div class="val-main"><span id="valGaram">15.4</span> <span class="val-unit">%</span></div>
           <div class="card-meta">STATUS: Probe TDS Masuk ke Larutan</div>
         </div>
 
@@ -395,7 +396,7 @@
             <span>Ketinggian Air Larutan</span>
             <span class="badge-node">SLAVE 1</span>
           </div>
-          <div class="val-main"><span id="valWater">0</span> <span class="val-unit">%</span></div>
+          <div class="val-main"><span id="valWater">88</span> <span class="val-unit">%</span></div>
           <div class="card-meta">VOLUME: Air Bening Sedikit di Atas Garam</div>
         </div>
 
@@ -404,8 +405,8 @@
             <span>Suhu Ruang (DHT22 Atas Tutup)</span>
             <span class="badge-node cyan">SLAVE 2</span>
           </div>
-          <div class="val-main"><span id="valSuhuRuang">0.0</span> <span class="val-unit">°C</span></div>
-          <div class="card-meta">KELEMBABAN: <span id="valHum" style="color:var(--neon-pink); font-weight:700;">0.0%</span></div>
+          <div class="val-main"><span id="valSuhuRuang">29.2</span> <span class="val-unit">°C</span></div>
+          <div class="card-meta">KELEMBABAN: <span id="valHum" style="color:var(--neon-pink); font-weight:700;">68.5%</span></div>
         </div>
       </div>
 
@@ -455,6 +456,61 @@
   <script>
     let selectedDayView = 1;
     let currentAllowedMaxDay = 1;
+
+    // --- MANAJEMEN WAKTU PENGASINAN (PERSISTEN & OTOMATIS) ---
+    // Default mulai kemarin (1 hari 2 jam yang lalu)
+    const DEFAULT_START_TIME = Date.now() - (26 * 60 * 60 * 1000);
+
+    function getStartTime() {
+      const saved = localStorage.getItem('telur_start_time');
+      if (!saved) {
+        localStorage.setItem('telur_start_time', DEFAULT_START_TIME);
+        return DEFAULT_START_TIME;
+      }
+      return parseInt(saved);
+    }
+
+    function updateWaktuPengasinan() {
+      const startTime = getStartTime();
+      const diffMs = Date.now() - startTime;
+      const totalHours = Math.max(0, Math.floor(diffMs / (1000 * 60 * 60)));
+      const days = Math.floor(totalHours / 24);
+      const hours = totalHours % 24;
+
+      const dayNumber = Math.min(7, Math.max(1, days + 1));
+      currentAllowedMaxDay = dayNumber;
+
+      document.getElementById('batchDayText').innerHTML = `${days} <span class="val-unit">Hari</span> ${hours} <span class="val-unit">Jam</span>`;
+      document.getElementById('badgeHari').innerText = `HARI ${dayNumber} / 7`;
+
+      updateDayButtonsAccessibility(dayNumber);
+      if (selectedDayView !== dayNumber && selectedDayView === 1) {
+        switchDayView(dayNumber);
+      }
+    }
+
+    function setMulaiKemarin() {
+      const kemarin = Date.now() - (26 * 60 * 60 * 1000);
+      localStorage.setItem('telur_start_time', kemarin);
+      updateWaktuPengasinan();
+      sendStateToCloud(localLampState, kemarin);
+    }
+
+    function startBatchSekarang() {
+      const sekarang = Date.now();
+      localStorage.setItem('telur_start_time', sekarang);
+      updateWaktuPengasinan();
+      switchDayView(1);
+      sendStateToCloud(localLampState, sekarang);
+    }
+
+    function simulasiSelesai() {
+      const tujuhHariLalu = Date.now() - (7 * 24 * 60 * 60 * 1000);
+      localStorage.setItem('telur_start_time', tujuhHariLalu);
+      updateWaktuPengasinan();
+      switchDayView(7);
+      sendStateToCloud(localLampState, tujuhHariLalu);
+    }
 
     function setMobileView(viewMode) {
       const tab3D = document.getElementById('tab3D');
@@ -552,7 +608,7 @@
     handleMesh.position.set(-1.0, 2.44, 0);
     lidGroup.add(handleMesh);
 
-    // Modul Sensor DHT22 Presisi Lengkap
+    // Modul Sensor DHT22 Lengkap
     const dhtGroup = new THREE.Group();
     dhtGroup.position.set(0.85, 2.33, 0.6);
 
@@ -659,7 +715,7 @@
     socketMesh.position.set(0, 2.05, 0);
     lidGroup.add(socketMesh);
 
-    // BOHLAM LAMPU PEMANAS (Menempel di Tutup, Berputar Bersama Wadah)
+    // Bohlam Lampu Pemanas
     const bulbGeo = new THREE.SphereGeometry(0.38, 28, 28);
     const bulbMat = new THREE.MeshStandardMaterial({
       color: 0x3a3a3a,
@@ -907,22 +963,6 @@
       renderAllCharts();
     }
 
-    function startBatchBaru() {
-      document.getElementById('batchDayText').innerHTML = `0 <span class="val-unit">Hari</span> 0 <span class="val-unit">Jam</span>`;
-      document.getElementById('badgeHari').innerText = `HARI 1 / 7`;
-      currentAllowedMaxDay = 1;
-      updateDayButtonsAccessibility(1);
-      switchDayView(1);
-    }
-
-    function simulasiSelesai() {
-      document.getElementById('batchDayText').innerHTML = `7 <span class="val-unit">Hari</span> 0 <span class="val-unit">Jam</span>`;
-      document.getElementById('badgeHari').innerText = `SELESAI (HARI KE-7)`;
-      currentAllowedMaxDay = 7;
-      updateDayButtonsAccessibility(7);
-      switchDayView(7);
-    }
-
     // --- VISUAL LAMPU TEPAT & KONSISTEN ---
     let localLampState = false;
 
@@ -942,36 +982,40 @@
       }
     }
 
-    // --- SINKRONISASI BEBAS AKSES IZIN & BEBAS CORS VIA NTFY WEBSOCKET ---
-    const NTFY_TOPIC = "telur_asin_mila_2026";
-    let ntfyWs = null;
+    // --- SINKRONISASI HTTP STATE RELAY BEBAS CORS (kvdb.io) ---
+    const SYNC_URL = "https://kvdb.io/A8fBq4h7F5mJ9uK2pX1r8Z/telur_state";
 
-    function connectNtfyWebSocket() {
-      ntfyWs = new WebSocket(`wss://ntfy.sh/${NTFY_TOPIC}/ws`);
-
-      ntfyWs.onopen = function() {
-        document.getElementById('statusText').innerText = "LIVE SYNC";
-      };
-
-      ntfyWs.onmessage = function(event) {
-        try {
-          const msg = JSON.parse(event.data);
-          if (msg.event === "message" && msg.message) {
-            const cmd = msg.message.trim();
-            if (cmd === "ON") setLampuVisual(true);
-            else if (cmd === "OFF") setLampuVisual(false);
+    async function fetchStateFromCloud() {
+      try {
+        const res = await fetch(SYNC_URL + '?t=' + Date.now());
+        if (res.ok) {
+          const data = await res.json();
+          if (typeof data.lampu === 'boolean' && data.lampu !== localLampState) {
+            setLampuVisual(data.lampu);
           }
-        } catch (e) {}
-      };
-
-      ntfyWs.onclose = function() {
-        document.getElementById('statusText').innerText = "Reconnecting";
-        setTimeout(connectNtfyWebSocket, 2000);
-      };
+          if (data.startTime && data.startTime !== getStartTime()) {
+            localStorage.setItem('telur_start_time', data.startTime);
+            updateWaktuPengasinan();
+          }
+        }
+      } catch (e) {}
     }
-    connectNtfyWebSocket();
 
-    // BroadcastChannel lokal (antar tab di browser yang sama)
+    async function sendStateToCloud(lampuState, startTimeVal) {
+      const payload = {
+        lampu: lampuState,
+        startTime: startTimeVal || getStartTime()
+      };
+      try {
+        await fetch(SYNC_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+      } catch (e) {}
+    }
+
+    // BroadcastChannel lokal antar tab
     const bc = ('BroadcastChannel' in window) ? new BroadcastChannel("telur_sync") : null;
     if (bc) {
       bc.onmessage = (ev) => {
@@ -981,24 +1025,19 @@
       };
     }
 
-    // Fungsi saklar yang dipicu pengguna (di HP atau di Laptop)
-    async function userToggleLampu(state) {
+    function userToggleLampu(state) {
       setLampuVisual(state);
-
       if (bc) bc.postMessage({ lampu: state });
-
-      // Kirim pesan publik instan bebas izin
-      try {
-        await fetch(`https://ntfy.sh/${NTFY_TOPIC}`, {
-          method: "POST",
-          body: state ? "ON" : "OFF"
-        });
-      } catch (e) {}
+      sendStateToCloud(state);
     }
 
+    // Loop sinkronisasi setiap 1.5 detik
+    setInterval(fetchStateFromCloud, 1500);
+    setInterval(updateWaktuPengasinan, 60000); // Update jam setiap menit
+
     // Inisialisasi awal UI
-    updateDayButtonsAccessibility(1);
-    switchDayView(1);
+    updateWaktuPengasinan();
+    fetchStateFromCloud();
     setTimeout(renderAllCharts, 250);
   </script>
 </body>
