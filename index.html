@@ -205,9 +205,10 @@
     .val-unit { font-size: 12px; color: var(--neon-yellow); font-weight: 600; }
     .card-meta { font-size: 9px; color: #d8b4fe; }
 
+    /* Hanya 2 Tombol Sesuai Keinginan */
     .btn-group-timer {
       display: flex;
-      gap: 6px;
+      gap: 8px;
       margin-top: 6px;
     }
     .btn-timer-action {
@@ -216,7 +217,7 @@
       color: white;
       padding: 7px 6px;
       border-radius: 6px;
-      font-size: 9.5px;
+      font-size: 10px;
       font-weight: 700;
       cursor: pointer;
       text-align: center;
@@ -464,12 +465,15 @@
     let currentAllowedMaxDay = 1;
 
     // --- WAKTU PENGASINAN (HARI, JAM, DETIK TERUS BERJALAN) ---
+    // Bersihkan sisa data waktu lama dari versi kemarin
+    localStorage.removeItem('telur_start_time');
+    localStorage.removeItem('telur_start_time_v2');
+
     function getStoredStartTime() {
-      let saved = localStorage.getItem('telur_start_time_real');
+      let saved = localStorage.getItem('telur_start_time_final');
       if (!saved) {
-        // Ambil waktu sekarang jika belum ada data tersimpan
         const now = Date.now();
-        localStorage.setItem('telur_start_time_real', now);
+        localStorage.setItem('telur_start_time_final', now);
         return now;
       }
       return parseInt(saved);
@@ -504,7 +508,7 @@
 
     function startBatchSekarang() {
       const sekarang = Date.now();
-      localStorage.setItem('telur_start_time_real', sekarang);
+      localStorage.setItem('telur_start_time_final', sekarang);
       hitungWaktuBerjalan();
       switchDayView(1);
       sendCloudSync(localLampState, sekarang);
@@ -512,13 +516,13 @@
 
     function simulasiSelesai() {
       const tujuhHariLalu = Date.now() - (7 * 86400 * 1000 + 1000);
-      localStorage.setItem('telur_start_time_real', tujuhHariLalu);
+      localStorage.setItem('telur_start_time_final', tujuhHariLalu);
       hitungWaktuBerjalan();
       switchDayView(7);
       sendCloudSync(localLampState, tujuhHariLalu);
     }
 
-    // Interval detik berjalan tepat setiap 1 detik (1000 ms)
+    // Interval detik berjalan setiap 1 detik
     setInterval(hitungWaktuBerjalan, 1000);
 
     function setMobileView(viewMode) {
@@ -1005,7 +1009,7 @@
               setLampuVisual(payload.lampu);
             }
             if (payload.startTime && payload.startTime !== getStoredStartTime()) {
-              localStorage.setItem('telur_start_time_real', payload.startTime);
+              localStorage.setItem('telur_start_time_final', payload.startTime);
               hitungWaktuBerjalan();
             }
           }
@@ -1027,7 +1031,7 @@
       } catch (e) {}
     }
 
-    // BroadcastChannel lokal
+    // BroadcastChannel lokal antar tab browser
     const bc = ('BroadcastChannel' in window) ? new BroadcastChannel("telur_sync_v2") : null;
     if (bc) {
       bc.onmessage = (ev) => {
@@ -1035,7 +1039,7 @@
           setLampuVisual(ev.data.lampu);
         }
         if (ev.data && ev.data.startTime) {
-          localStorage.setItem('telur_start_time_real', ev.data.startTime);
+          localStorage.setItem('telur_start_time_final', ev.data.startTime);
           hitungWaktuBerjalan();
         }
       };
