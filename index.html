@@ -180,7 +180,7 @@
       position: absolute;
       top: 98px;
       left: 14px;
-      width: 295px;
+      width: 298px;
       display: flex;
       flex-direction: column;
       gap: 7px;
@@ -234,14 +234,14 @@
       border-color: rgba(52, 211, 153, 0.4);
     }
     .val-main {
-      font-size: 16px;
+      font-size: 15.5px;
       font-weight: 800;
       color: #fff;
       margin: 2px 0;
       text-shadow: 0 0 14px rgba(255, 42, 133, 0.35);
       letter-spacing: 0.3px;
     }
-    .val-unit { font-size: 11px; color: var(--neon-yellow); font-weight: 600; }
+    .val-unit { font-size: 10.5px; color: var(--neon-yellow); font-weight: 600; }
     .card-meta { font-size: 8.5px; color: #d8b4fe; }
 
     .btn-group-timer {
@@ -535,9 +535,11 @@
       startTime: 0
     };
     let localLampState = false;
+    let lastUpdatedAt = 0;
 
     function saveAllLocal() {
-      localStorage.setItem('telur_sync_state_v4', JSON.stringify({
+      localStorage.setItem('telur_sync_state_v5', JSON.stringify({
+        updatedAt: lastUpdatedAt,
         lampu: localLampState,
         timer: timerState
       }));
@@ -635,6 +637,7 @@
     function actionMulaiBaru() {
       const now = Date.now();
       warningSoundPlayed = false;
+      lastUpdatedAt = now;
       timerState = {
         status: "RUNNING",
         startTime: now
@@ -646,6 +649,7 @@
     }
 
     function actionSelesai() {
+      lastUpdatedAt = Date.now();
       timerState = {
         status: "FINISHED",
         startTime: 0
@@ -1173,11 +1177,14 @@
       }
     }
 
-    // --- BUS KOMUNIKASI CLOUD INSTAN (TARIK RIWAYAT TERAKHIR SAAT WIFI NYALA) ---
-    const SYNC_ROOM = "telur_mila_room_sync_v4";
+    // --- BUS KOMUNIKASI CLOUD INSTAN (ANTI-TIMPA DATA LAMA) ---
+    const SYNC_ROOM = "telur_mila_room_sync_v5";
 
     function applyPayload(payload) {
       if (!payload) return;
+      if (payload.updatedAt && payload.updatedAt <= lastUpdatedAt) return;
+      if (payload.updatedAt) lastUpdatedAt = payload.updatedAt;
+
       if (typeof payload.lampu === 'boolean' && payload.lampu !== localLampState) {
         setLampuVisual(payload.lampu);
       }
@@ -1209,7 +1216,6 @@
         } catch (e) {}
       };
     }
-    listenCloudEvents();
 
     window.addEventListener('online', () => {
       document.getElementById('statusText').innerText = "LIVE SYNC";
@@ -1220,7 +1226,9 @@
     });
 
     async function broadcastCloudState() {
+      lastUpdatedAt = Date.now();
       const payload = {
+        updatedAt: lastUpdatedAt,
         lampu: localLampState,
         timer: timerState
       };
@@ -1232,28 +1240,31 @@
       } catch (e) {}
     }
 
-    const bc = ('BroadcastChannel' in window) ? new BroadcastChannel("telur_sync_v4") : null;
+    const bc = ('BroadcastChannel' in window) ? new BroadcastChannel("telur_sync_v5") : null;
     if (bc) {
       bc.onmessage = (ev) => applyPayload(ev.data);
     }
 
     function userToggleLampu(state) {
       setLampuVisual(state);
+      lastUpdatedAt = Date.now();
       saveAllLocal();
-      if (bc) bc.postMessage({ lampu: state, timer: timerState });
+      if (bc) bc.postMessage({ updatedAt: lastUpdatedAt, lampu: state, timer: timerState });
       broadcastCloudState();
     }
 
-    // Muat data lokal tersimpan saat web pertama kali dibuka (aman meski offline)
-    const localSaved = localStorage.getItem('telur_sync_state_v4');
+    // Muat data lokal tersimpan lebih dulu sebelum mendengarkan cloud
+    const localSaved = localStorage.getItem('telur_sync_state_v5');
     if (localSaved) {
       try {
         const parsed = JSON.parse(localSaved);
+        if (parsed.updatedAt) lastUpdatedAt = parsed.updatedAt;
         if (typeof parsed.lampu === 'boolean') setLampuVisual(parsed.lampu);
         if (parsed.timer) timerState = parsed.timer;
       } catch (e) {}
     }
 
+    listenCloudEvents();
     updateWaktuDisplay();
     setTimeout(renderAllCharts, 250);
   </script>
