@@ -116,6 +116,39 @@
     }
     .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--neon-pink); box-shadow: 0 0 8px var(--neon-pink); }
 
+    /* Banner Peringatan Pengasinan */
+    .warning-banner {
+      display: none;
+      margin-top: 8px;
+      padding: 8px 12px;
+      border-radius: 10px;
+      font-size: 11px;
+      font-weight: 800;
+      text-align: center;
+      letter-spacing: 0.4px;
+      backdrop-filter: blur(12px);
+      animation: pulseWarn 1.2s infinite alternate;
+      z-index: 40;
+    }
+    .warning-banner.near {
+      display: block;
+      background: rgba(234, 179, 8, 0.22);
+      border: 1px solid #facc15;
+      color: #fef08a;
+      box-shadow: 0 0 15px rgba(250, 204, 21, 0.35);
+    }
+    .warning-banner.over {
+      display: block;
+      background: rgba(239, 68, 68, 0.28);
+      border: 1px solid #ff3344;
+      color: #fecaca;
+      box-shadow: 0 0 18px rgba(255, 51, 68, 0.5);
+    }
+    @keyframes pulseWarn {
+      from { transform: scale(1); }
+      to { transform: scale(1.012); }
+    }
+
     /* Switch Mode HP */
     .mobile-tab-bar {
       display: none;
@@ -145,7 +178,7 @@
     /* Panels */
     .left-panel {
       position: absolute;
-      top: 64px;
+      top: 98px;
       left: 14px;
       width: 290px;
       display: flex;
@@ -155,7 +188,7 @@
     }
     .right-panel {
       position: absolute;
-      top: 64px;
+      top: 98px;
       right: 14px;
       width: 330px;
       display: flex;
@@ -277,7 +310,7 @@
     }
     .chart-container {
       position: relative;
-      height: 76px;
+      height: 74px;
       width: 100%;
       margin-top: 3px;
     }
@@ -330,7 +363,7 @@
         display: flex;
         flex-direction: column;
         gap: 8px;
-        max-height: calc(100vh - 120px);
+        max-height: calc(100vh - 150px);
         overflow-y: auto;
         padding-bottom: 30px;
       }
@@ -367,6 +400,9 @@
         </div>
       </div>
     </div>
+
+    <!-- Banner Peringatan Otomatis -->
+    <div id="warningBanner" class="warning-banner clickable"></div>
 
     <!-- Mode Layar HP -->
     <div class="mobile-tab-bar clickable">
@@ -486,22 +522,46 @@
   <script>
     let selectedDayView = 1;
     let currentAllowedMaxDay = 1;
+    let warningSoundPlayed = false;
 
-    // --- LOGIKA WAKTU KETAT & SINKRON CLOUD ---
+    // --- LOGIKA WAKTU, PERINGATAN OTOMATIS & SINKRON CLOUD ---
     let timerState = {
       status: "IDLE",
       startTime: 0
     };
 
+    function playWarningBeep() {
+      if (warningSoundPlayed) return;
+      warningSoundPlayed = true;
+      try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(880, ctx.currentTime);
+        gain.gain.setValueAtTime(0.15, ctx.currentTime);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.35);
+      } catch (e) {}
+    }
+
     function updateWaktuDisplay() {
       const displayEl = document.getElementById('batchDayText');
       const badgeEl = document.getElementById('badgeHari');
+      const warnEl = document.getElementById('warningBanner');
 
       if (timerState.status === "IDLE" || !timerState.startTime) {
         if (displayEl) {
           displayEl.innerHTML = `0 <span class="val-unit">Hari</span> 0 <span class="val-unit">Jam</span> 0 <span class="val-unit">Detik</span>`;
         }
         if (badgeEl) badgeEl.innerText = `SIAP MULAI`;
+        if (warnEl) {
+          warnEl.className = 'warning-banner clickable';
+          warnEl.innerText = '';
+        }
+        warningSoundPlayed = false;
         updateDayButtonsAccessibility(1);
         return;
       }
@@ -511,6 +571,11 @@
           displayEl.innerHTML = `7 <span class="val-unit">Hari</span> 0 <span class="val-unit">Jam</span> 0 <span class="val-unit">Detik</span>`;
         }
         if (badgeEl) badgeEl.innerText = `SELESAI (7 HARI)`;
+        if (warnEl) {
+          warnEl.className = 'warning-banner over clickable';
+          warnEl.innerText = `🚨 TARGET 7 HARI TERCAPAI! Segera angkat telur agar tidak terlalu asin.`;
+        }
+        playWarningBeep();
         updateDayButtonsAccessibility(7);
         return;
       }
@@ -530,7 +595,23 @@
         displayEl.innerHTML = `${days} <span class="val-unit">Hari</span> ${hours} <span class="val-unit">Jam</span> ${seconds} <span class="val-unit">Detik</span>`;
       }
       if (badgeEl) {
-        badgeEl.innerText = `HARI ${dayNumber} / 7`;
+        badgeEl.innerText = (days >= 7) ? `LEWAT TARGET (${days} HARI)` : `HARI ${dayNumber} / 7`;
+      }
+
+      // Logika Warning Otomatis (Mendekati 7 Hari vs Melebihi 7 Hari)
+      if (warnEl) {
+        if (days >= 7) {
+          warnEl.className = 'warning-banner over clickable';
+          warnEl.innerText = `🚨 PERINGATAN OVER-CURING: Proses sudah ${days} Hari ${hours} Jam (Melebihi batas 7 Hari)! Segera panen telur.`;
+          playWarningBeep();
+        } else if (days === 6) {
+          warnEl.className = 'warning-banner near clickable';
+          warnEl.innerText = `⚠️ PERHATIAN: Sudah memasuki Hari ke-7 (${days} Hari ${hours} Jam). Sebentar lagi waktu panen tiba!`;
+        } else {
+          warnEl.className = 'warning-banner clickable';
+          warnEl.innerText = '';
+          warningSoundPlayed = false;
+        }
       }
 
       updateDayButtonsAccessibility(dayNumber);
@@ -540,6 +621,7 @@
 
     function actionMulaiBaru() {
       const now = Date.now();
+      warningSoundPlayed = false;
       timerState = {
         status: "RUNNING",
         startTime: now
@@ -757,55 +839,49 @@
 
     groupTank.add(probeGroup);
 
-    // --- 2. SENSOR SUHU WATERPROOF DS18B20 (Kiri Belakang) ---
+    // --- 2. SENSOR SUHU WATERPROOF DS18B20 (Kiri Belakang, Tercelup Air Garam) ---
     const dsX = -0.95;
     const dsZ = -0.95;
 
-    // Grommet Karet Hitam Jalur Kabel DS18B20
     const dsGrommet = new THREE.Mesh(grommetGeo, grommetMat);
     dsGrommet.rotation.x = Math.PI / 2;
     dsGrommet.position.set(dsX, 2.34, dsZ);
     lidGroup.add(dsGrommet);
 
-    // Kabel Hitam Melengkung DS18B20 di Atas Tutup
     const dsCableCurve = new THREE.CatmullRomCurve3([
-      new THREE.Vector3(dsX - 0.5, 2.48, dsZ + 0.4),
-      new THREE.Vector3(dsX - 0.25, 2.72, dsZ + 0.15),
-      new THREE.Vector3(dsX + 0.25, 2.68, dsZ - 0.2),
-      new THREE.Vector3(dsX + 0.12, 2.50, dsZ - 0.1),
+      new THREE.Vector3(dsX - 0.55, 2.48, dsZ + 0.45),
+      new THREE.Vector3(dsX - 0.3, 2.75, dsZ + 0.15),
+      new THREE.Vector3(dsX + 0.25, 2.7, dsZ - 0.2),
+      new THREE.Vector3(dsX + 0.12, 2.52, dsZ - 0.1),
       new THREE.Vector3(dsX, 2.34, dsZ)
     ]);
-    const dsCableTop = new THREE.Mesh(new THREE.TubeGeometry(dsCableCurve, 40, 0.04, 10, false), cableMat);
+    const dsCableTop = new THREE.Mesh(new THREE.TubeGeometry(dsCableCurve, 40, 0.045, 10, false), cableMat);
     lidGroup.add(dsCableTop);
 
-    // Kabel Hitam Turun ke Dalam Wadah
-    const dsInnerCable = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 1.55, 16), cableMat);
-    dsInnerCable.position.set(dsX, 1.48, dsZ);
+    const dsInnerCable = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.045, 1.5, 16), cableMat);
+    dsInnerCable.position.set(dsX, 1.5, dsZ);
     groupTank.add(dsInnerCable);
 
-    // Probe Waterproof Stainless Steel DS18B20 (50mm x 6mm proporsional)
     const dsGroup = new THREE.Group();
-    dsGroup.position.set(dsX, 0.22, dsZ);
+    dsGroup.position.set(dsX, 0.35, dsZ);
 
-    // Selongsong Heatshrink Hitam Pangkal Probe
-    const heatshrinkMat = new THREE.MeshStandardMaterial({ color: 0x111827, roughness: 0.7 });
-    const heatshrinkMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.068, 0.068, 0.35, 20), heatshrinkMat);
+    const heatshrinkMat = new THREE.MeshStandardMaterial({ color: 0x09090b, roughness: 0.6 });
+    const heatshrinkMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.085, 0.085, 0.38, 20), heatshrinkMat);
     heatshrinkMesh.position.y = 0.42;
     dsGroup.add(heatshrinkMesh);
 
-    // Tabung Stainless Steel Mengilap DS18B20
     const steelMat = new THREE.MeshStandardMaterial({
-      color: 0xe2e8f0,
-      metalness: 0.94,
-      roughness: 0.14
+      color: 0xffffff,
+      emissive: 0x1e293b,
+      metalness: 0.9,
+      roughness: 0.15
     });
-    const steelBody = new THREE.Mesh(new THREE.CylinderGeometry(0.065, 0.065, 0.85, 24), steelMat);
-    steelBody.position.y = -0.15;
+    const steelBody = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.9, 24), steelMat);
+    steelBody.position.y = -0.18;
     dsGroup.add(steelBody);
 
-    // Ujung Bulat Tertutup Waterproof Probe DS18B20
-    const steelTip = new THREE.Mesh(new THREE.SphereGeometry(0.065, 20, 16), steelMat);
-    steelTip.position.y = -0.575;
+    const steelTip = new THREE.Mesh(new THREE.SphereGeometry(0.08, 20, 16), steelMat);
+    steelTip.position.y = -0.63;
     dsGroup.add(steelTip);
 
     groupTank.add(dsGroup);
