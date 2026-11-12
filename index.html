@@ -520,15 +520,28 @@
   </div>
 
   <script>
+    // Daftarkan Service Worker agar tidak mati/error saat WiFi terputus
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('./sw.js').catch(() => {});
+    }
+
     let selectedDayView = 1;
     let currentAllowedMaxDay = 1;
     let warningSoundPlayed = false;
 
-    // --- LOGIKA WAKTU, PERINGATAN OTOMATIS & SINKRON CLOUD ---
+    // --- STATUS LOKAL & SINKRONISASI PERMANEN ---
     let timerState = {
       status: "IDLE",
       startTime: 0
     };
+    let localLampState = false;
+
+    function saveAllLocal() {
+      localStorage.setItem('telur_sync_state_v4', JSON.stringify({
+        lampu: localLampState,
+        timer: timerState
+      }));
+    }
 
     function playWarningBeep() {
       if (warningSoundPlayed) return;
@@ -598,7 +611,6 @@
         badgeEl.innerText = (days >= 7) ? `LEWAT TARGET (${days} HARI)` : `HARI ${dayNumber} / 7`;
       }
 
-      // Logika Warning Otomatis (Mendekati 7 Hari vs Melebihi 7 Hari)
       if (warnEl) {
         if (days >= 7) {
           warnEl.className = 'warning-banner over clickable';
@@ -626,7 +638,7 @@
         status: "RUNNING",
         startTime: now
       };
-      localStorage.setItem('telur_sync_state', JSON.stringify(timerState));
+      saveAllLocal();
       updateWaktuDisplay();
       switchDayView(1);
       broadcastCloudState();
@@ -637,7 +649,7 @@
         status: "FINISHED",
         startTime: 0
       };
-      localStorage.setItem('telur_sync_state', JSON.stringify(timerState));
+      saveAllLocal();
       updateWaktuDisplay();
       switchDayView(7);
       broadcastCloudState();
@@ -1144,8 +1156,6 @@
     }
 
     // --- VISUAL LAMPU TEPAT & KONSISTEN ---
-    let localLampState = false;
-
     function setLampuVisual(isNyala) {
       localLampState = isNyala;
       const checkbox = document.getElementById('btnToggleLampu');
@@ -1162,31 +1172,53 @@
       }
     }
 
-    // --- BUS KOMUNIKASI CLOUD INSTAN (SINKRON LAMPU & TIMER) ---
-    const SYNC_ROOM = "telur_mila_room_sync_v3";
+    // --- BUS KOMUNIKASI CLOUD INSTAN (TARIK RIWAYAT TERAKHIR SAAT WIFI NYALA) ---
+    const SYNC_ROOM = "telur_mila_room_sync_v4";
+
+    function applyPayload(payload) {
+      if (!payload) return;
+      if (typeof payload.lampu === 'boolean' && payload.lampu !== localLampState) {
+        setLampuVisual(payload.lampu);
+      }
+      if (payload.timer && payload.timer.status) {
+        timerState = payload.timer;
+        updateWaktuDisplay();
+      }
+      saveAllLocal();
+    }
 
     function listenCloudEvents() {
-      const eventSource = new EventSource(`https://ntfy.sh/${SYNC_ROOM}/sse`);
+      // since=all memastikan saat WiFi nyala kembali, pesan terakhir dari server langsung ditarik
+      const eventSource = new EventSource(`https://ntfy.sh/${SYNC_ROOM}/sse?since=all`);
+      
+      eventSource.onopen = () => {
+        document.getElementById('statusText').innerText = "LIVE SYNC";
+      };
+
+      eventSource.onerror = () => {
+        document.getElementById('statusText').innerText = "OFFLINE";
+      };
+
       eventSource.onmessage = (event) => {
         try {
           const res = JSON.parse(event.data);
           if (res.event === "message" && res.message) {
             const payload = JSON.parse(res.message);
-
-            if (typeof payload.lampu === 'boolean' && payload.lampu !== localLampState) {
-              setLampuVisual(payload.lampu);
-            }
-
-            if (payload.timer && payload.timer.status) {
-              timerState = payload.timer;
-              localStorage.setItem('telur_sync_state', JSON.stringify(timerState));
-              updateWaktuDisplay();
-            }
+            applyPayload(payload);
           }
         } catch (e) {}
       };
     }
     listenCloudEvents();
+
+    // Otomatis sinkron ulang begitu event online browser terdeteksi
+    window.addEventListener('online', () => {
+      document.getElementById('statusText').innerText = "LIVE SYNC";
+      listenCloudEvents();
+    });
+    window.addEventListener('offline', () => {
+      document.getElementById('statusText').innerText = "OFFLINE";
+    });
 
     async function broadcastCloudState() {
       const payload = {
@@ -1201,39 +1233,28 @@
       } catch (e) {}
     }
 
-    // BroadcastChannel lokal (antar tab di browser yang sama)
-    const bc = ('BroadcastChannel' in window) ? new BroadcastChannel("telur_sync_v3") : null;
+    const bc = ('BroadcastChannel' in window) ? new BroadcastChannel("telur_sync_v4") : null;
     if (bc) {
-      bc.onmessage = (ev) => {
-        if (ev.data) {
-          if (typeof ev.data.lampu === 'boolean') setLampuVisual(ev.data.lampu);
-          if (ev.data.timer) {
-            timerState = ev.data.timer;
-            updateWaktuDisplay();
-          }
-        }
-      };
+      bc.onmessage = (ev) => applyPayload(ev.data);
     }
 
     function userToggleLampu(state) {
       setLampuVisual(state);
+      saveAllLocal();
       if (bc) bc.postMessage({ lampu: state, timer: timerState });
       broadcastCloudState();
     }
 
-    // Baca status tersimpan awal saat web dibuka
-    const localSaved = localStorage.getItem('telur_sync_state');
+    // Muat data lokal tersimpan saat web pertama kali dibuka (aman meski offline)
+    const localSaved = localStorage.getItem('telur_sync_state_v4');
     if (localSaved) {
       try {
-        timerState = JSON.parse(localSaved);
-      } catch(e) {
-        timerState = { status: "IDLE", startTime: 0 };
-      }
-    } else {
-      timerState = { status: "IDLE", startTime: 0 };
+        const parsed = JSON.parse(localSaved);
+        if (typeof parsed.lampu === 'boolean') setLampuVisual(parsed.lampu);
+        if (parsed.timer) timerState = parsed.timer;
+      } catch (e) {}
     }
 
-    // Inisialisasi awal
     updateWaktuDisplay();
     setTimeout(renderAllCharts, 250);
   </script>
