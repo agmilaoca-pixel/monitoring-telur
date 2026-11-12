@@ -520,7 +520,6 @@
   </div>
 
   <script>
-    // Daftarkan Service Worker agar tetap aktif saat WiFi terputus
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('./sw.js').catch(() => {});
     }
@@ -529,20 +528,35 @@
     let currentAllowedMaxDay = 1;
     let warningSoundPlayed = false;
 
-    // --- STATUS LOKAL & SINKRONISASI PERMANEN ---
-    let timerState = {
-      status: "IDLE",
-      startTime: 0
-    };
-    let localLampState = false;
-    let lastUpdatedAt = 0;
+    // --- PENYIMPANAN PERMANEN ANTI-RESET ---
+    const DB_KEY = 'telur_asin_permanen_db';
+    const SYNC_ROOM = 'telur_asin_mila_master_sync';
 
-    function saveAllLocal() {
-      localStorage.setItem('telur_sync_state_v5', JSON.stringify({
-        updatedAt: lastUpdatedAt,
-        lampu: localLampState,
-        timer: timerState
-      }));
+    let appState = {
+      updatedAt: 0,
+      lampu: false,
+      timer: {
+        status: "IDLE",
+        startTime: 0
+      }
+    };
+
+    function savePermanentLocal() {
+      try {
+        localStorage.setItem(DB_KEY, JSON.stringify(appState));
+      } catch (e) {}
+    }
+
+    function loadPermanentLocal() {
+      try {
+        const raw = localStorage.getItem(DB_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (parsed && parsed.timer) {
+            appState = parsed;
+          }
+        }
+      } catch (e) {}
     }
 
     function playWarningBeep() {
@@ -566,8 +580,9 @@
       const displayEl = document.getElementById('batchDayText');
       const badgeEl = document.getElementById('badgeHari');
       const warnEl = document.getElementById('warningBanner');
+      const t = appState.timer;
 
-      if (timerState.status === "IDLE" || !timerState.startTime) {
+      if (!t || t.status === "IDLE" || !t.startTime) {
         if (displayEl) {
           displayEl.innerHTML = `0 <span class="val-unit">Hari</span> 0 <span class="val-unit">Jam</span> 0 <span class="val-unit">Menit</span> 0 <span class="val-unit">Detik</span>`;
         }
@@ -581,7 +596,7 @@
         return;
       }
 
-      if (timerState.status === "FINISHED") {
+      if (t.status === "FINISHED") {
         if (displayEl) {
           displayEl.innerHTML = `7 <span class="val-unit">Hari</span> 0 <span class="val-unit">Jam</span> 0 <span class="val-unit">Menit</span> 0 <span class="val-unit">Detik</span>`;
         }
@@ -596,7 +611,7 @@
       }
 
       const now = Date.now();
-      let diffMs = Math.max(0, now - timerState.startTime);
+      let diffMs = Math.max(0, now - t.startTime);
 
       const totalSeconds = Math.floor(diffMs / 1000);
       const days = Math.floor(totalSeconds / 86400);
@@ -637,27 +652,27 @@
     function actionMulaiBaru() {
       const now = Date.now();
       warningSoundPlayed = false;
-      lastUpdatedAt = now;
-      timerState = {
+      appState.updatedAt = now;
+      appState.timer = {
         status: "RUNNING",
         startTime: now
       };
-      saveAllLocal();
+      savePermanentLocal();
       updateWaktuDisplay();
       switchDayView(1);
-      broadcastCloudState();
+      pushStateToCloud();
     }
 
     function actionSelesai() {
-      lastUpdatedAt = Date.now();
-      timerState = {
+      appState.updatedAt = Date.now();
+      appState.timer = {
         status: "FINISHED",
         startTime: 0
       };
-      saveAllLocal();
+      savePermanentLocal();
       updateWaktuDisplay();
       switchDayView(7);
-      broadcastCloudState();
+      pushStateToCloud();
     }
 
     function setMobileView(viewMode) {
@@ -756,7 +771,7 @@
     handleMesh.position.set(-1.15, 2.44, 0.65);
     lidGroup.add(handleMesh);
 
-    // Modul Sensor DHT22 Presisi Lengkap (Atas Tutup Kanan Depan)
+    // Modul Sensor DHT22 Presisi Lengkap
     const dhtGroup = new THREE.Group();
     dhtGroup.position.set(0.95, 2.33, 0.75);
 
@@ -800,7 +815,7 @@
     }
     lidGroup.add(dhtGroup);
 
-    // --- 1. SENSOR TDS (Kanan Belakang) ---
+    // --- 1. SENSOR TDS ---
     const portX = 0.95;
     const portZ = -0.95;
 
@@ -828,7 +843,6 @@
     innerCable.position.set(portX, 1.5, portZ);
     groupTank.add(innerCable);
 
-    // Probe TDS Fisik
     const probeGroup = new THREE.Group();
     probeGroup.position.set(portX, 0.25, portZ);
 
@@ -856,7 +870,7 @@
 
     groupTank.add(probeGroup);
 
-    // --- 2. SENSOR SUHU WATERPROOF DS18B20 (Kiri Belakang, Tercelup Air Garam) ---
+    // --- 2. SENSOR SUHU WATERPROOF DS18B20 ---
     const dsX = -0.95;
     const dsZ = -0.95;
 
@@ -903,14 +917,13 @@
 
     groupTank.add(dsGroup);
 
-    // Soket Dudukan Lampu
+    // Soket & Bohlam Lampu Pemanas
     const socketGeo = new THREE.CylinderGeometry(0.3, 0.35, 0.25, 20);
     const socketMat = new THREE.MeshStandardMaterial({ color: 0x222222, metalness: 0.8 });
     const socketMesh = new THREE.Mesh(socketGeo, socketMat);
     socketMesh.position.set(0, 2.05, 0);
     lidGroup.add(socketMesh);
 
-    // BOHLAM LAMPU PEMANAS (Menempel di Tutup, Berputar Bersama Wadah)
     const bulbGeo = new THREE.SphereGeometry(0.38, 28, 28);
     const bulbMat = new THREE.MeshStandardMaterial({
       color: 0x3a3a3a,
@@ -1162,11 +1175,11 @@
 
     // --- VISUAL LAMPU TEPAT & KONSISTEN ---
     function setLampuVisual(isNyala) {
-      localLampState = isNyala;
+      appState.lampu = Boolean(isNyala);
       const checkbox = document.getElementById('btnToggleLampu');
-      if (checkbox) checkbox.checked = isNyala;
+      if (checkbox) checkbox.checked = appState.lampu;
 
-      if (isNyala) {
+      if (appState.lampu) {
         heaterLight.intensity = 5.5;
         bulbMat.color.setHex(0xffaa00);
         bulbMat.emissive.setHex(0xffaa00);
@@ -1177,111 +1190,98 @@
       }
     }
 
-   // --- BUS KOMUNIKASI CLOUD TUNGGAL & ANTI-MACET (SSE + POLLING) ---
-    const SYNC_ROOM = "telur_mila_sync_v6";
+    // --- SINKRONISASI CLOUD DUA ARAH (SSE + POLLING ANTI-PUTUS) ---
+    function applyIncomingState(incoming) {
+      if (!incoming || typeof incoming.updatedAt !== 'number') return;
+      if (incoming.updatedAt <= appState.updatedAt) return;
 
-    function applyPayload(payload) {
-      if (!payload) return;
-      if (payload.updatedAt && payload.updatedAt <= lastUpdatedAt) return;
-      if (payload.updatedAt) lastUpdatedAt = payload.updatedAt;
-
-      if (typeof payload.lampu === 'boolean' && payload.lampu !== localLampState) {
-        setLampuVisual(payload.lampu);
-      }
-      if (payload.timer && payload.timer.status) {
-        timerState = payload.timer;
-        updateWaktuDisplay();
-      }
-      saveAllLocal();
+      appState = incoming;
+      savePermanentLocal();
+      setLampuVisual(appState.lampu);
+      updateWaktuDisplay();
     }
 
-    // 1. Jalur Real-Time Stream (SSE)
-    function listenCloudEvents() {
-      const eventSource = new EventSource(`https://ntfy.sh/${SYNC_ROOM}/sse?since=all`);
-      eventSource.onopen = () => {
+    function connectRealtimeStream() {
+      const es = new EventSource(`https://ntfy.sh/${SYNC_ROOM}/sse?since=all`);
+      es.onopen = () => {
         document.getElementById('statusText').innerText = "LIVE SYNC";
       };
-      eventSource.onerror = () => {
-        document.getElementById('statusText').innerText = "RECONNECTING";
+      es.onerror = () => {
+        document.getElementById('statusText').innerText = navigator.onLine ? "SYNCING" : "OFFLINE";
       };
-      eventSource.onmessage = (event) => {
+      es.onmessage = (event) => {
         try {
-          const res = JSON.parse(event.data);
-          if (res.event === "message" && res.message) {
-            applyPayload(JSON.parse(res.message));
+          const wrapper = JSON.parse(event.data);
+          if (wrapper.event === "message" && wrapper.message) {
+            applyIncomingState(JSON.parse(wrapper.message));
           }
         } catch (e) {}
       };
     }
 
-    // 2. Jalur Cadangan Polling Setiap 1.5 Detik (Menjamin Sinkronisasi HP & Laptop)
-    async function pollLatestCloudState() {
+    async function pullLatestFromCloud() {
       if (!navigator.onLine) {
         document.getElementById('statusText').innerText = "OFFLINE";
         return;
       }
       try {
-        const res = await fetch(`https://ntfy.sh/${SYNC_ROOM}/json?poll=1&since=10m`);
+        const res = await fetch(`https://ntfy.sh/${SYNC_ROOM}/json?poll=1&since=24h`);
         if (res.ok) {
           document.getElementById('statusText').innerText = "LIVE SYNC";
-          const text = await res.text();
-          const lines = text.trim().split('\n');
+          const rawText = await res.text();
+          const lines = rawText.trim().split('\n');
           for (const line of lines) {
             if (!line) continue;
             const obj = JSON.parse(line);
             if (obj.event === "message" && obj.message) {
-              applyPayload(JSON.parse(obj.message));
+              applyIncomingState(JSON.parse(obj.message));
             }
           }
         }
       } catch (e) {}
     }
 
-    setInterval(pollLatestCloudState, 1500);
-
-    async function broadcastCloudState() {
-      lastUpdatedAt = Date.now();
-      const payload = {
-        updatedAt: lastUpdatedAt,
-        lampu: localLampState,
-        timer: timerState
-      };
-      saveAllLocal();
+    async function pushStateToCloud() {
+      if (!navigator.onLine) return;
       try {
         await fetch(`https://ntfy.sh/${SYNC_ROOM}`, {
           method: 'POST',
-          body: JSON.stringify(payload)
+          body: JSON.stringify(appState)
         });
       } catch (e) {}
     }
 
-    const bc = ('BroadcastChannel' in window) ? new BroadcastChannel("telur_sync_v6") : null;
+    const bc = ('BroadcastChannel' in window) ? new BroadcastChannel(SYNC_ROOM) : null;
     if (bc) {
-      bc.onmessage = (ev) => applyPayload(ev.data);
+      bc.onmessage = (ev) => applyIncomingState(ev.data);
     }
 
     function userToggleLampu(state) {
+      appState.updatedAt = Date.now();
       setLampuVisual(state);
-      lastUpdatedAt = Date.now();
-      saveAllLocal();
-      if (bc) bc.postMessage({ updatedAt: lastUpdatedAt, lampu: state, timer: timerState });
-      broadcastCloudState();
+      savePermanentLocal();
+      if (bc) bc.postMessage(appState);
+      pushStateToCloud();
     }
 
-    // Muat memori lokal awal
-    const localSaved = localStorage.getItem('telur_sync_state_v6');
-    if (localSaved) {
-      try {
-        const parsed = JSON.parse(localSaved);
-        if (parsed.updatedAt) lastUpdatedAt = parsed.updatedAt;
-        if (typeof parsed.lampu === 'boolean') setLampuVisual(parsed.lampu);
-        if (parsed.timer) timerState = parsed.timer;
-      } catch (e) {}
-    }
+    window.addEventListener('online', () => {
+      document.getElementById('statusText').innerText = "LIVE SYNC";
+      pullLatestFromCloud();
+      pushStateToCloud();
+    });
+    window.addEventListener('offline', () => {
+      document.getElementById('statusText').innerText = "OFFLINE";
+    });
 
-    listenCloudEvents();
-    pollLatestCloudState();
+    // Jalankan pemulihan lokal terlebih dahulu sebelum jaringan dicek
+    loadPermanentLocal();
+    setLampuVisual(appState.lampu);
     updateWaktuDisplay();
+
+    // Jalankan koneksi cloud
+    connectRealtimeStream();
+    pullLatestFromCloud();
+    setInterval(pullLatestFromCloud, 1500);
     setTimeout(renderAllCharts, 250);
   </script>
 </body>
