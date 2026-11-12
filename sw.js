@@ -1,4 +1,4 @@
-const CACHE_NAME = 'telur-digital-twin-offline-v1';
+const CACHE_NAME = 'telur-digital-twin-master-v1';
 const ASSETS = [
   './',
   './index.html',
@@ -13,22 +13,24 @@ self.addEventListener('install', (event) => {
 });
 
 self.addEventListener('activate', (event) => {
-  event.waitUntil(self.clients.claim());
+  event.waitUntil(
+    caches.keys().then((keys) =>
+      Promise.all(keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k)))
+    ).then(() => self.clients.claim())
+  );
 });
 
 self.addEventListener('fetch', (event) => {
-  // Jangan cache panggilan API sinkronisasi cloud
-  if (event.request.url.includes('ntfy.sh')) {
-    return;
-  }
+  if (event.request.url.includes('ntfy.sh')) return;
+
+  // Network-First: Selalu ambil versi terbaru jika online, dan langsung pakai cache jika WiFi mati
   event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
-      return cachedResponse || fetch(event.request).then((networkResponse) => {
-        return caches.open(CACHE_NAME).then((cache) => {
-          cache.put(event.request, networkResponse.clone());
-          return networkResponse;
-        });
-      }).catch(() => caches.match('./index.html'));
-    })
+    fetch(event.request)
+      .then((networkResponse) => {
+        const clone = networkResponse.clone();
+        caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+        return networkResponse;
+      })
+      .catch(() => caches.match(event.request).then((res) => res || caches.match('./index.html')))
   );
 });
