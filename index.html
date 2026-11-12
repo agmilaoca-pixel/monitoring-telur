@@ -180,7 +180,7 @@
       position: absolute;
       top: 98px;
       left: 14px;
-      width: 290px;
+      width: 295px;
       display: flex;
       flex-direction: column;
       gap: 7px;
@@ -234,14 +234,14 @@
       border-color: rgba(52, 211, 153, 0.4);
     }
     .val-main {
-      font-size: 17px;
+      font-size: 16px;
       font-weight: 800;
       color: #fff;
       margin: 2px 0;
       text-shadow: 0 0 14px rgba(255, 42, 133, 0.35);
-      letter-spacing: 0.4px;
+      letter-spacing: 0.3px;
     }
-    .val-unit { font-size: 11.5px; color: var(--neon-yellow); font-weight: 600; }
+    .val-unit { font-size: 11px; color: var(--neon-yellow); font-weight: 600; }
     .card-meta { font-size: 8.5px; color: #d8b4fe; }
 
     .btn-group-timer {
@@ -419,7 +419,7 @@
             <span class="badge-node" id="badgeHari">SIAP MULAI</span>
           </div>
           <div class="val-main" id="batchDayText">
-            0 <span class="val-unit">Hari</span> 0 <span class="val-unit">Jam</span> 0 <span class="val-unit">Detik</span>
+            0 <span class="val-unit">Hari</span> 0 <span class="val-unit">Jam</span> 0 <span class="val-unit">Menit</span> 0 <span class="val-unit">Detik</span>
           </div>
           <div class="card-meta">Target: 7 Hari Perendaman</div>
           
@@ -520,7 +520,7 @@
   </div>
 
   <script>
-    // Daftarkan Service Worker agar tidak mati/error saat WiFi terputus
+    // Daftarkan Service Worker agar tetap aktif saat WiFi terputus
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('./sw.js').catch(() => {});
     }
@@ -567,7 +567,7 @@
 
       if (timerState.status === "IDLE" || !timerState.startTime) {
         if (displayEl) {
-          displayEl.innerHTML = `0 <span class="val-unit">Hari</span> 0 <span class="val-unit">Jam</span> 0 <span class="val-unit">Detik</span>`;
+          displayEl.innerHTML = `0 <span class="val-unit">Hari</span> 0 <span class="val-unit">Jam</span> 0 <span class="val-unit">Menit</span> 0 <span class="val-unit">Detik</span>`;
         }
         if (badgeEl) badgeEl.innerText = `SIAP MULAI`;
         if (warnEl) {
@@ -581,7 +581,7 @@
 
       if (timerState.status === "FINISHED") {
         if (displayEl) {
-          displayEl.innerHTML = `7 <span class="val-unit">Hari</span> 0 <span class="val-unit">Jam</span> 0 <span class="val-unit">Detik</span>`;
+          displayEl.innerHTML = `7 <span class="val-unit">Hari</span> 0 <span class="val-unit">Jam</span> 0 <span class="val-unit">Menit</span> 0 <span class="val-unit">Detik</span>`;
         }
         if (badgeEl) badgeEl.innerText = `SELESAI (7 HARI)`;
         if (warnEl) {
@@ -599,13 +599,14 @@
       const totalSeconds = Math.floor(diffMs / 1000);
       const days = Math.floor(totalSeconds / 86400);
       const hours = Math.floor((totalSeconds % 86400) / 3600);
+      const minutes = Math.floor((totalSeconds % 3600) / 60);
       const seconds = totalSeconds % 60;
 
       const dayNumber = Math.min(7, Math.max(1, days + 1));
       currentAllowedMaxDay = dayNumber;
 
       if (displayEl) {
-        displayEl.innerHTML = `${days} <span class="val-unit">Hari</span> ${hours} <span class="val-unit">Jam</span> ${seconds} <span class="val-unit">Detik</span>`;
+        displayEl.innerHTML = `${days} <span class="val-unit">Hari</span> ${hours} <span class="val-unit">Jam</span> ${minutes} <span class="val-unit">Menit</span> ${seconds} <span class="val-unit">Detik</span>`;
       }
       if (badgeEl) {
         badgeEl.innerText = (days >= 7) ? `LEWAT TARGET (${days} HARI)` : `HARI ${dayNumber} / 7`;
@@ -614,11 +615,11 @@
       if (warnEl) {
         if (days >= 7) {
           warnEl.className = 'warning-banner over clickable';
-          warnEl.innerText = `🚨 PERINGATAN OVER-CURING: Proses sudah ${days} Hari ${hours} Jam (Melebihi batas 7 Hari)! Segera panen telur.`;
+          warnEl.innerText = `🚨 PERINGATAN OVER-CURING: Proses sudah ${days} Hari ${hours} Jam ${minutes} Menit (Melebihi batas 7 Hari)! Segera panen telur.`;
           playWarningBeep();
         } else if (days === 6) {
           warnEl.className = 'warning-banner near clickable';
-          warnEl.innerText = `⚠️ PERHATIAN: Sudah memasuki Hari ke-7 (${days} Hari ${hours} Jam). Sebentar lagi waktu panen tiba!`;
+          warnEl.innerText = `⚠️ PERHATIAN: Sudah memasuki Hari ke-7 (${days} Hari ${hours} Jam ${minutes} Menit). Sebentar lagi waktu panen tiba!`;
         } else {
           warnEl.className = 'warning-banner clickable';
           warnEl.innerText = '';
@@ -1188,7 +1189,6 @@
     }
 
     function listenCloudEvents() {
-      // since=all memastikan saat WiFi nyala kembali, pesan terakhir dari server langsung ditarik
       const eventSource = new EventSource(`https://ntfy.sh/${SYNC_ROOM}/sse?since=all`);
       
       eventSource.onopen = () => {
@@ -1211,7 +1211,6 @@
     }
     listenCloudEvents();
 
-    // Otomatis sinkron ulang begitu event online browser terdeteksi
     window.addEventListener('online', () => {
       document.getElementById('statusText').innerText = "LIVE SYNC";
       listenCloudEvents();
