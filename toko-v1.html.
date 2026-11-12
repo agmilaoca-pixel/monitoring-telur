@@ -1,0 +1,1189 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BlueDuck SmartCuring — Telur Bebek Biru Segar &amp; Olahan</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-cream: #faf7f0;
+      --bg-sand: #f1ece1;
+      --green-dark: #1b4332;
+      --green-mid: #2d6a4f;
+      --green-soft: #d8f3dc;
+      --duck-blue: #3b82f6;
+      --accent-gold: #fde047;
+      --text-dark: #1f2937;
+      --text-muted: #4b5563;
+      --white: #ffffff;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background-color: var(--bg-cream);
+      color: var(--text-dark);
+      line-height: 1.6;
+    }
+
+    h1, h2, h3, .serif { font-family: 'Playfair Display', serif; }
+
+    /* Navbar */
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: rgba(250, 247, 240, 0.94);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(27, 67, 50, 0.1);
+    }
+    .nav-container {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 14px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 800;
+      font-size: 18px;
+      color: var(--green-dark);
+      text-decoration: none;
+    }
+    .logo-badge {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #60a5fa, #2563eb);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 16px;
+      box-shadow: 0 4px 10px rgba(37, 99, 235, 0.25);
+    }
+    nav ul {
+      display: flex;
+      list-style: none;
+      gap: 28px;
+    }
+    nav a {
+      text-decoration: none;
+      color: var(--text-dark);
+      font-weight: 600;
+      font-size: 14px;
+      transition: color 0.2s;
+    }
+    nav a:hover { color: var(--green-mid); }
+
+    .btn-cart-nav {
+      background: var(--green-dark);
+      color: var(--white);
+      padding: 10px 18px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 700;
+      border: none;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: transform 0.2s, background 0.2s;
+      box-shadow: 0 4px 14px rgba(27, 67, 50, 0.25);
+    }
+    .btn-cart-nav:hover {
+      background: var(--green-mid);
+      transform: translateY(-1px);
+    }
+    .cart-badge-count {
+      background: var(--accent-gold);
+      color: var(--green-dark);
+      padding: 1px 7px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    /* Hero Section */
+    .hero {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 56px 24px 40px;
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 44px;
+      align-items: center;
+    }
+    .hero-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: #e0f2fe;
+      color: #0369a1;
+      padding: 6px 14px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      margin-bottom: 18px;
+    }
+    .hero h1 {
+      font-size: 46px;
+      line-height: 1.15;
+      color: var(--green-dark);
+      margin-bottom: 18px;
+    }
+    .hero p {
+      font-size: 16px;
+      color: var(--text-muted);
+      margin-bottom: 28px;
+      max-width: 520px;
+    }
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+    }
+    .btn-primary {
+      background: var(--green-dark);
+      color: var(--white);
+      padding: 14px 26px;
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: 15px;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      box-shadow: 0 10px 22px rgba(27, 67, 50, 0.25);
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-primary:hover {
+      background: var(--green-mid);
+      transform: translateY(-2px);
+    }
+    .btn-secondary {
+      background: var(--white);
+      color: var(--green-dark);
+      border: 1.5px solid rgba(27, 67, 50, 0.25);
+      padding: 14px 24px;
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: 15px;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+    .btn-secondary:hover {
+      border-color: var(--green-dark);
+      background: var(--bg-sand);
+    }
+
+    .hero-visual { position: relative; }
+    .hero-img-card {
+      border-radius: 24px;
+      overflow: hidden;
+      box-shadow: 0 24px 48px rgba(27, 67, 50, 0.16);
+      border: 6px solid var(--white);
+    }
+    .hero-img-card img {
+      width: 100%;
+      height: 430px;
+      object-fit: cover;
+      display: block;
+    }
+    .floating-egg-badge {
+      position: absolute;
+      bottom: -18px;
+      left: -18px;
+      background: var(--white);
+      padding: 14px 18px;
+      border-radius: 16px;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border: 1px solid #dbeafe;
+    }
+    .egg-icon-circle {
+      width: 44px;
+      height: 52px;
+      background: radial-gradient(circle at 35% 30%, #eff6ff, #93c5fd 70%, #60a5fa);
+      border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+      box-shadow: inset -4px -4px 8px rgba(30, 64, 175, 0.15);
+    }
+
+    /* Feature Strip */
+    .strip-wrapper {
+      max-width: 1180px;
+      margin: 24px auto 60px;
+      padding: 0 24px;
+    }
+    .feature-strip {
+      background: var(--white);
+      border-radius: 18px;
+      padding: 24px 32px;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 20px;
+      box-shadow: 0 10px 30px rgba(27, 67, 50, 0.06);
+      border: 1px solid rgba(27, 67, 50, 0.08);
+    }
+    .strip-item {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .strip-icon {
+      width: 46px;
+      height: 46px;
+      border-radius: 12px;
+      background: var(--green-soft);
+      color: var(--green-dark);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+    .strip-item h4 { font-size: 14px; color: var(--green-dark); font-weight: 800; }
+    .strip-item p { font-size: 12px; color: var(--text-muted); }
+
+    /* About Section */
+    .about-section {
+      max-width: 1180px;
+      margin: 0 auto 70px;
+      padding: 0 24px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 48px;
+      align-items: center;
+    }
+    .about-grid-imgs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    .about-grid-imgs img {
+      width: 100%;
+      height: 240px;
+      object-fit: cover;
+      border-radius: 18px;
+      border: 4px solid var(--white);
+      box-shadow: 0 10px 24px rgba(0,0,0,0.08);
+    }
+    .about-grid-imgs img:first-child { margin-top: 24px; }
+    .section-kicker {
+      color: var(--green-mid);
+      font-weight: 800;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 8px;
+    }
+    .about-text h2 {
+      font-size: 34px;
+      color: var(--green-dark);
+      margin-bottom: 16px;
+      line-height: 1.2;
+    }
+    .about-text p {
+      color: var(--text-muted);
+      margin-bottom: 16px;
+      font-size: 15px;
+    }
+    .check-list {
+      list-style: none;
+      margin: 18px 0 26px;
+      display: grid;
+      gap: 10px;
+    }
+    .check-list li {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-dark);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .check-list span {
+      background: var(--green-dark);
+      color: white;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+    }
+
+    /* Olahan Kuliner Section */
+    .recipes-section {
+      max-width: 1180px;
+      margin: 0 auto 75px;
+      padding: 0 24px;
+    }
+    .section-header-center {
+      text-align: center;
+      max-width: 640px;
+      margin: 0 auto 40px;
+    }
+    .section-header-center h2 {
+      font-size: 34px;
+      color: var(--green-dark);
+      margin-bottom: 10px;
+    }
+    .cards-4 {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 20px;
+    }
+    .recipe-card {
+      background: var(--white);
+      border-radius: 18px;
+      overflow: hidden;
+      border: 1px solid rgba(27, 67, 50, 0.1);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.3s ease;
+    }
+    .recipe-card:hover { transform: translateY(-5px); }
+    .recipe-card img {
+      width: 100%;
+      height: 170px;
+      object-fit: cover;
+    }
+    .recipe-body {
+      padding: 18px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .recipe-body h3 {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 16px;
+      font-weight: 800;
+      color: var(--green-dark);
+      margin-bottom: 8px;
+    }
+    .recipe-body p {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: 16px;
+    }
+    .btn-recipe {
+      background: var(--bg-cream);
+      color: var(--green-dark);
+      border: 1.5px solid var(--green-dark);
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 13px;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.2s;
+    }
+    .btn-recipe:hover {
+      background: var(--green-dark);
+      color: var(--white);
+    }
+
+    /* Daftar Harga & Keranjang Belanja */
+    .shop-section {
+      background: var(--green-dark);
+      color: var(--white);
+      padding: 64px 24px;
+      margin-bottom: 60px;
+    }
+    .shop-container {
+      max-width: 1180px;
+      margin: 0 auto;
+    }
+    .shop-header {
+      text-align: center;
+      max-width: 680px;
+      margin: 0 auto 40px;
+    }
+    .shop-header h2 {
+      font-size: 36px;
+      margin-bottom: 10px;
+    }
+    .shop-header p {
+      color: #a7f3d0;
+      font-size: 15px;
+    }
+    .shop-grid {
+      display: grid;
+      grid-template-columns: 1.15fr 0.85fr;
+      gap: 32px;
+      align-items: start;
+    }
+    .shop-price-list {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .price-item {
+      background: var(--white);
+      color: var(--text-dark);
+      border-radius: 16px;
+      padding: 16px 22px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+    }
+    .price-item-left {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .egg-mini {
+      width: 34px;
+      height: 42px;
+      border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+      background: radial-gradient(circle at 35% 30%, #eff6ff, #93c5fd 70%, #60a5fa);
+      flex-shrink: 0;
+    }
+    .egg-mini.raw {
+      background: radial-gradient(circle at 35% 30%, #fefce8, #fde047 75%, #eab308);
+    }
+    .price-item-info h4 {
+      font-size: 16px;
+      font-weight: 800;
+      color: var(--green-dark);
+    }
+    .price-item-info p {
+      font-size: 12.5px;
+      color: var(--text-muted);
+    }
+    .price-item-right {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .price-value {
+      font-size: 16px;
+      font-weight: 800;
+      color: var(--green-dark);
+      white-space: nowrap;
+    }
+    .btn-add-item {
+      background: var(--green-dark);
+      color: var(--white);
+      border: none;
+      padding: 9px 14px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background 0.2s;
+    }
+    .btn-add-item:hover { background: var(--green-mid); }
+
+    /* Live Cart Box (Kanan) */
+    .cart-card {
+      background: var(--white);
+      color: var(--text-dark);
+      border-radius: 22px;
+      padding: 28px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.25);
+    }
+    .cart-card h3 {
+      font-size: 22px;
+      color: var(--green-dark);
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .cart-sub {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: 16px;
+    }
+    .cart-item-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--bg-sand);
+      padding: 11px 0;
+    }
+    .cart-item-info h4 { font-size: 14px; color: var(--text-dark); }
+    .cart-item-info p { font-size: 12px; color: var(--text-muted); }
+    .qty-control {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .btn-qty {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      border: 1.5px solid var(--green-dark);
+      background: var(--white);
+      color: var(--green-dark);
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .btn-qty:hover { background: var(--green-soft); }
+    .qty-val {
+      font-weight: 800;
+      font-size: 14px;
+      width: 22px;
+      text-align: center;
+    }
+    .form-group { margin-top: 14px; }
+    .form-group label {
+      display: block;
+      font-size: 12.5px;
+      font-weight: 700;
+      color: var(--green-dark);
+      margin-bottom: 5px;
+    }
+    .form-group input, .form-group textarea {
+      width: 100%;
+      padding: 9px 12px;
+      border-radius: 8px;
+      border: 1.5px solid rgba(27, 67, 50, 0.2);
+      font-family: inherit;
+      font-size: 13.5px;
+    }
+    .form-group input:focus, .form-group textarea:focus {
+      outline: none;
+      border-color: var(--green-dark);
+    }
+    .cart-total-box {
+      background: var(--bg-cream);
+      padding: 14px 16px;
+      border-radius: 12px;
+      margin-top: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-weight: 800;
+      color: var(--green-dark);
+      border: 1.5px dashed var(--green-dark);
+    }
+    .btn-wa-submit {
+      display: block;
+      width: 100%;
+      background: #16a34a;
+      color: var(--white);
+      border: none;
+      padding: 14px 18px;
+      border-radius: 12px;
+      font-size: 15px;
+      font-weight: 800;
+      cursor: pointer;
+      margin-top: 16px;
+      box-shadow: 0 8px 20px rgba(22, 163, 74, 0.28);
+      transition: transform 0.2s, background 0.2s;
+    }
+    .btn-wa-submit:hover {
+      background: #15803d;
+      transform: translateY(-2px);
+    }
+
+    /* Modal Resep */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.6);
+      z-index: 100;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      backdrop-filter: blur(4px);
+    }
+    .modal-box {
+      background: var(--white);
+      border-radius: 20px;
+      width: 100%;
+      max-width: 580px;
+      max-height: 90vh;
+      overflow-y: auto;
+      padding: 32px;
+      position: relative;
+      animation: modalFadeIn 0.25s ease;
+    }
+    @keyframes modalFadeIn {
+      from { transform: translateY(16px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    .modal-close {
+      position: absolute;
+      top: 18px;
+      right: 20px;
+      font-size: 26px;
+      font-weight: 700;
+      color: var(--text-muted);
+      cursor: pointer;
+      background: none;
+      border: none;
+    }
+    .modal-title {
+      font-size: 24px;
+      color: var(--green-dark);
+      margin-bottom: 10px;
+    }
+    .recipe-meta {
+      display: flex;
+      gap: 16px;
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: 16px;
+      font-weight: 600;
+    }
+    .recipe-details-title {
+      font-size: 15px;
+      font-weight: 800;
+      color: var(--green-dark);
+      margin: 14px 0 6px;
+    }
+    .recipe-list {
+      padding-left: 20px;
+      font-size: 14px;
+      color: var(--text-dark);
+    }
+    .recipe-list li { margin-bottom: 5px; }
+
+    footer {
+      background: var(--bg-sand);
+      border-top: 1px solid rgba(27, 67, 50, 0.12);
+      padding: 28px 24px;
+      text-align: center;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    @media (max-width: 900px) {
+      .hero, .about-section, .shop-grid { grid-template-columns: 1fr; }
+      .feature-strip, .cards-4 { grid-template-columns: repeat(2, 1fr); }
+      nav ul { display: none; }
+      .hero h1 { font-size: 34px; }
+    }
+    @media (max-width: 540px) {
+      .feature-strip, .cards-4 { grid-template-columns: 1fr; }
+      .price-item { flex-direction: column; align-items: flex-start; }
+      .price-item-right { width: 100%; justify-content: space-between; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header>
+    <div class="nav-container">
+      <a href="#" class="logo">
+        <span class="logo-badge">🥚</span>
+        <span>BlueDuck SmartCuring</span>
+      </a>
+      <nav>
+        <ul>
+          <li><a href="#keunggulan">Telur Bebek Biru</a></li>
+          <li><a href="#olahan">Olahan &amp; Resep</a></li>
+          <li><a href="#pembelian">Daftar Harga &amp; Beli</a></li>
+        </ul>
+      </nav>
+      <a href="#pembelian" class="btn-cart-nav">
+        🛒 Keranjang <span class="cart-badge-count" id="navCartCount">0</span>
+      </a>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="hero">
+    <div>
+      <div class="hero-tag">🦆 Peternakan Bebek &amp; Telur Asin Pilihan</div>
+      <h1>Telur Bebek Biru Pilihan, Diasinkan Presisi 7 Hari.</h1>
+      <p>
+        Dihasilkan dari bebek sehat dengan pakan alami, menghasilkan telur bercangkang biru tebal dengan kuning telur masir berminyak yang gurih untuk berbagai sajian keluarga.
+      </p>
+      <div class="hero-actions">
+        <a href="#pembelian" class="btn-primary">🛒 Pesan Telur Bebek Sekarang →</a>
+        <a href="#olahan" class="btn-secondary">Lihat Resep Olahan</a>
+      </div>
+    </div>
+
+    <div class="hero-visual">
+      <div class="hero-img-card">
+        <img src="https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&w=900&q=80" alt="Bebek Peternakan Alami">
+      </div>
+      <div class="floating-egg-badge">
+        <div class="egg-icon-circle"></div>
+        <div>
+          <strong style="display:block; font-size:14px; color:#1b4332;">Telur Bebek Biru Segar</strong>
+          <span style="font-size:12px; color:#4b5563;">Pori-pori cangkang optimal &amp; kuning masir</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Feature Strip -->
+  <div class="strip-wrapper">
+    <div class="feature-strip">
+      <div class="strip-item">
+        <div class="strip-icon">🦆</div>
+        <div>
+          <h4>Bebek Sehat Terjaga</h4>
+          <p>Pakan alami kaya karoten</p>
+        </div>
+      </div>
+      <div class="strip-item">
+        <div class="strip-icon">🥚</div>
+        <div>
+          <h4>Cangkang Biru Tebal</h4>
+          <p>Kuning telur lebih pekat &amp; masir</p>
+        </div>
+      </div>
+      <div class="strip-item">
+        <div class="strip-icon">🧂</div>
+        <div>
+          <h4>Takaran Garam Presisi</h4>
+          <p>Rasa asin gurih pas di lidah</p>
+        </div>
+      </div>
+      <div class="strip-item">
+        <div class="strip-icon">⏱️</div>
+        <div>
+          <h4>Perendaman 7 Hari</h4>
+          <p>Matang sempurna &amp; tahan lama</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- About Telur Bebek Biru -->
+  <section class="about-section" id="keunggulan">
+    <div class="about-grid-imgs">
+      <img src="https://images.unsplash.com/photo-1587486913049-53fc88980cfc?auto=format&fit=crop&w=600&q=80" alt="Telur Bebek Biru">
+      <img src="https://images.unsplash.com/photo-1518492104633-130d0cc84637?auto=format&fit=crop&w=600&q=80" alt="Bebek di Peternakan">
+    </div>
+    <div class="about-text">
+      <div class="section-kicker">Mengapa Telur Bebek Biru?</div>
+      <h2>Kualitas Bahan Baku Menentukan Hasil Pengasinan.</h2>
+      <p>
+        Telur bebek dengan pigmen cangkang biru alami (<em>biliverdin</em>) memiliki struktur pori yang merata dan cangkang yang kokoh, sehingga proses penyerapan garam berlangsung stabil tanpa mudah retak.
+      </p>
+      <ul class="check-list">
+        <li><span>✓</span> Kuning telur berukuran lebih besar dengan warna jingga kemerahan alami.</li>
+        <li><span>✓</span> Tekstur putih telur kenyal dan tidak terlalu encer setelah direndam 7 hari.</li>
+        <li><span>✓</span> Tersedia pilihan telur asin siap olah maupun telur bebek mentah segar.</li>
+      </ul>
+      <a href="#pembelian" class="btn-primary">Pilih Ukuran Telur</a>
+    </div>
+  </section>
+
+  <!-- Olahan Kuliner & Resep -->
+  <section class="recipes-section" id="olahan">
+    <div class="section-header-center">
+      <div class="section-kicker">Sajian Nikmat Tradisional &amp; Modern</div>
+      <h2>Olahan Kuliner Telur Bebek Asin</h2>
+      <p style="color:var(--text-muted); font-size:14.5px;">Klik tombol <strong>Lihat Resep</strong> di setiap kartu untuk melihat takaran bahan dan langkah memasaknya.</p>
+    </div>
+
+    <div class="cards-4">
+      <div class="recipe-card">
+        <img src="https://images.unsplash.com/photo-1582722872445-44dc5f7e3c8f?auto=format&fit=crop&w=600&q=80" alt="Botokan Telur Asin">
+        <div class="recipe-body">
+          <div>
+            <h3>Botokan Telur Asin</h3>
+            <p>Sajian kukus tradisional berbalut daun pisang dengan kelapa parut muda dan bumbu rempah harum.</p>
+          </div>
+          <button class="btn-recipe" onclick="openRecipeModal('botokan')">Lihat Resep</button>
+        </div>
+      </div>
+
+      <div class="recipe-card">
+        <img src="https://images.unsplash.com/photo-1565557623262-b51c2513a641?auto=format&fit=crop&w=600&q=80" alt="Udang Saus Telur Asin">
+        <div class="recipe-body">
+          <div>
+            <h3>Udang Saus Telur Asin</h3>
+            <p>Udang goreng tepung renyah berlumur saus kuning telur asin creamy dengan aroma daun kari.</p>
+          </div>
+          <button class="btn-recipe" onclick="openRecipeModal('udang')">Lihat Resep</button>
+        </div>
+      </div>
+
+      <div class="recipe-card">
+        <img src="https://images.unsplash.com/photo-1512058564366-18510be2db19?auto=format&fit=crop&w=600&q=80" alt="Nasi Goreng Telur Asin">
+        <div class="recipe-body">
+          <div>
+            <h3>Nasi Goreng Telur Asin</h3>
+            <p>Nasi goreng gurih keemasan yang diorak-arik bersama kuning telur asin melimpah dan irisan cabai.</p>
+          </div>
+          <button class="btn-recipe" onclick="openRecipeModal('nasigoreng')">Lihat Resep</button>
+        </div>
+      </div>
+
+      <div class="recipe-card">
+        <img src="https://images.unsplash.com/photo-1551183053-bf91a1d81141?auto=format&fit=crop&w=600&q=80" alt="Pasta Saus Telur Asin">
+        <div class="recipe-body">
+          <div>
+            <h3>Pasta Saus Telur Asin</h3>
+            <p>Kombinasi modern spaghetti dengan balutan saus telur asin yang kental, gurih, dan creamy.</p>
+          </div>
+          <button class="btn-recipe" onclick="openRecipeModal('pasta')">Lihat Resep</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Daftar Harga & Keranjang Belanja -->
+  <section class="shop-section" id="pembelian">
+    <div class="shop-container">
+      <div class="shop-header">
+        <div class="section-kicker" style="color:#fde047;">BELI LANGSUNG DARI PETERNAKAN</div>
+        <h2>Daftar Harga &amp; Pembelian Telur Bebek</h2>
+        <p>Pilih jenis telur yang diinginkan, atur jumlah di keranjang sebelah kanan, lalu kirim pesanan langsung ke WhatsApp penjual.</p>
+      </div>
+
+      <div class="shop-grid">
+        <!-- Daftar 4 Pilihan Telur -->
+        <div class="shop-price-list">
+          <div class="price-item">
+            <div class="price-item-left">
+              <div class="egg-mini"></div>
+              <div class="price-item-info">
+                <h4>Telur Bebek Jenis A</h4>
+                <p>Ukuran Super Besar (kuning telur besar &amp; masir tinggi)</p>
+              </div>
+            </div>
+            <div class="price-item-right">
+              <div class="price-value">Rp 5.000</div>
+              <button class="btn-add-item" onclick="changeQty('A', 1)">+ Tambah</button>
+            </div>
+          </div>
+
+          <div class="price-item">
+            <div class="price-item-left">
+              <div class="egg-mini"></div>
+              <div class="price-item-info">
+                <h4>Telur Bebek Jenis B</h4>
+                <p>Ukuran Sedang (standar lauk harian &amp; olahan kuliner)</p>
+              </div>
+            </div>
+            <div class="price-item-right">
+              <div class="price-value">Rp 4.000</div>
+              <button class="btn-add-item" onclick="changeQty('B', 1)">+ Tambah</button>
+            </div>
+          </div>
+
+          <div class="price-item">
+            <div class="price-item-left">
+              <div class="egg-mini"></div>
+              <div class="price-item-info">
+                <h4>Telur Bebek Jenis C</h4>
+                <p>Ukuran Paling Kecil (ekonomis untuk sajian rumahan)</p>
+              </div>
+            </div>
+            <div class="price-item-right">
+              <div class="price-value">Rp 3.000</div>
+              <button class="btn-add-item" onclick="changeQty('C', 1)">+ Tambah</button>
+            </div>
+          </div>
+
+          <div class="price-item">
+            <div class="price-item-left">
+              <div class="egg-mini raw"></div>
+              <div class="price-item-info">
+                <h4>Telur Bebek Mentah</h4>
+                <p>Telur bebek biru segar mentah (untuk martabak, jamu, atau diasinkan sendiri)</p>
+              </div>
+            </div>
+            <div class="price-item-right">
+              <div class="price-value">Rp 2.800</div>
+              <button class="btn-add-item" onclick="changeQty('M', 1)">+ Tambah</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Keranjang Belanja Interaktif -->
+        <div class="cart-card">
+          <h3>🛒 Keranjang Belanja</h3>
+          <p class="cart-sub">Atur jumlah butir dan isi data penerima untuk dikirim ke WhatsApp penjual.</p>
+
+          <div class="cart-item-row">
+            <div class="cart-item-info">
+              <h4>Telur Bebek Jenis A</h4>
+              <p>Rp 5.000 / butir</p>
+            </div>
+            <div class="qty-control">
+              <button class="btn-qty" onclick="changeQty('A', -1)">-</button>
+              <span class="qty-val" id="qtyA">0</span>
+              <button class="btn-qty" onclick="changeQty('A', 1)">+</button>
+            </div>
+          </div>
+
+          <div class="cart-item-row">
+            <div class="cart-item-info">
+              <h4>Telur Bebek Jenis B</h4>
+              <p>Rp 4.000 / butir</p>
+            </div>
+            <div class="qty-control">
+              <button class="btn-qty" onclick="changeQty('B', -1)">-</button>
+              <span class="qty-val" id="qtyB">0</span>
+              <button class="btn-qty" onclick="changeQty('B', 1)">+</button>
+            </div>
+          </div>
+
+          <div class="cart-item-row">
+            <div class="cart-item-info">
+              <h4>Telur Bebek Jenis C</h4>
+              <p>Rp 3.000 / butir</p>
+            </div>
+            <div class="qty-control">
+              <button class="btn-qty" onclick="changeQty('C', -1)">-</button>
+              <span class="qty-val" id="qtyC">0</span>
+              <button class="btn-qty" onclick="changeQty('C', 1)">+</button>
+            </div>
+          </div>
+
+          <div class="cart-item-row">
+            <div class="cart-item-info">
+              <h4>Telur Bebek Mentah</h4>
+              <p>Rp 2.800 / butir</p>
+            </div>
+            <div class="qty-control">
+              <button class="btn-qty" onclick="changeQty('M', -1)">-</button>
+              <span class="qty-val" id="qtyM">0</span>
+              <button class="btn-qty" onclick="changeQty('M', 1)">+</button>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="custName">Nama Penerima *</label>
+            <input type="text" id="custName" placeholder="Masukkan nama lengkap Anda">
+          </div>
+
+          <div class="form-group">
+            <label for="custAddress">Alamat Lengkap Pengiriman *</label>
+            <textarea id="custAddress" rows="2" placeholder="Jalan, No. Rumah, Kecamatan, Kota"></textarea>
+          </div>
+
+          <div class="cart-total-box">
+            <span>TOTAL PEMBAYARAN:</span>
+            <span id="cartTotalPrice" style="font-size:18px;">Rp 0</span>
+          </div>
+
+          <button class="btn-wa-submit" onclick="sendOrderToWA()">
+            💬 Kirim Pemesanan ke WhatsApp →
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Pop-Up Resep Masak -->
+  <div class="modal-overlay" id="recipeModal">
+    <div class="modal-box">
+      <button class="modal-close" onclick="closeRecipeModal()">×</button>
+      <h3 class="modal-title" id="recipeTitle">Judul Resep</h3>
+      <div class="recipe-meta" id="recipeMeta">Porsi &amp; Waktu</div>
+      
+      <div class="recipe-details-title">Bahan-Bahan:</div>
+      <ul class="recipe-list" id="recipeIngredients"></ul>
+
+      <div class="recipe-details-title" style="margin-top:18px;">Cara Memasak:</div>
+      <ol class="recipe-list" id="recipeSteps"></ol>
+    </div>
+  </div>
+
+  <footer>
+    BlueDuck SmartCuring — Peternakan Bebek &amp; Telur Bebek Biru Pilihan
+  </footer>
+
+  <script>
+    // Ganti nomor WhatsApp penjual di bawah ini (diawali 62 tanpa tanda +)
+    const WA_NUMBER = "628123456789";
+
+    const prices = { A: 5000, B: 4000, C: 3000, M: 2800 };
+    let cart = { A: 0, B: 0, C: 0, M: 0 };
+
+    function changeQty(type, val) {
+      cart[type] = Math.max(0, cart[type] + val);
+      document.getElementById(`qty${type}`).innerText = cart[type];
+      calculateTotal();
+    }
+
+    function calculateTotal() {
+      const totalQty = cart.A + cart.B + cart.C + cart.M;
+      const total = (cart.A * prices.A) + (cart.B * prices.B) + (cart.C * prices.C) + (cart.M * prices.M);
+      document.getElementById('navCartCount').innerText = totalQty;
+      document.getElementById('cartTotalPrice').innerText = "Rp " + total.toLocaleString('id-ID');
+    }
+
+    function sendOrderToWA() {
+      const name = document.getElementById('custName').value.trim();
+      const address = document.getElementById('custAddress').value.trim();
+
+      if (!name || !address) {
+        alert("Mohon isi Nama Penerima dan Alamat Pengiriman terlebih dahulu.");
+        return;
+      }
+
+      if (cart.A === 0 && cart.B === 0 && cart.C === 0 && cart.M === 0) {
+        alert("Keranjang masih kosong. Tambahkan minimal 1 butir telur bebek.");
+        return;
+      }
+
+      const total = (cart.A * prices.A) + (cart.B * prices.B) + (cart.C * prices.C) + (cart.M * prices.M);
+
+      let message = `*PESANAN TELUR BEBEK BIRU - BLUEDUCK*\n`;
+      message += `----------------------------------------\n`;
+      message += `*Nama Customer:* ${name}\n`;
+      message += `*Alamat Kirim:* ${address}\n\n`;
+      message += `*Rincian Pesanan:*\n`;
+      if (cart.A > 0) message += `• Telur Bebek Jenis A (Super Besar): ${cart.A} butir = Rp ${(cart.A * prices.A).toLocaleString('id-ID')}\n`;
+      if (cart.B > 0) message += `• Telur Bebek Jenis B (Sedang): ${cart.B} butir = Rp ${(cart.B * prices.B).toLocaleString('id-ID')}\n`;
+      if (cart.C > 0) message += `• Telur Bebek Jenis C (Kecil): ${cart.C} butir = Rp ${(cart.C * prices.C).toLocaleString('id-ID')}\n`;
+      if (cart.M > 0) message += `• Telur Bebek Mentah: ${cart.M} butir = Rp ${(cart.M * prices.M).toLocaleString('id-ID')}\n`;
+      message += `----------------------------------------\n`;
+      message += `*Total Pembayaran:* Rp ${total.toLocaleString('id-ID')}\n\n`;
+      message += `Mohon info ketersediaan stok dan ongkos kirimnya. Terima kasih!`;
+
+      const waUrl = `https://api.whatsapp.com/send?phone=${WA_NUMBER}&text=${encodeURIComponent(message)}`;
+      window.open(waUrl, '_blank');
+    }
+
+    // Data Pop-Up Resep
+    const recipes = {
+      botokan: {
+        title: "Botokan Telur Asin Tradisional",
+        meta: "👥 4 Porsi  |  ⏱️ 45 Menit",
+        ingredients: [
+          "4 butir Telur Bebek Asin Biru mentah (ambil isinya utuh)",
+          "150 gram Kelapa Parut Muda",
+          "50 ml Santan Kental",
+          "2 ikat Daun Kemangi segar",
+          "2 buah Cabai Merah Besar (iris serong) & 10 Cabai Rawit utuh",
+          "Daun pisang & lidi penyemat secukupnya",
+          "Bumbu Halus: 5 Bawang Merah, 3 Bawang Putih, 2 cm Kencur, 1 sdt Ketumbar, garam & gula secukupnya"
+        ],
+        steps: [
+          "Aduk rata kelapa parut muda, bumbu halus, santan kental, irisan cabai merah, dan daun kemangi.",
+          "Ambil selembar daun pisang, taruh 2–3 sendok makan adonan kelapa di tengahnya.",
+          "Tuang 1 butir telur bebek asin mentah di atas kelapa, beri cabai rawit utuh.",
+          "Bungkus tum dan semat dengan lidi. Ulangi hingga semua telur terbungkus.",
+          "Kukus selama 30 menit hingga matang dan harum, lalu sajikan hangat."
+        ]
+      },
+      udang: {
+        title: "Udang Goreng Saus Telur Asin Creamy",
+        meta: "👥 3 Porsi  |  ⏱️ 30 Menit",
+        ingredients: [
+          "300 gram Udang Segar (kupas kulit, sisakan ekor)",
+          "4 butir Kuning Telur Bebek Asin Biru matang (haluskan)",
+          "50 ml Susu Cair Full Cream",
+          "3 siung Bawang Putih (cincang halus) & 2 tangkai Daun Kari",
+          "3 buah Cabai Rawit Merah (iris serong)",
+          "2 sdm Mentega untuk menumis",
+          "1 butir telur kocok & campuran tepung terigu + maizena (1:1) untuk baluran"
+        ],
+        steps: [
+          "Celupkan udang ke kocokan telur lalu gulingkan ke campuran tepung hingga terbalut rata.",
+          "Goreng udang dalam minyak panas hingga kuning keemasan dan renyah, tiriskan.",
+          "Lelehkan mentega, tumis bawang putih, cabai rawit, dan daun kari sampai harum.",
+          "Masukkan kuning telur asin halus, aduk cepat hingga berbusa lalu tuang susu cair sedikit demi sedikit.",
+          "Masukkan udang goreng, aduk cepat hingga seluruh udang terbalut saus telur asin, lalu sajikan."
+        ]
+      },
+      nasigoreng: {
+        title: "Nasi Goreng Gurih Telur Asin",
+        meta: "👥 2 Porsi  |  ⏱️ 20 Menit",
+        ingredients: [
+          "2 piring Nasi Putih dingin",
+          "2 butir Kuning Telur Bebek Asin Biru matang (hancurkan kasar)",
+          "1 butir Telur Asin matang utuh (potong dadu kecil untuk taburan)",
+          "100 gram Ayam / Udang potong kecil",
+          "3 Bawang Merah & 2 Bawang Putih (cincang halus)",
+          "2 batang Daun Bawang iris & 2 Cabai Merah iris serong",
+          "1 sdm Kecap Asin, 1 sdt Minyak Wijen, lada & kaldu bubuk secukupnya"
+        ],
+        steps: [
+          "Tumis bawang merah, bawang putih, dan cabai merah dengan sedikit margarin hingga harum.",
+          "Masukkan potongan ayam/udang, masak hingga matang.",
+          "Masukkan kuning telur asin yang dihancurkan, aduk cepat hingga berbusa.",
+          "Tuang nasi putih dingin, kecap asin, minyak wijen, lada, dan kaldu bubuk; aduk rata dengan api besar.",
+          "Taburkan daun bawang serta potongan telur asin dadu sesaat sebelum diangkat."
+        ]
+      },
+      pasta: {
+        title: "Pasta Spaghetti Saus Telur Asin",
+        meta: "👥 2 Porsi  |  ⏱️ 25 Menit",
+        ingredients: [
+          "200 gram Pasta Spaghetti (rebus al dente, sisakan 3 sdm air rebusan)",
+          "3 butir Kuning Telur Bebek Asin Biru matang (haluskan)",
+          "100 ml Susu Cair Full Cream / Cooking Cream",
+          "4 siung Bawang Putih cincang, 2 tangkai Daun Kari, & 4 Cabai Rawit iris",
+          "2 sdm Mentega, lada hitam, kaldu bubuk, & keju parmesan parut"
+        ],
+        steps: [
+          "Campur kuning telur asin halus dengan 2 sdm susu cair hingga menjadi pasta lembut.",
+          "Lelehkan mentega, tumis bawang putih, daun kari, dan cabai rawit sampai harum.",
+          "Masukkan pasta kuning telur asin, aduk cepat hingga berbusa lalu tuang sisa susu cair hingga saus mengental.",
+          "Masukkan spaghetti rebus dan air rebusan pasta, bumbui lada hitam dan kaldu bubuk, aduk rata 1–2 menit.",
+          "Sajikan hangat dengan taburan keju parmesan."
+        ]
+      }
+    };
+
+    function openRecipeModal(key) {
+      const recipe = recipes[key];
+      if (!recipe) return;
+      document.getElementById('recipeTitle').innerText = recipe.title;
+      document.getElementById('recipeMeta').innerText = recipe.meta;
+
+      const ingUl = document.getElementById('recipeIngredients');
+      ingUl.innerHTML = "";
+      recipe.ingredients.forEach(item => {
+        const li = document.createElement('li');
+        li.innerText = item;
+        ingUl.appendChild(li);
+      });
+
+      const stepsOl = document.getElementById('recipeSteps');
+      stepsOl.innerHTML = "";
+      recipe.steps.forEach(item => {
+        const li = document.createElement('li');
+        li.innerText = item;
+        stepsOl.appendChild(li);
+      });
+
+      document.getElementById('recipeModal').style.display = 'flex';
+    }
+
+    function closeRecipeModal() {
+      document.getElementById('recipeModal').style.display = 'none';
+    }
+
+    window.onclick = function(event) {
+      if (event.target === document.getElementById('recipeModal')) {
+        closeRecipeModal();
+      }
+    }
+  </script>
+</body>
+</html>
