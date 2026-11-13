@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>BlueDuck SmartCuring — Telur Bebek Biru Segar &amp; Kalender Pengasinan</title>
+  <title>BlueDuck SmartCuring — Telur Bebek Biru, Kalender &amp; Live Sensor Monitoring</title>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     :root {
@@ -40,20 +40,20 @@
       border-bottom: 1px solid rgba(27, 67, 50, 0.1);
     }
     .nav-container {
-      max-width: 1180px;
+      max-width: 1220px;
       margin: 0 auto;
-      padding: 14px 24px;
+      padding: 14px 20px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      gap: 16px;
+      gap: 12px;
     }
     .logo {
       display: flex;
       align-items: center;
       gap: 10px;
       font-weight: 800;
-      font-size: 18px;
+      font-size: 17px;
       color: var(--green-dark);
       text-decoration: none;
       flex-shrink: 0;
@@ -73,14 +73,14 @@
     nav ul {
       display: flex;
       list-style: none;
-      gap: 22px;
+      gap: 16px;
       align-items: center;
     }
     nav a {
       text-decoration: none;
       color: var(--text-dark);
       font-weight: 600;
-      font-size: 14px;
+      font-size: 13.5px;
       transition: color 0.2s;
       white-space: nowrap;
     }
@@ -93,14 +93,35 @@
       font-weight: 700 !important;
       border: 1px solid #bae6fd;
     }
-    .nav-cal-pill:hover {
-      background: #bae6fd;
+    .nav-cal-pill:hover { background: #bae6fd; }
+
+    .nav-live-pill {
+      background: #18181b;
+      color: #f472b6 !important;
+      padding: 6px 12px;
+      border-radius: 999px;
+      font-weight: 700 !important;
+      border: 1px solid rgba(244, 114, 182, 0.45);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .nav-live-pill:hover {
+      background: #27272a;
+      color: #ffffff !important;
+    }
+    .live-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #ec4899;
+      box-shadow: 0 0 8px #ec4899;
     }
 
     .btn-cart-nav {
       background: var(--green-dark);
       color: var(--white);
-      padding: 10px 18px;
+      padding: 9px 16px;
       border-radius: 999px;
       font-size: 13px;
       font-weight: 700;
@@ -625,7 +646,7 @@
       transform: translateY(-2px);
     }
 
-    /* Kalender Pencatat Pengasinan Pedagang */
+    /* Kalender Pencatat Pengasinan + Panel Live Sensor Monitoring */
     .calendar-section {
       max-width: 1180px;
       margin: 0 auto 75px;
@@ -701,9 +722,7 @@
       position: relative;
       border: 1px solid transparent;
     }
-    .cal-day.empty {
-      background: transparent;
-    }
+    .cal-day.empty { background: transparent; }
     .cal-day.start-cure {
       background: #dbeafe;
       color: #1e40af;
@@ -746,6 +765,77 @@
       width: 14px;
       height: 14px;
       border-radius: 4px;
+    }
+
+    /* Kotak Akses Langsung ke Live Sensor Monitoring 3D */
+    .live-sensor-bridge {
+      margin-top: 22px;
+      background: linear-gradient(135deg, #0f0a1e 0%, #1e1338 100%);
+      color: #f8fafc;
+      border-radius: 18px;
+      padding: 20px 22px;
+      border: 1px solid rgba(236, 72, 153, 0.45);
+      box-shadow: 0 14px 30px rgba(15, 10, 30, 0.25);
+    }
+    .bridge-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    .bridge-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(236, 72, 153, 0.16);
+      color: #f472b6;
+      border: 1px solid rgba(236, 72, 153, 0.4);
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+    }
+    .bridge-sensors {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin: 14px 0 16px;
+    }
+    .sensor-mini-box {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      padding: 10px;
+    }
+    .sensor-mini-box span {
+      display: block;
+      font-size: 10.5px;
+      color: #94a3b8;
+      font-weight: 700;
+    }
+    .sensor-mini-box strong {
+      font-size: 14px;
+      color: #38bdf8;
+    }
+    .btn-open-3d {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      background: linear-gradient(90deg, #ec4899, #8b5cf6);
+      color: #ffffff;
+      text-decoration: none;
+      padding: 12px 16px;
+      border-radius: 10px;
+      font-size: 13.5px;
+      font-weight: 800;
+      transition: opacity 0.2s, transform 0.2s;
+    }
+    .btn-open-3d:hover {
+      opacity: 0.92;
+      transform: translateY(-1px);
     }
 
     .batch-history-list {
@@ -864,14 +954,16 @@
       color: var(--text-muted);
     }
 
+    @media (max-width: 1024px) {
+      nav ul { display: none; }
+    }
     @media (max-width: 960px) {
       .hero, .about-section, .shop-grid, .cal-layout { grid-template-columns: 1fr; }
       .feature-strip, .cards-4 { grid-template-columns: repeat(2, 1fr); }
-      nav ul { display: none; }
       .hero h1 { font-size: 34px; }
     }
     @media (max-width: 540px) {
-      .feature-strip, .cards-4 { grid-template-columns: 1fr; }
+      .feature-strip, .cards-4, .bridge-sensors { grid-template-columns: 1fr; }
       .price-item { flex-direction: column; align-items: flex-start; }
       .price-item-right { width: 100%; justify-content: space-between; }
     }
@@ -879,7 +971,7 @@
 </head>
 <body>
 
-  <!-- Header dengan Menu Kalender Pengasinan di Sebelah Daftar Harga & Beli -->
+  <!-- Header dengan Menu Kalender Pengasinan & Live Sensor Monitoring -->
   <header>
     <div class="nav-container">
       <a href="#" class="logo">
@@ -892,6 +984,11 @@
           <li><a href="#olahan">Olahan &amp; Resep</a></li>
           <li><a href="#pembelian">Daftar Harga &amp; Beli</a></li>
           <li><a href="#kalender-pengasinan" class="nav-cal-pill">📅 Kalender Pengasinan</a></li>
+          <li>
+            <a href="https://agmilaoca-pixel.github.io/monitoring-telur/" target="_blank" rel="noopener noreferrer" class="nav-live-pill">
+              <span class="live-dot"></span> Live Sensor Monitoring 3D
+            </a>
+          </li>
         </ul>
       </nav>
       <a href="#pembelian" class="btn-cart-nav">
@@ -1185,13 +1282,13 @@
     </div>
   </section>
 
-  <!-- Kalender Pencatat Pengasinan Pedagang Telur Asin -->
+  <!-- Kalender Pencatat Pengasinan + Panel Akses Live Sensor Monitoring -->
   <section class="calendar-section" id="kalender-pengasinan">
     <div class="section-header-center">
-      <div class="section-kicker">Buku Catatan Digital Pedagang Telur Asin</div>
-      <h2>Kalender Jadwal Pengasinan &amp; Panen (Angkat Telur)</h2>
+      <div class="section-kicker">Buku Catatan Digital &amp; Integrasi Sensor IoT</div>
+      <h2>Kalender Jadwal Pengasinan &amp; Live Sensor Monitoring</h2>
       <p style="color:var(--text-muted); font-size:14.5px;">
-        Catat tanggal, bulan, dan tahun mulai merendam telur beserta durasi harinya—kalender otomatis menandai tanggal panen angkat telur asin.
+        Catat tanggal mulai perendaman dan jadwal angkat telur asin panen, sekaligus pantau langsung kondisi wadah pengasinan secara <em>real-time</em> di Digital Twin 3D.
       </p>
     </div>
 
@@ -1239,34 +1336,64 @@
         <div class="batch-history-list" id="batchHistoryList"></div>
       </div>
 
-      <!-- Tampilan Kalender Bulanan & Tahunan -->
-      <div class="cal-card">
-        <div class="cal-nav-header">
-          <button class="cal-nav-btn" onclick="changeCalMonth(-1)" title="Bulan Sebelumnya">◀</button>
-          <div class="cal-month-label" id="calMonthYearLabel">November 2026</div>
-          <button class="cal-nav-btn" onclick="changeCalMonth(1)" title="Bulan Berikutnya">▶</button>
+      <!-- Kolom Kanan: Kalender Bulanan + Kotak Akses Live Sensor Monitoring 3D -->
+      <div>
+        <div class="cal-card">
+          <div class="cal-nav-header">
+            <button class="cal-nav-btn" onclick="changeCalMonth(-1)" title="Bulan Sebelumnya">◀</button>
+            <div class="cal-month-label" id="calMonthYearLabel">November 2026</div>
+            <button class="cal-nav-btn" onclick="changeCalMonth(1)" title="Bulan Berikutnya">▶</button>
+          </div>
+
+          <div class="cal-weekdays">
+            <div>Min</div>
+            <div>Sen</div>
+            <div>Sel</div>
+            <div>Rab</div>
+            <div>Kam</div>
+            <div>Jum</div>
+            <div>Sab</div>
+          </div>
+          <div class="cal-days-grid" id="calDaysGrid"></div>
+
+          <div class="cal-legend">
+            <div class="legend-item">
+              <span class="legend-swatch" style="background:#dbeafe; border:1px solid #3b82f6;"></span>
+              <span>Mulai Pengasinan (Rendam)</span>
+            </div>
+            <div class="legend-item">
+              <span class="legend-swatch" style="background:#dcfce7; border:1px solid #16a34a;"></span>
+              <span>Jadwal Angkat Telur Asin (Panen)</span>
+            </div>
+          </div>
         </div>
 
-        <div class="cal-weekdays">
-          <div>Min</div>
-          <div>Sen</div>
-          <div>Sel</div>
-          <div>Rab</div>
-          <div>Kam</div>
-          <div>Jum</div>
-          <div>Sab</div>
-        </div>
-        <div class="cal-days-grid" id="calDaysGrid"></div>
-
-        <div class="cal-legend">
-          <div class="legend-item">
-            <span class="legend-swatch" style="background:#dbeafe; border:1px solid #3b82f6;"></span>
-            <span>Mulai Pengasinan (Rendam)</span>
+        <!-- Kotak Arahan Langsung ke Live Sensor Monitoring 3D -->
+        <div class="live-sensor-bridge">
+          <div class="bridge-top">
+            <strong style="font-size:15px; color:#ffffff;">📡 Digital Twin: Wadah Pengasinan Telur</strong>
+            <span class="bridge-badge"><span class="live-dot"></span> LIVE SYNC 3D</span>
           </div>
-          <div class="legend-item">
-            <span class="legend-swatch" style="background:#dcfce7; border:1px solid #16a34a;"></span>
-            <span>Jadwal Angkat Telur Asin (Panen)</span>
+          <p style="font-size:12.5px; color:#cbd5e1;">
+            Pantau visualisasi 3D wadah perendaman beserta pembacaan sensor IoT (Slave 1 &amp; Slave 2) secara langsung:
+          </p>
+          <div class="bridge-sensors">
+            <div class="sensor-mini-box">
+              <span>TDS GARAM</span>
+              <strong>Probe Larutan</strong>
+            </div>
+            <div class="sensor-mini-box">
+              <span>SUHU LARUTAN</span>
+              <strong>DS18B20 (°C)</strong>
+            </div>
+            <div class="sensor-mini-box">
+              <span>SUHU RUANG</span>
+              <strong>DHT22 &amp; RH</strong>
+            </div>
           </div>
+          <a href="https://agmilaoca-pixel.github.io/monitoring-telur/" target="_blank" rel="noopener noreferrer" class="btn-open-3d">
+            🚀 Buka Live Sensor Monitoring 3D →
+          </a>
         </div>
       </div>
     </div>
@@ -1288,7 +1415,7 @@
   </div>
 
   <footer>
-    BlueDuck SmartCuring — Peternakan Bebek &amp; Telur Bebek Biru Pilihan
+    BlueDuck SmartCuring — Peternakan Bebek, Kalender Pengasinan &amp; Live Sensor Monitoring
   </footer>
 
   <script>
