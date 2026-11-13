@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>BlueDuck SmartCuring — Telur Bebek Biru Segar &amp; Olahan</title>
+  <title>BlueDuck SmartCuring — Telur Bebek Biru Segar &amp; Kalender Pengasinan</title>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     :root {
@@ -46,6 +46,7 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
+      gap: 16px;
     }
     .logo {
       display: flex;
@@ -55,6 +56,7 @@
       font-size: 18px;
       color: var(--green-dark);
       text-decoration: none;
+      flex-shrink: 0;
     }
     .logo-badge {
       width: 34px;
@@ -71,7 +73,8 @@
     nav ul {
       display: flex;
       list-style: none;
-      gap: 28px;
+      gap: 22px;
+      align-items: center;
     }
     nav a {
       text-decoration: none;
@@ -79,8 +82,20 @@
       font-weight: 600;
       font-size: 14px;
       transition: color 0.2s;
+      white-space: nowrap;
     }
     nav a:hover { color: var(--green-mid); }
+    .nav-cal-pill {
+      background: #e0f2fe;
+      color: #0369a1 !important;
+      padding: 6px 12px;
+      border-radius: 999px;
+      font-weight: 700 !important;
+      border: 1px solid #bae6fd;
+    }
+    .nav-cal-pill:hover {
+      background: #bae6fd;
+    }
 
     .btn-cart-nav {
       background: var(--green-dark);
@@ -95,6 +110,7 @@
       gap: 8px;
       transition: transform 0.2s, background 0.2s;
       box-shadow: 0 4px 14px rgba(27, 67, 50, 0.25);
+      flex-shrink: 0;
     }
     .btn-cart-nav:hover {
       background: var(--green-mid);
@@ -430,7 +446,7 @@
       background: var(--green-dark);
       color: var(--white);
       padding: 64px 24px;
-      margin-bottom: 60px;
+      margin-bottom: 64px;
     }
     .shop-container {
       max-width: 1180px;
@@ -584,15 +600,16 @@
       color: var(--green-dark);
       margin-bottom: 5px;
     }
-    .form-group input, .form-group textarea {
+    .form-group input, .form-group textarea, .form-group select {
       width: 100%;
       padding: 9px 12px;
       border-radius: 8px;
       border: 1.5px solid rgba(27, 67, 50, 0.2);
       font-family: inherit;
       font-size: 13.5px;
+      background: var(--white);
     }
-    .form-group input:focus, .form-group textarea:focus {
+    .form-group input:focus, .form-group textarea:focus, .form-group select:focus {
       outline: none;
       border-color: var(--green-dark);
     }
@@ -627,6 +644,169 @@
       background: #15803d;
       transform: translateY(-2px);
     }
+
+    /* Kalender Pencatat Pengasinan Pedagang */
+    .calendar-section {
+      max-width: 1180px;
+      margin: 0 auto 75px;
+      padding: 0 24px;
+    }
+    .cal-layout {
+      display: grid;
+      grid-template-columns: 0.95fr 1.05fr;
+      gap: 28px;
+      align-items: start;
+    }
+    .cal-card {
+      background: var(--white);
+      border-radius: 22px;
+      padding: 26px;
+      border: 1px solid rgba(27, 67, 50, 0.12);
+      box-shadow: 0 12px 30px rgba(27, 67, 50, 0.07);
+    }
+    .cal-card h3 {
+      font-size: 21px;
+      color: var(--green-dark);
+      margin-bottom: 6px;
+    }
+    .cal-nav-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--bg-cream);
+      padding: 10px 14px;
+      border-radius: 12px;
+      margin-bottom: 16px;
+      border: 1px solid rgba(27, 67, 50, 0.12);
+    }
+    .cal-nav-btn {
+      background: var(--green-dark);
+      color: var(--white);
+      border: none;
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    .cal-nav-btn:hover { background: var(--green-mid); }
+    .cal-month-label {
+      font-weight: 800;
+      font-size: 16px;
+      color: var(--green-dark);
+    }
+    .cal-weekdays, .cal-days-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 6px;
+      text-align: center;
+    }
+    .cal-weekdays div {
+      font-size: 12px;
+      font-weight: 800;
+      color: var(--text-muted);
+      padding-bottom: 6px;
+    }
+    .cal-day {
+      aspect-ratio: 1 / 1;
+      border-radius: 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 700;
+      background: var(--bg-cream);
+      color: var(--text-dark);
+      position: relative;
+      border: 1px solid transparent;
+    }
+    .cal-day.empty {
+      background: transparent;
+    }
+    .cal-day.start-cure {
+      background: #dbeafe;
+      color: #1e40af;
+      border-color: #3b82f6;
+    }
+    .cal-day.harvest-cure {
+      background: #dcfce7;
+      color: #166534;
+      border-color: #16a34a;
+    }
+    .cal-day.both-cure {
+      background: linear-gradient(135deg, #dbeafe 50%, #dcfce7 50%);
+      color: #1b4332;
+      border-color: #0284c7;
+    }
+    .cal-dot-row {
+      display: flex;
+      gap: 3px;
+      margin-top: 2px;
+    }
+    .dot-start { width: 6px; height: 6px; border-radius: 50%; background: #2563eb; }
+    .dot-harvest { width: 6px; height: 6px; border-radius: 50%; background: #16a34a; }
+
+    .cal-legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin-top: 16px;
+      padding-top: 14px;
+      border-top: 1px solid var(--bg-sand);
+      font-size: 12.5px;
+      font-weight: 600;
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .legend-swatch {
+      width: 14px;
+      height: 14px;
+      border-radius: 4px;
+    }
+
+    .batch-history-list {
+      margin-top: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      max-height: 290px;
+      overflow-y: auto;
+    }
+    .batch-record {
+      background: var(--bg-cream);
+      border-left: 4px solid var(--green-dark);
+      padding: 12px 14px;
+      border-radius: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+    }
+    .batch-record h4 {
+      font-size: 14px;
+      color: var(--green-dark);
+      font-weight: 800;
+    }
+    .batch-record p {
+      font-size: 12.5px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+    .btn-del-batch {
+      background: #fee2e2;
+      color: #b91c1c;
+      border: none;
+      padding: 6px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .btn-del-batch:hover { background: #fecaca; }
 
     /* Modal Resep */
     .modal-overlay {
@@ -704,8 +884,8 @@
       color: var(--text-muted);
     }
 
-    @media (max-width: 900px) {
-      .hero, .about-section, .shop-grid { grid-template-columns: 1fr; }
+    @media (max-width: 960px) {
+      .hero, .about-section, .shop-grid, .cal-layout { grid-template-columns: 1fr; }
       .feature-strip, .cards-4 { grid-template-columns: repeat(2, 1fr); }
       nav ul { display: none; }
       .hero h1 { font-size: 34px; }
@@ -719,7 +899,7 @@
 </head>
 <body>
 
-  <!-- Header -->
+  <!-- Header dengan Menu Kalender Pengasinan di Sebelah Daftar Harga & Beli -->
   <header>
     <div class="nav-container">
       <a href="#" class="logo">
@@ -731,6 +911,7 @@
           <li><a href="#keunggulan">Telur Bebek Biru</a></li>
           <li><a href="#olahan">Olahan &amp; Resep</a></li>
           <li><a href="#pembelian">Daftar Harga &amp; Beli</a></li>
+          <li><a href="#kalender-pengasinan" class="nav-cal-pill">📅 Kalender Pengasinan</a></li>
         </ul>
       </nav>
       <a href="#pembelian" class="btn-cart-nav">
@@ -749,7 +930,7 @@
       </p>
       <div class="hero-actions">
         <a href="#pembelian" class="btn-primary">🛒 Pesan Telur Bebek Sekarang →</a>
-        <a href="#olahan" class="btn-secondary">Lihat Resep Olahan</a>
+        <a href="#kalender-pengasinan" class="btn-secondary">📅 Catat Jadwal Pengasinan</a>
       </div>
     </div>
 
@@ -775,7 +956,6 @@
             </radialGradient>
           </defs>
 
-          <!-- Latar Langit & Padang Rumput -->
           <rect width="600" height="460" fill="url(#skyGrad)"/>
           <circle cx="500" cy="80" r="42" fill="#fde047" opacity="0.7"/>
           <path d="M0 320 Q150 285 300 315 T600 305 L600 460 L0 460 Z" fill="#86efac"/>
@@ -786,7 +966,7 @@
           <ellipse cx="305" cy="358" rx="170" ry="44" fill="#f59e0b"/>
           <ellipse cx="305" cy="354" rx="152" ry="36" fill="#fcd34d"/>
 
-          <!-- Bebek 1 (Kiri - Cokelat Keemasan) -->
+          <!-- Bebek 1 -->
           <g transform="translate(120, 145)">
             <ellipse cx="78" cy="142" rx="68" ry="44" fill="#92400e"/>
             <ellipse cx="72" cy="144" rx="52" ry="30" fill="#b45309"/>
@@ -797,7 +977,7 @@
             <circle cx="142" cy="30" r="1.2" fill="#ffffff"/>
           </g>
 
-          <!-- Bebek 2 (Kanan - Abu-abu Kebiruan) -->
+          <!-- Bebek 2 -->
           <g transform="translate(320, 135)">
             <ellipse cx="95" cy="150" rx="72" ry="46" fill="#475569"/>
             <ellipse cx="102" cy="152" rx="54" ry="32" fill="#64748b"/>
@@ -808,7 +988,7 @@
             <circle cx="31" cy="32" r="2" fill="#0f172a"/>
           </g>
 
-          <!-- Kumpulan Telur Bebek Biru di Sarang -->
+          <!-- Telur Bebek Biru -->
           <ellipse cx="255" cy="345" rx="28" ry="36" transform="rotate(-14 255 345)" fill="url(#blueEgg1)" stroke="#bfdbfe" stroke-width="2"/>
           <ellipse cx="305" cy="342" rx="30" ry="38" fill="url(#blueEgg2)" stroke="#bae6fd" stroke-width="2"/>
           <ellipse cx="355" cy="346" rx="28" ry="36" transform="rotate(14 355 346)" fill="url(#blueEgg1)" stroke="#bfdbfe" stroke-width="2"/>
@@ -1103,6 +1283,93 @@
     </div>
   </section>
 
+  <!-- Kalender Pencatat Pengasinan Pedagang Telur Asin -->
+  <section class="calendar-section" id="kalender-pengasinan">
+    <div class="section-header-center">
+      <div class="section-kicker">Buku Catatan Digital Pedagang Telur Asin</div>
+      <h2>Kalender Jadwal Pengasinan &amp; Panen (Angkat Telur)</h2>
+      <p style="color:var(--text-muted); font-size:14.5px;">
+        Catat tanggal, bulan, dan tahun mulai merendam telur beserta durasi harinya—kalender otomatis menandai tanggal panen angkat telur asin.
+      </p>
+    </div>
+
+    <div class="cal-layout">
+      <!-- Form Input Batch Pengasinan + Daftar Riwayat -->
+      <div class="cal-card">
+        <h3>📝 Tambah Catatan Pengasinan</h3>
+        <p style="font-size:13px; color:var(--text-muted); margin-bottom:14px;">
+          Isi detail batch rendaman baru untuk menandai tanggal mulai dan tanggal angkat panen di kalender.
+        </p>
+
+        <div class="form-group">
+          <label for="batchName">Nama Batch / Wadah *</label>
+          <input type="text" id="batchName" placeholder="Contoh: Batch #1 - Wadah Biru (100 Butir)">
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+          <div class="form-group">
+            <label for="batchStartDate">Tanggal Mulai Pengasinan *</label>
+            <input type="date" id="batchStartDate">
+          </div>
+          <div class="form-group">
+            <label for="batchDuration">Lama Perendaman *</label>
+            <select id="batchDuration">
+              <option value="7" selected>7 Hari (Standar Presisi)</option>
+              <option value="10">10 Hari (Asin Mantap)</option>
+              <option value="12">12 Hari (Asin Masir Pekat)</option>
+              <option value="14">14 Hari (Tahan Lama)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="batchQty">Jumlah Telur (Butir)</label>
+          <input type="number" id="batchQty" placeholder="Contoh: 120" min="1">
+        </div>
+
+        <button class="btn-primary" style="width:100%; justify-content:center; margin-top:16px;" onclick="addBatchRecord()">
+          + Simpan Jadwal ke Kalender
+        </button>
+
+        <h4 style="font-size:15px; color:var(--green-dark); margin-top:24px; font-weight:800;">
+          📋 Riwayat &amp; Jadwal Panen Tercatat
+        </h4>
+        <div class="batch-history-list" id="batchHistoryList"></div>
+      </div>
+
+      <!-- Tampilan Kalender Bulanan & Tahunan -->
+      <div class="cal-card">
+        <div class="cal-nav-header">
+          <button class="cal-nav-btn" onclick="changeCalMonth(-1)" title="Bulan Sebelumnya">◀</button>
+          <div class="cal-month-label" id="calMonthYearLabel">November 2026</div>
+          <button class="cal-nav-btn" onclick="changeCalMonth(1)" title="Bulan Berikutnya">▶</button>
+        </div>
+
+        <div class="cal-weekdays">
+          <div>Min</div>
+          <div>Sen</div>
+          <div>Sel</div>
+          <div>Rab</div>
+          <div>Kam</div>
+          <div>Jum</div>
+          <div>Sab</div>
+        </div>
+        <div class="cal-days-grid" id="calDaysGrid"></div>
+
+        <div class="cal-legend">
+          <div class="legend-item">
+            <span class="legend-swatch" style="background:#dbeafe; border:1px solid #3b82f6;"></span>
+            <span>Mulai Pengasinan (Rendam)</span>
+          </div>
+          <div class="legend-item">
+            <span class="legend-swatch" style="background:#dcfce7; border:1px solid #16a34a;"></span>
+            <span>Jadwal Angkat Telur Asin (Panen)</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- Pop-Up Resep Masak -->
   <div class="modal-overlay" id="recipeModal">
     <div class="modal-box">
@@ -1174,6 +1441,156 @@
       window.open(waUrl, '_blank');
     }
 
+    // --- LOGIKA KALENDER PENCATAT PENGASINAN PEDAGANG ---
+    const monthNames = [
+      "Januari", "Februari", "Maret", "April", "Mei", "Juni",
+      "Juli", "Agustus", "September", "Oktober", "November", "Desember"
+    ];
+
+    let viewDate = new Date();
+    let batches = JSON.parse(localStorage.getItem('blueduck_batches_v1')) || [
+      {
+        id: 1,
+        name: "Batch #1 - Telur Bebek Biru Grade A",
+        startDate: "2026-11-06",
+        duration: 7,
+        harvestDate: "2026-11-13",
+        qty: 100
+      }
+    ];
+
+    function formatDateIndo(isoStr) {
+      const [y, m, d] = isoStr.split('-');
+      return `${parseInt(d, 10)} ${monthNames[parseInt(m, 10) - 1]} ${y}`;
+    }
+
+    function addDaysISO(isoStr, days) {
+      const [y, m, d] = isoStr.split('-').map(Number);
+      const dt = new Date(y, m - 1, d);
+      dt.setDate(dt.getDate() + Number(days));
+      const yy = dt.getFullYear();
+      const mm = String(dt.getMonth() + 1).padStart(2, '0');
+      const dd = String(dt.getDate()).padStart(2, '0');
+      return `${yy}-${mm}-${dd}`;
+    }
+
+    function saveBatches() {
+      localStorage.setItem('blueduck_batches_v1', JSON.stringify(batches));
+      renderBatchList();
+      renderCalendar();
+    }
+
+    function addBatchRecord() {
+      const name = document.getElementById('batchName').value.trim();
+      const startDate = document.getElementById('batchStartDate').value;
+      const duration = parseInt(document.getElementById('batchDuration').value, 10);
+      const qty = document.getElementById('batchQty').value.trim();
+
+      if (!name || !startDate) {
+        alert("Mohon isi Nama Batch dan Tanggal Mulai Pengasinan.");
+        return;
+      }
+
+      const harvestDate = addDaysISO(startDate, duration);
+      batches.unshift({
+        id: Date.now(),
+        name,
+        startDate,
+        duration,
+        harvestDate,
+        qty: qty ? Number(qty) : 0
+      });
+
+      const [y, m] = startDate.split('-').map(Number);
+      viewDate = new Date(y, m - 1, 1);
+
+      document.getElementById('batchName').value = "";
+      document.getElementById('batchQty').value = "";
+      saveBatches();
+    }
+
+    function deleteBatchRecord(id) {
+      batches = batches.filter(b => b.id !== id);
+      saveBatches();
+    }
+
+    function changeCalMonth(delta) {
+      viewDate.setMonth(viewDate.getMonth() + delta);
+      renderCalendar();
+    }
+
+    function renderBatchList() {
+      const container = document.getElementById('batchHistoryList');
+      if (batches.length === 0) {
+        container.innerHTML = `<p style="font-size:13px; color:var(--text-muted);">Belum ada jadwal pengasinan dicatat.</p>`;
+        return;
+      }
+
+      container.innerHTML = batches.map(b => `
+        <div class="batch-record">
+          <div>
+            <h4>${b.name} ${b.qty > 0 ? `(${b.qty} butir)` : ''}</h4>
+            <p>🔵 Mulai Rendam: <strong>${formatDateIndo(b.startDate)}</strong> (${b.duration} hari)</p>
+            <p>🟢 Angkat / Panen: <strong>${formatDateIndo(b.harvestDate)}</strong></p>
+          </div>
+          <button class="btn-del-batch" onclick="deleteBatchRecord(${b.id})">Hapus</button>
+        </div>
+      `).join('');
+    }
+
+    function renderCalendar() {
+      const year = viewDate.getFullYear();
+      const month = viewDate.getMonth();
+      document.getElementById('calMonthYearLabel').innerText = `${monthNames[month]} ${year}`;
+
+      const firstDay = new Date(year, month, 1).getDay();
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+      const grid = document.getElementById('calDaysGrid');
+      grid.innerHTML = "";
+
+      for (let i = 0; i < firstDay; i++) {
+        const emptyCell = document.createElement('div');
+        emptyCell.className = 'cal-day empty';
+        grid.appendChild(emptyCell);
+      }
+
+      for (let day = 1; day <= daysInMonth; day++) {
+        const iso = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        const isStart = batches.some(b => b.startDate === iso);
+        const isHarvest = batches.some(b => b.harvestDate === iso);
+
+        const cell = document.createElement('div');
+        cell.className = 'cal-day';
+        if (isStart && isHarvest) {
+          cell.classList.add('both-cure');
+          cell.title = "Mulai Pengasinan & Jadwal Angkat Panen";
+        } else if (isStart) {
+          cell.classList.add('start-cure');
+          cell.title = "Mulai Pengasinan";
+        } else if (isHarvest) {
+          cell.classList.add('harvest-cure');
+          cell.title = "Jadwal Angkat Telur Asin (Panen)";
+        }
+
+        let dots = "";
+        if (isStart || isHarvest) {
+          dots = `<div class="cal-dot-row">
+            ${isStart ? '<span class="dot-start"></span>' : ''}
+            ${isHarvest ? '<span class="dot-harvest"></span>' : ''}
+          </div>`;
+        }
+
+        cell.innerHTML = `<span>${day}</span>${dots}`;
+        grid.appendChild(cell);
+      }
+    }
+
+    // Set default tanggal input hari ini
+    document.getElementById('batchStartDate').valueAsDate = new Date();
+    renderBatchList();
+    renderCalendar();
+
+    // --- DATA POP-UP RESEP ---
     const recipes = {
       botokan: {
         title: "Botokan Telur Asin Tradisional",
