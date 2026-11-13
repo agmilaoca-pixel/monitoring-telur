@@ -202,18 +202,19 @@
       background: var(--bg-sand);
     }
 
-    /* Visual Hero Illustration Card */
+    /* Foto Asli Hero */
     .hero-visual { position: relative; }
     .hero-img-card {
       border-radius: 24px;
       overflow: hidden;
       box-shadow: 0 24px 48px rgba(27, 67, 50, 0.16);
       border: 6px solid var(--white);
-      background: linear-gradient(180deg, #dcfce7 0%, #fef9c3 60%, #fde68a 100%);
+      background: #e5e7eb;
     }
-    .hero-img-card svg {
+    .hero-img-card img {
       width: 100%;
       height: 410px;
+      object-fit: cover;
       display: block;
     }
     .floating-egg-badge {
@@ -274,7 +275,7 @@
     .strip-item h4 { font-size: 14px; color: var(--green-dark); font-weight: 800; }
     .strip-item p { font-size: 12px; color: var(--text-muted); }
 
-    /* About Section */
+    /* About Section dengan Foto Asli */
     .about-section {
       max-width: 1180px;
       margin: 0 auto 70px;
@@ -284,31 +285,21 @@
       gap: 48px;
       align-items: center;
     }
-    .about-cards-visual {
+    .about-grid-imgs {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 18px;
+      gap: 16px;
     }
-    .visual-box {
-      background: var(--white);
-      border-radius: 20px;
-      padding: 24px 18px;
-      text-align: center;
-      border: 2px solid rgba(27, 67, 50, 0.08);
-      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.06);
+    .about-grid-imgs img {
+      width: 100%;
+      height: 240px;
+      object-fit: cover;
+      border-radius: 18px;
+      border: 4px solid var(--white);
+      box-shadow: 0 10px 24px rgba(0,0,0,0.08);
+      background: #e5e7eb;
     }
-    .visual-box:first-child { margin-top: 24px; }
-    .visual-box h4 {
-      font-size: 15px;
-      color: var(--green-dark);
-      margin-top: 12px;
-      font-weight: 800;
-    }
-    .visual-box p {
-      font-size: 12.5px;
-      color: var(--text-muted);
-      margin-top: 4px;
-    }
+    .about-grid-imgs img:first-child { margin-top: 24px; }
     .section-kicker {
       color: var(--green-mid);
       font-weight: 800;
@@ -355,7 +346,7 @@
       flex-shrink: 0;
     }
 
-    /* Olahan Kuliner Section */
+    /* Olahan Kuliner Section dengan Foto Asli Makanan */
     .recipes-section {
       max-width: 1180px;
       margin: 0 auto 75px;
@@ -387,24 +378,13 @@
       transition: transform 0.3s ease;
     }
     .recipe-card:hover { transform: translateY(-5px); }
-    .recipe-banner {
-      height: 150px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      font-weight: 800;
-      font-size: 12px;
-      letter-spacing: 0.5px;
-      text-transform: uppercase;
+    .recipe-card img {
+      width: 100%;
+      height: 175px;
+      object-fit: cover;
+      display: block;
+      background: #e5e7eb;
     }
-    .recipe-banner .emoji-big { font-size: 52px; line-height: 1; }
-    .banner-botokan { background: linear-gradient(135deg, #dcfce7, #bbf7d0); color: #166534; }
-    .banner-udang { background: linear-gradient(135deg, #ffedd5, #fed7aa); color: #9a3412; }
-    .banner-nasgor { background: linear-gradient(135deg, #fef9c3, #fef08a); color: #854d0e; }
-    .banner-pasta { background: linear-gradient(135deg, #fce7f3, #fbcfe8); color: #9d174d; }
-
     .recipe-body {
       padding: 18px;
       flex: 1;
@@ -920,7 +900,7 @@
     </div>
   </header>
 
-  <!-- Hero Section -->
+  <!-- Hero Section dengan Foto Asli Bebek Peternakan -->
   <section class="hero">
     <div>
       <div class="hero-tag">🦆 Peternakan Bebek &amp; Telur Asin Pilihan</div>
@@ -936,65 +916,7 @@
 
     <div class="hero-visual">
       <div class="hero-img-card">
-        <!-- Ilustrasi Bebek & Telur Bebek Biru Permanen (Selalu Muncul 100%) -->
-        <svg viewBox="0 0 600 460" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Bebek Peternakan dan Telur Bebek Biru">
-          <defs>
-            <linearGradient id="skyGrad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stop-color="#e0f2fe"/>
-              <stop offset="55%" stop-color="#dcfce7"/>
-              <stop offset="100%" stop-color="#fef3c7"/>
-            </linearGradient>
-            <radialGradient id="blueEgg1" cx="35%" cy="30%" r="65%">
-              <stop offset="0%" stop-color="#f0f9ff"/>
-              <stop offset="55%" stop-color="#93c5fd"/>
-              <stop offset="100%" stop-color="#3b82f6"/>
-            </radialGradient>
-            <radialGradient id="blueEgg2" cx="35%" cy="30%" r="65%">
-              <stop offset="0%" stop-color="#ecfeff"/>
-              <stop offset="55%" stop-color="#7dd3fc"/>
-              <stop offset="100%" stop-color="#0284c7"/>
-            </radialGradient>
-          </defs>
-
-          <rect width="600" height="460" fill="url(#skyGrad)"/>
-          <circle cx="500" cy="80" r="42" fill="#fde047" opacity="0.7"/>
-          <path d="M0 320 Q150 285 300 315 T600 305 L600 460 L0 460 Z" fill="#86efac"/>
-          <path d="M0 355 Q180 330 360 360 T600 350 L600 460 L0 460 Z" fill="#4ade80"/>
-
-          <!-- Sarang Jerami -->
-          <ellipse cx="305" cy="365" rx="185" ry="52" fill="#d97706"/>
-          <ellipse cx="305" cy="358" rx="170" ry="44" fill="#f59e0b"/>
-          <ellipse cx="305" cy="354" rx="152" ry="36" fill="#fcd34d"/>
-
-          <!-- Bebek 1 -->
-          <g transform="translate(120, 145)">
-            <ellipse cx="78" cy="142" rx="68" ry="44" fill="#92400e"/>
-            <ellipse cx="72" cy="144" rx="52" ry="30" fill="#b45309"/>
-            <path d="M120 120 Q138 75 128 45 Q122 30 135 30 Q148 30 144 50 Q140 85 135 125 Z" fill="#78350f"/>
-            <circle cx="135" cy="35" r="22" fill="#78350f"/>
-            <path d="M153 33 L184 39 Q186 44 180 46 L152 44 Z" fill="#f59e0b"/>
-            <circle cx="141" cy="31" r="3.5" fill="#111827"/>
-            <circle cx="142" cy="30" r="1.2" fill="#ffffff"/>
-          </g>
-
-          <!-- Bebek 2 -->
-          <g transform="translate(320, 135)">
-            <ellipse cx="95" cy="150" rx="72" ry="46" fill="#475569"/>
-            <ellipse cx="102" cy="152" rx="54" ry="32" fill="#64748b"/>
-            <path d="M52 128 Q35 80 45 48 Q50 32 37 32 Q24 32 28 52 Q32 88 38 132 Z" fill="#334155"/>
-            <circle cx="38" cy="36" r="23" fill="#1e293b"/>
-            <path d="M19 34 L-12 40 Q-14 45 -8 47 L20 45 Z" fill="#eab308"/>
-            <circle cx="32" cy="32" r="3.5" fill="#ffffff"/>
-            <circle cx="31" cy="32" r="2" fill="#0f172a"/>
-          </g>
-
-          <!-- Telur Bebek Biru -->
-          <ellipse cx="255" cy="345" rx="28" ry="36" transform="rotate(-14 255 345)" fill="url(#blueEgg1)" stroke="#bfdbfe" stroke-width="2"/>
-          <ellipse cx="305" cy="342" rx="30" ry="38" fill="url(#blueEgg2)" stroke="#bae6fd" stroke-width="2"/>
-          <ellipse cx="355" cy="346" rx="28" ry="36" transform="rotate(14 355 346)" fill="url(#blueEgg1)" stroke="#bfdbfe" stroke-width="2"/>
-          <ellipse cx="282" cy="364" rx="27" ry="34" transform="rotate(-6 282 364)" fill="url(#blueEgg2)" stroke="#e0f2fe" stroke-width="2"/>
-          <ellipse cx="332" cy="364" rx="27" ry="34" transform="rotate(8 332 364)" fill="url(#blueEgg1)" stroke="#e0f2fe" stroke-width="2"/>
-        </svg>
+        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/a1/Mallard2.jpg/960px-Mallard2.jpg" alt="Bebek Peternakan Alami">
       </div>
 
       <div class="floating-egg-badge">
@@ -1041,19 +963,11 @@
     </div>
   </div>
 
-  <!-- About Telur Bebek Biru -->
+  <!-- About Telur Bebek Biru dengan Foto Asli Telur Biru & Telur Asin -->
   <section class="about-section" id="keunggulan">
-    <div class="about-cards-visual">
-      <div class="visual-box">
-        <div style="font-size:58px;">🥚</div>
-        <h4>Pigmen Biliverdin Alami</h4>
-        <p>Cangkang biru tebal menjaga kesegaran dan membuat penyerapan garam lebih merata.</p>
-      </div>
-      <div class="visual-box">
-        <div style="font-size:58px;">🍳</div>
-        <h4>Kuning Telur Masir</h4>
-        <p>Berwarna jingga pekat, berminyak alami, dan gurih tanpa bau amis berlebih.</p>
-      </div>
+    <div class="about-grid-imgs">
+      <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/8/86/Blue_eggs.jpg/640px-Blue_eggs.jpg" alt="Telur Bebek Cangkang Biru Alami">
+      <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/4/4b/Salted_duck_egg_cut_in_half.jpg/640px-Salted_duck_egg_cut_in_half.jpg" alt="Belahan Telur Asin Kuning Masir">
     </div>
 
     <div class="about-text">
@@ -1071,7 +985,7 @@
     </div>
   </section>
 
-  <!-- Olahan Kuliner & Resep -->
+  <!-- Olahan Kuliner & Resep dengan Foto Asli Makanan -->
   <section class="recipes-section" id="olahan">
     <div class="section-header-center">
       <div class="section-kicker">Sajian Nikmat Tradisional &amp; Modern</div>
@@ -1081,10 +995,7 @@
 
     <div class="cards-4">
       <div class="recipe-card">
-        <div class="recipe-banner banner-botokan">
-          <span class="emoji-big">🍃</span>
-          <span>Kukus Tradisional</span>
-        </div>
+        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/6/63/Botok_telur_asin.JPG/640px-Botok_telur_asin.JPG" alt="Botokan Telur Asin">
         <div class="recipe-body">
           <div>
             <h3>Botokan Telur Asin</h3>
@@ -1095,10 +1006,7 @@
       </div>
 
       <div class="recipe-card">
-        <div class="recipe-banner banner-udang">
-          <span class="emoji-big">🍤</span>
-          <span>Saus Creamy Gurih</span>
-        </div>
+        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/7/7c/Salted_egg_prawns.jpg/640px-Salted_egg_prawns.jpg" alt="Udang Saus Telur Asin">
         <div class="recipe-body">
           <div>
             <h3>Udang Saus Telur Asin</h3>
@@ -1109,10 +1017,7 @@
       </div>
 
       <div class="recipe-card">
-        <div class="recipe-banner banner-nasgor">
-          <span class="emoji-big">🍛</span>
-          <span>Menu Favorit Keluarga</span>
-        </div>
+        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/3e/Nasi_goreng_indonesia.jpg/640px-Nasi_goreng_indonesia.jpg" alt="Nasi Goreng Telur Asin">
         <div class="recipe-body">
           <div>
             <h3>Nasi Goreng Telur Asin</h3>
@@ -1123,10 +1028,7 @@
       </div>
 
       <div class="recipe-card">
-        <div class="recipe-banner banner-pasta">
-          <span class="emoji-big">🍝</span>
-          <span>Kreasi Fusion Modern</span>
-        </div>
+        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/33/Spaghetti_alla_Carbonara_%28cropped%29.jpg/640px-Spaghetti_alla_Carbonara_%28cropped%29.jpg" alt="Pasta Saus Telur Asin">
         <div class="recipe-body">
           <div>
             <h3>Pasta Saus Telur Asin</h3>
@@ -1585,7 +1487,6 @@
       }
     }
 
-    // Set default tanggal input hari ini
     document.getElementById('batchStartDate').valueAsDate = new Date();
     renderBatchList();
     renderCalendar();
