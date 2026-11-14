@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BlueDuck 3D Live Sensor — Wadah Pengasinan Telur Biru</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <style>
+    :root {
+      --bg-main: #f0f7ff;
+      --bg-card: rgba(255, 255, 255, 0.92);
+      --blue-primary: #0284c7;
+      --blue-dark: #0f172a;
+      --blue-accent: #38bdf8;
+      --blue-border: #bae6fd;
+      --text-main: #0f172a;
+      --text-sub: #475569;
+      --green-ok: #16a34a;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background: radial-gradient(circle at 50% 35%, #ffffff 0%, #e0f2fe 55%, #bae6fd 100%);
+      color: var(--text-main);
+      overflow: hidden;
+      height: 100vh;
+      width: 100vw;
+    }
+
+    #canvas3d {
+      position: fixed;
+      inset: 0;
+      z-index: 1;
+    }
+
+    /* Top Header Bar */
+    .top-bar {
+      position: fixed;
+      top: 16px;
+      left: 20px;
+      right: 20px;
+      z-index: 10;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      pointer-events: none;
+    }
+    .brand-box, .top-actions {
+      pointer-events: auto;
+      background: var(--bg-card);
+      backdrop-filter: blur(12px);
+      border: 1.5px solid var(--blue-border);
+      box-shadow: 0 10px 25px rgba(2, 132, 199, 0.12);
+      border-radius: 16px;
+      padding: 12px 18px;
+    }
+    .brand-box h1 {
+      font-size: 15px;
+      font-weight: 800;
+      color: var(--blue-primary);
+      letter-spacing: 0.4px;
+    }
+    .brand-box p {
+      font-size: 11.5px;
+      font-weight: 700;
+      color: var(--text-sub);
+      margin-top: 2px;
+    }
+    .top-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .btn-back-store {
+      text-decoration: none;
+      background: var(--blue-primary);
+      color: #fff;
+      font-size: 12.5px;
+      font-weight: 800;
+      padding: 8px 14px;
+      border-radius: 10px;
+      transition: background 0.2s;
+    }
+    .btn-back-store:hover { background: #0369a1; }
+    .btn-lamp {
+      background: #e0f2fe;
+      color: var(--blue-primary);
+      border: 1px solid var(--blue-border);
+      padding: 8px 12px;
+      border-radius: 10px;
+      font-size: 12px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    .sync-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #dcfce7;
+      color: #15803d;
+      border: 1px solid #86efac;
+      padding: 6px 12px;
+      border-radius: 999px;
+      font-size: 11.5px;
+      font-weight: 800;
+    }
+    .dot-pulse {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #16a34a;
+      box-shadow: 0 0 8px #16a34a;
+    }
+
+    /* Left Panel Cards */
+    .left-panel {
+      position: fixed;
+      top: 92px;
+      left: 20px;
+      bottom: 20px;
+      width: 300px;
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+    .sensor-card {
+      background: var(--bg-card);
+      backdrop-filter: blur(12px);
+      border: 1.5px solid var(--blue-border);
+      border-radius: 16px;
+      padding: 13px 16px;
+      box-shadow: 0 8px 20px rgba(2, 132, 199, 0.08);
+    }
+    .card-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+    .card-title {
+      font-size: 11px;
+      font-weight: 800;
+      color: var(--text-sub);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .badge-slave {
+      background: #e0f2fe;
+      color: var(--blue-primary);
+      border: 1px solid #7dd3fc;
+      font-size: 10px;
+      font-weight: 800;
+      padding: 2px 8px;
+      border-radius: 999px;
+    }
+    .timer-value {
+      font-size: 17px;
+      font-weight: 800;
+      color: var(--blue-dark);
+      margin: 4px 0;
+    }
+    .batch-sub {
+      font-size: 11.5px;
+      color: var(--blue-primary);
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .btn-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    .btn-act {
+      border: none;
+      padding: 7px 10px;
+      border-radius: 8px;
+      font-weight: 800;
+      font-size: 11.5px;
+      cursor: pointer;
+    }
+    .btn-start { background: var(--blue-primary); color: white; }
+    .btn-reset { background: #fee2e2; color: #b91c1c; }
+
+    .metric-val {
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--blue-primary);
+    }
+    .metric-status {
+      font-size: 11px;
+      color: var(--text-sub);
+      margin-top: 2px;
+      font-weight: 600;
+    }
+
+    /* Right Panel Charts */
+    .right-panel {
+      position: fixed;
+      top: 92px;
+      right: 20px;
+      bottom: 20px;
+      width: 320px;
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .day-tabs {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 5px;
+      background: var(--bg-card);
+      padding: 6px;
+      border-radius: 12px;
+      border: 1.5px solid var(--blue-border);
+    }
+    .day-tab {
+      border: none;
+      background: transparent;
+      padding: 6px 0;
+      border-radius: 8px;
+      font-size: 11px;
+      font-weight: 800;
+      color: var(--text-sub);
+      cursor: pointer;
+    }
+    .day-tab.active {
+      background: var(--blue-primary);
+      color: #fff;
+    }
+    .chart-card {
+      background: var(--bg-card);
+      border: 1.5px solid var(--blue-border);
+      border-radius: 16px;
+      padding: 12px 14px;
+      box-shadow: 0 8px 20px rgba(2, 132, 199, 0.08);
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .chart-svg {
+      width: 100%;
+      height: 70px;
+      overflow: visible;
+    }
+    .chart-axis {
+      display: flex;
+      justify-content: space-between;
+      font-size: 10px;
+      color: var(--text-sub);
+      font-weight: 700;
+    }
+
+    /* Camera Bottom View Buttons */
+    .cam-controls {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 10;
+      display: flex;
+      gap: 8px;
+      background: var(--bg-card);
+      padding: 6px 10px;
+      border-radius: 12px;
+      border: 1.5px solid var(--blue-border);
+      box-shadow: 0 8px 20px rgba(2, 132, 199, 0.12);
+    }
+    .cam-btn {
+      background: #e0f2fe;
+      color: var(--blue-primary);
+      border: none;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    .cam-btn:hover { background: #bae6fd; }
+
+    @media (max-width: 900px) {
+      .left-panel, .right-panel { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <div id="canvas3d"></div>
+
+  <!-- Top Bar -->
+  <div class="top-bar">
+    <div class="brand-box">
+      <h1>BLUEDUCK SMARTCURING: WADAH PENGASINAN 3D</h1>
+      <p id="topBatchBanner">● SENSOR DHT22, DS18B20 &amp; PROBE TDS — TEMA BIRU PUTIH</p>
+    </div>
+    <div class="top-actions">
+      <a href="toko-v1.html#kalender-pengasinan" class="btn-back-store">← Kembali ke Toko &amp; Kalender</a>
+      <button class="btn-lamp" onclick="toggleLamp()">💡 Lampu Wadah</button>
+      <div class="sync-pill"><span class="dot-pulse"></span> LIVE SYNC</div>
+    </div>
+  </div>
+
+  <!-- Left Sensor Cards -->
+  <div class="left-panel">
+    <div class="sensor-card">
+      <div class="card-head">
+        <span class="card-title">WAKTU PENGASINAN</span>
+        <span class="badge-slave" id="dayBadge">HARI 1 / 7</span>
+      </div>
+      <div class="timer-value" id="timerDisplay">0 Hari 00 Jam 00 Menit 00 Detik</div>
+      <div class="batch-sub" id="batchMetaText">Batch: Standar 7 Hari Perendaman</div>
+      <div class="btn-row">
+        <button class="btn-act btn-start" onclick="resetTimerNow()">▶ Mulai Baru</button>
+        <button class="btn-act btn-reset" onclick="finishBatch()">✓ Selesai</button>
+      </div>
+    </div>
+
+    <div class="sensor-card">
+      <div class="card-head">
+        <span class="card-title">KEPEKATAN GARAM (TDS)</span>
+        <span class="badge-slave">SLAVE 1</span>
+      </div>
+      <div class="metric-val" id="tdsValue">15.2 %</div>
+      <div class="metric-status">STATUS: Probe TDS Masuk ke Larutan Biru</div>
+    </div>
+
+    <div class="sensor-card">
+      <div class="card-head">
+        <span class="card-title">SUHU LARUTAN (DS18B20)</span>
+        <span class="badge-slave">SLAVE 1</span>
+      </div>
+      <div class="metric-val" id="waterTempValue">27.8 °C</div>
+      <div class="metric-status">STATUS: Probe Waterproof Tercelup Air Garam</div>
+    </div>
+
+    <div class="sensor-card">
+      <div class="card-head">
+        <span class="card-title">KETINGGIAN AIR LARUTAN</span>
+        <span class="badge-slave">SLAVE 1</span>
+      </div>
+      <div class="metric-val" id="levelValue">88 %</div>
+      <div class="metric-status">VOLUME: Seluruh Telur Bebek Biru Terendam</div>
+    </div>
+
+    <div class="sensor-card">
+      <div class="card-head">
+        <span class="card-title">SUHU RUANG (DHT22 ATAS TUTUP)</span>
+        <span class="badge-slave">SLAVE 2</span>
+      </div>
+      <div class="metric-val" id="roomTempValue">29.1 °C</div>
+      <div class="metric-status" id="roomHumValue">KELEMBABAN: 68.0 %</div>
+    </div>
+  </div>
+
+  <!-- Right Trend Charts -->
+  <div class="right-panel">
+    <div class="day-tabs" id="dayTabsContainer">
+      <button class="day-tab active" onclick="selectDayTab(1)">H1</button>
+      <button class="day-tab" onclick="selectDayTab(2)">H2</button>
+      <button class="day-tab" onclick="selectDayTab(3)">H3</button>
+      <button class="day-tab" onclick="selectDayTab(4)">H4</button>
+      <button class="day-tab" onclick="selectDayTab(5)">H5</button>
+      <button class="day-tab" onclick="selectDayTab(6)">H6</button>
+      <button class="day-tab" onclick="selectDayTab(7)">H7</button>
+    </div>
+
+    <div class="chart-card">
+      <div class="card-head">
+        <span class="card-title">GRAFIK TDS GARAM (SLAVE 1)</span>
+        <span class="badge-slave" id="chartDayLabel1">HARI 1 (%)</span>
+      </div>
+      <svg class="chart-svg" viewBox="0 0 260 60">
+        <polyline fill="none" stroke="#0284c7" stroke-width="3" points="10,45 65,38 125,25 185,18 250,22" />
+      </svg>
+      <div class="chart-axis"><span>00:00</span><span>06:00</span><span>12:00</span><span>18:00</span><span>21:00</span></div>
+    </div>
+
+    <div class="chart-card">
+      <div class="card-head">
+        <span class="card-title">GRAFIK SUHU LARUTAN DS18B20</span>
+        <span class="badge-slave" id="chartDayLabel2">HARI 1 (°C)</span>
+      </div>
+      <svg class="chart-svg" viewBox="0 0 260 60">
+        <polyline fill="none" stroke="#0d9488" stroke-width="3" points="10,42 65,40 125,16 185,20 250,24" />
+      </svg>
+      <div class="chart-axis"><span>00:00</span><span>06:00</span><span>12:00</span><span>18:00</span><span>21:00</span></div>
+    </div>
+
+    <div class="chart-card">
+      <div class="card-head">
+        <span class="card-title">GRAFIK SUHU RUANG DHT22</span>
+        <span class="badge-slave" id="chartDayLabel3">HARI 1 (°C)</span>
+      </div>
+      <svg class="chart-svg" viewBox="0 0 260 60">
+        <polyline fill="none" stroke="#2563eb" stroke-width="3" points="10,44 65,42 125,15 185,22 250,30" />
+      </svg>
+      <div class="chart-axis"><span>00:00</span><span>06:00</span><span>12:00</span><span>18:00</span><span>21:00</span></div>
+    </div>
+  </div>
+
+  <!-- Bottom Camera Controls -->
+  <div class="cam-controls">
+    <button class="cam-btn" onclick="setCamView('top')">Top</button>
+    <button class="cam-btn" onclick="setCamView('front')">Front</button>
+    <button class="cam-btn" onclick="setCamView('iso')">Iso</button>
+  </div>
+
+  <script>
+    // --- 1. SINKRONISASI DATA BATCH DARI KALENDER TOKO-V1.HTML ---
+    const params = new URLSearchParams(window.location.search);
+    const savedBatch = JSON.parse(localStorage.getItem('active_monitoring_batch') || 'null');
+
+    let batchName = params.get('batch') || (savedBatch && savedBatch.name) || 'PENGASINAN 1';
+    let startDate = params.get('start') || (savedBatch && savedBatch.startDate) || '2026-11-13';
+    let harvestDate = params.get('harvest') || (savedBatch && savedBatch.harvestDate) || '2026-11-20';
+    let durationDays = Number(params.get('duration') || (savedBatch && savedBatch.duration) || 7);
+    let eggQty = Number(params.get('qty') || (savedBatch && savedBatch.qty) || 25);
+
+    const [sy, sm, sd] = startDate.split('-').map(Number);
+    let startTimestamp = new Date(sy, sm - 1, sd, 8, 0, 0).getTime();
+
+    document.getElementById('topBatchBanner').innerText =
+      `● BATCH AKTIF: ${batchName} (${eggQty} BUTIR) | MULAI: ${startDate} → PANEN: ${harvestDate}`;
+    document.getElementById('batchMetaText').innerText =
+      `${batchName} (${eggQty} Butir) • Target Panen: ${harvestDate}`;
+
+    function selectDayTab(dayNum) {
+      document.querySelectorAll('.day-tab').forEach((btn, idx) => {
+        btn.classList.toggle('active', idx + 1 === dayNum);
+      });
+      document.getElementById('chartDayLabel1').innerText = `HARI ${dayNum} (%)`;
+      document.getElementById('chartDayLabel2').innerText = `HARI ${dayNum} (°C)`;
+      document.getElementById('chartDayLabel3').innerText = `HARI ${dayNum} (°C)`;
+    }
+
+    function updateTimer() {
+      const diffSec = Math.max(0, Math.floor((Date.now() - startTimestamp) / 1000));
+      const days = Math.floor(diffSec / 86400);
+      const hours = Math.floor((diffSec % 86400) / 3600);
+      const mins = Math.floor((diffSec % 3600) / 60);
+      const secs = diffSec % 60;
+      const currentDay = Math.min(durationDays, days + 1);
+
+      document.getElementById('timerDisplay').innerText =
+        `${days} Hari ${hours} Jam ${mins} Menit ${secs} Detik`;
+      document.getElementById('dayBadge').innerText = `HARI ${currentDay} / ${durationDays}`;
+    }
+    setInterval(updateTimer, 1000);
+    updateTimer();
+
+    function resetTimerNow() {
+      startTimestamp = Date.now();
+      updateTimer();
+    }
+
+    function finishBatch() {
+      alert(`Pengasinan ${batchName} (${eggQty} butir) selesai! Silakan kembali ke halaman Kalender Toko.`);
+    }
+
+    // --- 2. VISUALISASI 3D THREE.JS TEMA BIRU PUTIH ---
+    const container = document.getElementById('canvas3d');
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(42, window.innerWidth / window.innerHeight, 0.1, 1000);
+    camera.position.set(5.5, 4.8, 6.2);
+    camera.lookAt(0, 0.2, 0);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(window.devicePixelRatio);
+    container.appendChild(renderer.domElement);
+
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.95);
+    scene.add(ambientLight);
+
+    const dirLight = new THREE.DirectionalLight(0x38bdf8, 0.9);
+    dirLight.position.set(5, 10, 7);
+    scene.add(dirLight);
+
+    const tankLight = new THREE.PointLight(0x0284c7, 1.4, 8);
+    tankLight.position.set(0, 1.5, 0);
+    scene.add(tankLight);
+
+    // Grid Lantai Biru Muda
+    const gridHelper = new THREE.GridHelper(14, 18, 0x38bdf8, 0xbae6fd);
+    gridHelper.position.y = -1.55;
+    scene.add(gridHelper);
+
+    const tankGroup = new THREE.Group();
+    scene.add(tankGroup);
+
+    // Dinding Kaca Wadah
+    const boxGeo = new THREE.BoxGeometry(3.2, 3.0, 3.2);
+    const glassMat = new THREE.MeshPhysicalMaterial({
+      color: 0xe0f2fe,
+      transparent: true,
+      opacity: 0.28,
+      roughness: 0.1,
+      transmission: 0.6
+    });
+    const glassBox = new THREE.Mesh(boxGeo, glassMat);
+    tankGroup.add(glassBox);
+
+    // Garis Tepi Wadah Biru Cerah
+    const edges = new THREE.EdgesGeometry(boxGeo);
+    const lineMat = new THREE.LineBasicMaterial({ color: 0x0284c7 });
+    const wireframe = new THREE.LineSegments(edges, lineMat);
+    tankGroup.add(wireframe);
+
+    // Air Larutan Garam Biru Jernih
+    const waterGeo = new THREE.BoxGeometry(3.08, 2.1, 3.08);
+    const waterMat = new THREE.MeshStandardMaterial({
+      color: 0x7dd3fc,
+      transparent: true,
+      opacity: 0.62,
+      roughness: 0.2
+    });
+    const waterMesh = new THREE.Mesh(waterGeo, waterMat);
+    waterMesh.position.y = -0.4;
+    tankGroup.add(waterMesh);
+
+    // Tutup Atas Biru Tua Elegan
+    const lidGeo = new THREE.BoxGeometry(3.32, 0.18, 3.32);
+    const lidMat = new THREE.MeshStandardMaterial({ color: 0x0369a1, roughness: 0.3 });
+    const lidMesh = new THREE.Mesh(lidGeo, lidMat);
+    lidMesh.position.y = 1.55;
+    tankGroup.add(lidMesh);
+
+    // Modul Sensor DHT22 Putih-Biru di Atas Tutup
+    const dhtGeo = new THREE.BoxGeometry(0.55, 0.75, 0.35);
+    const dhtMat = new THREE.MeshStandardMaterial({ color: 0xffffff });
+    const dhtMesh = new THREE.Mesh(dhtGeo, dhtMat);
+    dhtMesh.position.set(0.2, 2.0, 0.2);
+    tankGroup.add(dhtMesh);
+
+    // Probe TDS & DS18B20 Masuk ke Larutan
+    const probeGeo = new THREE.CylinderGeometry(0.08, 0.08, 1.9, 16);
+    const probeMat = new THREE.MeshStandardMaterial({ color: 0x0284c7 });
+    const probe1 = new THREE.Mesh(probeGeo, probeMat);
+    probe1.position.set(-0.6, 0.65, 0.5);
+    tankGroup.add(probe1);
+
+    const probe2 = new THREE.Mesh(probeGeo, new THREE.MeshStandardMaterial({ color: 0x0d9488 }));
+    probe2.position.set(0.65, 0.65, -0.4);
+    tankGroup.add(probe2);
+
+    // Telur Bebek Biru di Dalam Wadah
+    const eggGeo = new THREE.SphereGeometry(0.38, 24, 24);
+    eggGeo.scale(1, 1.22, 1);
+    const eggMat = new THREE.MeshStandardMaterial({
+      color: 0xdbeafe,
+      roughness: 0.25,
+      metalness: 0.05
+    });
+
+    const eggPositions = [
+      [-0.75, -0.95, -0.7], [0.0, -0.95, -0.7], [0.75, -0.95, -0.7],
+      [-0.75, -0.95,  0.1], [0.0, -0.95,  0.1], [0.75, -0.95,  0.1],
+      [-0.4,  -0.95,  0.8], [0.45, -0.95, 0.8],
+      [-0.4,  -0.30, -0.2], [0.4,  -0.30, -0.2], [0.0, -0.30, 0.45]
+    ];
+    eggPositions.forEach(([x, y, z]) => {
+      const egg = new THREE.Mesh(eggGeo, eggMat);
+      egg.position.set(x, y, z);
+      tankGroup.add(egg);
+    });
+
+    let lampOn = true;
+    function toggleLamp() {
+      lampOn = !lampOn;
+      tankLight.intensity = lampOn ? 1.4 : 0.1;
+    }
+
+    function setCamView(mode) {
+      if (mode === 'top') camera.position.set(0, 8.5, 0.01);
+      else if (mode === 'front') camera.position.set(0, 0.8, 7.8);
+      else camera.position.set(5.5, 4.8, 6.2);
+      camera.lookAt(0, 0.2, 0);
+    }
+
+    function animate() {
+      requestAnimationFrame(animate);
+      tankGroup.rotation.y += 0.0025;
+      renderer.render(scene, camera);
+    }
+    animate();
+
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+  </script>
+</body>
+</html>
