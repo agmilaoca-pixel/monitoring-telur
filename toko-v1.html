@@ -96,27 +96,26 @@
     .nav-cal-pill:hover { background: #bae6fd; }
 
     .nav-live-pill {
-      background: #18181b;
-      color: #f472b6 !important;
+      background: #0284c7;
+      color: #ffffff !important;
       padding: 6px 12px;
       border-radius: 999px;
       font-weight: 700 !important;
-      border: 1px solid rgba(244, 114, 182, 0.45);
+      border: 1px solid #38bdf8;
       display: inline-flex;
       align-items: center;
       gap: 6px;
       cursor: pointer;
     }
     .nav-live-pill:hover {
-      background: #27272a;
-      color: #ffffff !important;
+      background: #0369a1;
     }
     .live-dot {
       width: 7px;
       height: 7px;
       border-radius: 50%;
-      background: #ec4899;
-      box-shadow: 0 0 8px #ec4899;
+      background: #bae6fd;
+      box-shadow: 0 0 8px #ffffff;
     }
 
     .btn-cart-nav {
@@ -647,7 +646,7 @@
       transform: translateY(-2px);
     }
 
-    /* Kalender Pencatat Pengasinan + Panel Live Sensor Monitoring */
+    /* Kalender Pencatat Pengasinan + Panel Live Sensor Monitoring Biru Putih */
     .calendar-section {
       max-width: 1180px;
       margin: 0 auto 75px;
@@ -768,15 +767,15 @@
       border-radius: 4px;
     }
 
-    /* Kotak Akses Langsung ke Live Sensor Monitoring 3D */
+    /* Kotak Akses Langsung ke Live Sensor Monitoring 3D Tema Biru Putih */
     .live-sensor-bridge {
       margin-top: 22px;
-      background: linear-gradient(135deg, #0f0a1e 0%, #1e1338 100%);
-      color: #f8fafc;
+      background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+      color: #0f172a;
       border-radius: 18px;
       padding: 20px 22px;
-      border: 1px solid rgba(236, 72, 153, 0.45);
-      box-shadow: 0 14px 30px rgba(15, 10, 30, 0.25);
+      border: 1.5px solid #7dd3fc;
+      box-shadow: 0 14px 30px rgba(2, 132, 199, 0.12);
     }
     .bridge-top {
       display: flex;
@@ -788,9 +787,8 @@
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      background: rgba(236, 72, 153, 0.16);
-      color: #f472b6;
-      border: 1px solid rgba(236, 72, 153, 0.4);
+      background: #0284c7;
+      color: #ffffff;
       padding: 4px 10px;
       border-radius: 999px;
       font-size: 11px;
@@ -804,20 +802,20 @@
       margin: 14px 0 16px;
     }
     .sensor-mini-box {
-      background: rgba(255, 255, 255, 0.06);
-      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: #ffffff;
+      border: 1px solid #bae6fd;
       border-radius: 10px;
       padding: 10px;
     }
     .sensor-mini-box span {
       display: block;
       font-size: 10.5px;
-      color: #94a3b8;
+      color: #475569;
       font-weight: 700;
     }
     .sensor-mini-box strong {
       font-size: 14px;
-      color: #38bdf8;
+      color: #0284c7;
     }
     .btn-open-3d {
       display: flex;
@@ -825,7 +823,7 @@
       justify-content: center;
       gap: 8px;
       width: 100%;
-      background: linear-gradient(90deg, #ec4899, #8b5cf6);
+      background: linear-gradient(90deg, #0284c7, #2563eb);
       color: #ffffff;
       text-decoration: none;
       padding: 12px 16px;
@@ -861,8 +859,8 @@
       transition: all 0.2s;
     }
     .batch-record.active-sync {
-      border-left: 4px solid #ec4899;
-      background: #fdf2f8;
+      border-left: 4px solid #0284c7;
+      background: #f0f9ff;
     }
     .batch-record h4 {
       font-size: 14px;
@@ -874,8 +872,8 @@
       flex-wrap: wrap;
     }
     .sync-tag {
-      background: #18181b;
-      color: #f472b6;
+      background: #0284c7;
+      color: #ffffff;
       font-size: 10px;
       padding: 2px 7px;
       border-radius: 999px;
@@ -893,7 +891,7 @@
       flex-shrink: 0;
     }
     .btn-sync-3d {
-      background: linear-gradient(90deg, #ec4899, #8b5cf6);
+      background: linear-gradient(90deg, #0284c7, #2563eb);
       color: #ffffff;
       border: none;
       padding: 7px 11px;
@@ -902,7 +900,7 @@
       font-weight: 800;
       cursor: pointer;
       white-space: nowrap;
-      box-shadow: 0 4px 10px rgba(236, 72, 153, 0.25);
+      box-shadow: 0 4px 10px rgba(2, 132, 199, 0.25);
     }
     .btn-sync-3d:hover { opacity: 0.9; }
     .btn-del-batch {
@@ -1325,7 +1323,7 @@
       <div class="section-kicker">Buku Catatan Digital &amp; Integrasi Sensor IoT</div>
       <h2>Kalender Jadwal Pengasinan &amp; Live Sensor Monitoring</h2>
       <p style="color:var(--text-muted); font-size:14.5px;">
-        Klik tombol <strong>📡 Pantau 3D</strong> pada daftar riwayat di bawah untuk menyambungkan jadwal batch langsung ke waktu perendaman di Digital Twin 3D.
+        Klik tombol <strong>📡 Pantau 3D</strong> pada daftar riwayat di bawah untuk menyambungkan jadwal batch langsung ke halaman 3D Tema Biru–Putih (<code>monitoring-biru.html</code>).
       </p>
     </div>
 
@@ -1334,7 +1332,7 @@
       <div class="cal-card">
         <h3>📝 Tambah Catatan Pengasinan</h3>
         <p style="font-size:13px; color:var(--text-muted); margin-bottom:14px;">
-          Batch baru yang disimpan akan otomatis tersinkronisasi dengan penghitung hari di Live Sensor Monitoring 3D.
+          Batch baru yang disimpan akan otomatis tersinkronisasi dengan penghitung hari di Live Sensor Monitoring 3D Biru–Putih.
         </p>
 
         <div class="form-group">
@@ -1405,14 +1403,14 @@
           </div>
         </div>
 
-        <!-- Kotak Arahan Langsung ke Live Sensor Monitoring 3D -->
+        <!-- Kotak Arahan Langsung ke Live Sensor Monitoring 3D Biru Putih -->
         <div class="live-sensor-bridge">
           <div class="bridge-top">
-            <strong style="font-size:15px; color:#ffffff;">📡 Digital Twin: Wadah Pengasinan Telur</strong>
-            <span class="bridge-badge"><span class="live-dot"></span> LIVE SYNC 3D</span>
+            <strong style="font-size:15px; color:#0369a1;">📡 BlueDuck 3D: Wadah Pengasinan Telur Biru</strong>
+            <span class="bridge-badge">● LIVE SYNC 3D</span>
           </div>
-          <p style="font-size:12.5px; color:#cbd5e1;" id="bridgeActiveBatchInfo">
-            Memantau batch aktif di wadah 3D beserta sensor IoT (Slave 1 &amp; Slave 2):
+          <p style="font-size:12.5px; color:#334155;" id="bridgeActiveBatchInfo">
+            Memantau batch aktif di wadah 3D Biru–Putih beserta sensor IoT (Slave 1 &amp; Slave 2):
           </p>
           <div class="bridge-sensors">
             <div class="sensor-mini-box">
@@ -1429,7 +1427,7 @@
             </div>
           </div>
           <button onclick="openLatestBatchIn3D()" class="btn-open-3d">
-            🚀 Buka Live Sensor Monitoring 3D (Batch Aktif) →
+            🚀 Buka Live Sensor Monitoring 3D (Biru–Putih) →
           </button>
         </div>
       </div>
@@ -1507,7 +1505,7 @@
       window.open(waUrl, '_blank');
     }
 
-    // --- LOGIKA KALENDER & SINKRONISASI LIVE SENSOR MONITORING 3D ---
+    // --- LOGIKA KALENDER & SINKRONISASI KE MONITORING-BIRU.HTML ---
     const monthNames = [
       "Januari", "Februari", "Maret", "April", "Mei", "Juni",
       "Juli", "Agustus", "September", "Oktober", "November", "Desember"
@@ -1557,7 +1555,7 @@
         infoEl.innerHTML = `Belum ada batch aktif yang dipilih. Tambahkan jadwal pengasinan untuk disinkronkan ke 3D.`;
         return;
       }
-      infoEl.innerHTML = `Tersambung ke: <strong style="color:#f472b6;">${batchObj.name} (${batchObj.qty || 0} butir)</strong> — Mulai Rendam: <strong>${formatDateIndo(batchObj.startDate)}</strong> • Panen: <strong>${formatDateIndo(batchObj.harvestDate)}</strong>`;
+      infoEl.innerHTML = `Tersambung ke: <strong style="color:#0284c7;">${batchObj.name} (${batchObj.qty || 0} butir)</strong> — Mulai Rendam: <strong>${formatDateIndo(batchObj.startDate)}</strong> • Panen: <strong>${formatDateIndo(batchObj.harvestDate)}</strong>`;
     }
 
     function saveBatches() {
@@ -1622,7 +1620,7 @@
         qty: found.qty || 0,
         ts: found.createdAtTimestamp || new Date(found.startDate + "T08:00:00").getTime()
       });
-      window.open(`index.html?${params.toString()}`, '_blank');
+      window.open(`monitoring-biru.html?${params.toString()}`, '_blank');
     }
 
     function openLatestBatchIn3D() {
@@ -1630,7 +1628,7 @@
         const target = batches.find(b => b.id === activeBatchId) || batches[0];
         openBatchIn3D(target.id);
       } else {
-        window.open('index.html', '_blank');
+        window.open('monitoring-biru.html', '_blank');
       }
     }
 
@@ -1658,7 +1656,7 @@
           <div>
             <h4>
               ${b.name} ${b.qty > 0 ? `(${b.qty} butir)` : ''}
-              ${isActive ? `<span class="sync-tag">● AKTIF DI 3D</span>` : ''}
+              ${isActive ? `<span class="sync-tag">● AKTIF DI 3D BIRU</span>` : ''}
             </h4>
             <p>🔵 Mulai Rendam: <strong>${formatDateIndo(b.startDate)}</strong> (${b.duration} hari)</p>
             <p>🟢 Angkat / Panen: <strong>${formatDateIndo(b.harvestDate)}</strong></p>
