@@ -2,13 +2,15 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>BlueDuck 3D Live Sensor — Wadah Pengasinan Telur Biru</title>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <!-- Library MQTT untuk Sinkronisasi Real-Time HP <-> Laptop -->
+  <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
   <style>
     :root {
-      --bg-card: rgba(255, 255, 255, 0.94);
+      --bg-card: rgba(255, 255, 255, 0.95);
       --blue-primary: #0284c7;
       --blue-dark: #0f172a;
       --blue-border: #7dd3fc;
@@ -35,10 +37,10 @@
     /* Top Header Bar */
     .top-bar {
       position: fixed;
-      top: 14px;
+      top: 12px;
       left: 16px;
       right: 16px;
-      z-index: 20;
+      z-index: 30;
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -85,19 +87,20 @@
     .btn-lamp {
       background: #fef08a;
       color: #854d0e;
-      border: 1.5px solid #facc15;
+      border: 2px solid #eab308;
       padding: 8px 12px;
       border-radius: 9px;
       font-size: 12px;
       font-weight: 800;
       cursor: pointer;
-      box-shadow: 0 0 14px rgba(250, 204, 21, 0.65);
+      box-shadow: 0 0 14px rgba(250, 204, 21, 0.75);
       white-space: nowrap;
+      transition: all 0.2s;
     }
     .btn-lamp.off {
       background: #e2e8f0;
-      color: #64748b;
-      border-color: #cbd5e1;
+      color: #475569;
+      border-color: #94a3b8;
       box-shadow: none;
     }
     .sync-pill {
@@ -121,14 +124,19 @@
       box-shadow: 0 0 8px #16a34a;
     }
 
+    /* Bar Pilihan Menu Khusus HP (Dipasang di Atas Supaya Pasti Terlihat) */
+    .mobile-top-switcher {
+      display: none;
+    }
+
     /* Left Panel Cards */
     .left-panel {
       position: fixed;
-      top: 88px;
+      top: 86px;
       left: 16px;
       bottom: 20px;
       width: 300px;
-      z-index: 15;
+      z-index: 20;
       display: flex;
       flex-direction: column;
       gap: 10px;
@@ -208,11 +216,11 @@
     /* Right Panel Charts */
     .right-panel {
       position: fixed;
-      top: 88px;
+      top: 86px;
       right: 16px;
       bottom: 20px;
       width: 325px;
-      z-index: 15;
+      z-index: 20;
       display: flex;
       flex-direction: column;
       gap: 10px;
@@ -278,7 +286,7 @@
       bottom: 20px;
       left: 50%;
       transform: translateX(-50%);
-      z-index: 15;
+      z-index: 20;
       display: flex;
       gap: 8px;
       background: var(--bg-card);
@@ -298,16 +306,12 @@
       cursor: pointer;
     }
 
-    /* Navigasi Tab Bawah Khusus HP */
-    .mobile-bottom-nav {
-      display: none;
-    }
-
-    @media (max-width: 900px) {
+    /* TAMPILAN KHUSUS HP & TABLET */
+    @media (max-width: 960px) {
       .top-bar {
         flex-direction: column;
         align-items: stretch;
-        top: 10px;
+        top: 8px;
         left: 10px;
         right: 10px;
         gap: 6px;
@@ -315,69 +319,67 @@
       .brand-box {
         padding: 8px 12px;
       }
-      .brand-box h1 { font-size: 12.5px; }
+      .brand-box h1 { font-size: 12px; }
       .brand-box p { font-size: 10px; }
       .top-actions {
         justify-content: space-between;
-        padding: 7px 10px;
+        padding: 6px 10px;
       }
       .btn-back-store, .btn-lamp {
         font-size: 11px;
         padding: 6px 10px;
       }
 
-      /* Panel Sensor & Grafik di HP bisa dibuka lewat Tab Bawah */
-      .left-panel, .right-panel {
-        top: 118px;
+      /* Menu Tab 3D / Sensor / Grafik tepat di bawah Header HP */
+      .mobile-top-switcher {
+        position: fixed;
+        top: 112px;
         left: 10px;
         right: 10px;
-        bottom: 74px;
-        width: auto;
-        display: none;
-        padding-bottom: 10px;
-      }
-      .left-panel.mobile-show, .right-panel.mobile-show {
-        display: flex;
-      }
-      .chart-card {
-        min-height: 135px;
-      }
-
-      .cam-controls {
-        bottom: 76px;
-      }
-      .cam-controls.mobile-hide {
-        display: none;
-      }
-
-      .mobile-bottom-nav {
-        position: fixed;
-        bottom: 12px;
-        left: 12px;
-        right: 12px;
-        z-index: 30;
+        z-index: 35;
         display: grid;
         grid-template-columns: repeat(3, 1fr);
         gap: 6px;
         background: rgba(255, 255, 255, 0.96);
-        padding: 6px;
-        border-radius: 14px;
+        padding: 5px;
+        border-radius: 12px;
         border: 1.5px solid var(--blue-border);
-        box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
       }
       .mob-tab-btn {
         border: none;
         background: #f1f5f9;
         color: var(--text-sub);
-        padding: 9px 6px;
-        border-radius: 10px;
-        font-size: 12px;
+        padding: 8px 4px;
+        border-radius: 8px;
+        font-size: 11.5px;
         font-weight: 800;
         cursor: pointer;
       }
       .mob-tab-btn.active {
         background: var(--blue-primary);
         color: #ffffff;
+      }
+
+      .left-panel, .right-panel {
+        top: 162px;
+        left: 10px;
+        right: 10px;
+        bottom: 16px;
+        width: auto;
+        display: none;
+        overflow-y: auto;
+        padding-bottom: 20px;
+      }
+      .left-panel.mobile-show, .right-panel.mobile-show {
+        display: flex;
+      }
+      .chart-card {
+        min-height: 130px;
+        flex: none;
+      }
+      .cam-controls.mobile-hide {
+        display: none;
       }
     }
   </style>
@@ -394,9 +396,16 @@
     </div>
     <div class="top-actions">
       <a href="toko-v1.html#kalender-pengasinan" class="btn-back-store">← Toko &amp; Kalender</a>
-      <button class="btn-lamp" id="lampBtn" onclick="toggleLamp()">💡 Lampu Kuning: ON</button>
-      <div class="sync-pill"><span class="dot-pulse"></span> LIVE</div>
+      <button class="btn-lamp" id="lampBtn" onclick="toggleLamp(true)">💡 Lampu Kuning: ON</button>
+      <div class="sync-pill"><span class="dot-pulse" id="mqttDot"></span> <span id="mqttText">SYNC ON</span></div>
     </div>
+  </div>
+
+  <!-- Bar Tombol Pindah Menu Khusus HP (Di Atas Layar) -->
+  <div class="mobile-top-switcher">
+    <button class="mob-tab-btn active" id="mobBtn3d" onclick="switchMobileView('3d')">🧊 Wadah 3D</button>
+    <button class="mob-tab-btn" id="mobBtnSensor" onclick="switchMobileView('sensor')">📟 Data Sensor</button>
+    <button class="mob-tab-btn" id="mobBtnGrafik" onclick="switchMobileView('grafik')">📈 Grafik H1–H7</button>
   </div>
 
   <!-- Left Sensor Cards -->
@@ -496,14 +505,14 @@
     <button class="cam-btn" onclick="setCamView('iso')">Iso</button>
   </div>
 
-  <!-- Tombol Navigasi Bawah Khusus HP -->
-  <div class="mobile-bottom-nav">
-    <button class="mob-tab-btn active" id="mobBtn3d" onclick="switchMobileView('3d')">🧊 Wadah 3D</button>
-    <button class="mob-tab-btn" id="mobBtnSensor" onclick="switchMobileView('sensor')">📟 Data Sensor</button>
-    <button class="mob-tab-btn" id="mobBtnGrafik" onclick="switchMobileView('grafik')">📈 Grafik H1–H7</button>
-  </div>
-
   <script>
+    // Matikan Service Worker cache lama agar HP selalu menampilkan versi terbaru
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then(regs => {
+        regs.forEach(r => r.unregister());
+      });
+    }
+
     function switchMobileView(mode) {
       const pSensor = document.getElementById('panelSensor');
       const pGrafik = document.getElementById('panelGrafik');
@@ -648,7 +657,7 @@
     dirLight.position.set(5, 10, 7);
     scene.add(dirLight);
 
-    const warmLampLight = new THREE.PointLight(0xffcc00, 3.0, 10);
+    const warmLampLight = new THREE.PointLight(0xffcc00, 3.2, 10);
     warmLampLight.position.set(0, 1.25, 0);
     scene.add(warmLampLight);
 
@@ -678,7 +687,7 @@
     const waterMat = new THREE.MeshStandardMaterial({
       color: 0xbae6fd,
       emissive: 0xfacc15,
-      emissiveIntensity: 0.15,
+      emissiveIntensity: 0.18,
       transparent: true,
       opacity: 0.52,
       roughness: 0.25
@@ -698,7 +707,7 @@
     lidMesh.position.y = 1.55;
     tankGroup.add(lidMesh);
 
-    const bulbGeo = new THREE.SphereGeometry(0.26, 24, 24);
+    const bulbGeo = new THREE.SphereGeometry(0.28, 24, 24);
     const bulbMat = new THREE.MeshStandardMaterial({
       color: 0xfef08a,
       emissive: 0xffb703,
@@ -708,11 +717,11 @@
     bulbMesh.position.set(0, 1.30, 0);
     tankGroup.add(bulbMesh);
 
-    const glowGeo = new THREE.SphereGeometry(0.48, 24, 24);
+    const glowGeo = new THREE.SphereGeometry(0.52, 24, 24);
     const glowMat = new THREE.MeshBasicMaterial({
       color: 0xfacc15,
       transparent: true,
-      opacity: 0.38
+      opacity: 0.42
     });
     const glowMesh = new THREE.Mesh(glowGeo, glowMat);
     glowMesh.position.set(0, 1.30, 0);
@@ -738,7 +747,7 @@
     const eggMat = new THREE.MeshStandardMaterial({
       color: 0xe0f2fe,
       emissive: 0xfef08a,
-      emissiveIntensity: 0.22,
+      emissiveIntensity: 0.25,
       roughness: 0.28,
       metalness: 0.08
     });
@@ -746,7 +755,7 @@
     const eggPositions = [
       [-0.75, -0.95, -0.7], [0.0, -0.95, -0.7], [0.75, -0.95, -0.7],
       [-0.75, -0.95,  0.1], [0.0, -0.95,  0.1], [0.75, -0.95,  0.1],
-      [-0.4,  -0.95,  0.8], [0.45, -0.95, 0.8],
+      [-0.4,  -0.95,  0.8], [0.45, -0.95,  0.8],
       [-0.4,  -0.30, -0.2], [0.4,  -0.30, -0.2], [0.0, -0.30, 0.45]
     ];
     eggPositions.forEach(([x, y, z]) => {
@@ -755,15 +764,19 @@
       tankGroup.add(egg);
     });
 
+    // --- 3. SINKRONISASI REAL-TIME LAMPU ON/OFF ANTARA HP & LAPTOP VIA MQTT ---
+    const TOPIC_LAMP = 'agmilaoca/blueduck/monitoring-biru/lamp';
     let lampOn = true;
-    function toggleLamp() {
-      lampOn = !lampOn;
-      warmLampLight.intensity = lampOn ? 3.0 : 0.0;
+    let mqttClient = null;
+
+    function applyLampVisual(state) {
+      lampOn = state;
+      warmLampLight.intensity = lampOn ? 3.2 : 0.0;
       bulbMat.emissiveIntensity = lampOn ? 1.8 : 0.0;
       bulbMat.color.setHex(lampOn ? 0xfef08a : 0x64748b);
       glowMesh.visible = lampOn;
-      waterMat.emissiveIntensity = lampOn ? 0.15 : 0.0;
-      eggMat.emissiveIntensity = lampOn ? 0.22 : 0.0;
+      waterMat.emissiveIntensity = lampOn ? 0.18 : 0.0;
+      eggMat.emissiveIntensity = lampOn ? 0.25 : 0.0;
 
       const btn = document.getElementById('lampBtn');
       btn.innerText = lampOn ? '💡 Lampu Kuning: ON' : '🌑 Lampu Kuning: OFF';
@@ -771,6 +784,37 @@
 
       document.getElementById('roomHumValue').innerText =
         lampOn ? 'KELEMBABAN: 68.0 % | LAMPU: MENYALA (ON)' : 'KELEMBABAN: 68.0 % | LAMPU: MATI (OFF)';
+    }
+
+    function toggleLamp(broadcast = true) {
+      applyLampVisual(!lampOn);
+      localStorage.setItem('blueduck_lamp_state', lampOn ? 'ON' : 'OFF');
+      if (broadcast && mqttClient && mqttClient.connected) {
+        mqttClient.publish(TOPIC_LAMP, lampOn ? 'ON' : 'OFF', { retain: true });
+      }
+    }
+
+    // Koneksi ke Broker Cloud HiveMQ via WebSockets (WSS)
+    try {
+      mqttClient = mqtt.connect('wss://broker.hivemq.com:8884/mqtt', {
+        clientId: 'blueduck_' + Math.random().toString(16).slice(2, 10)
+      });
+
+      mqttClient.on('connect', () => {
+        document.getElementById('mqttText').innerText = 'SYNC HP↔LAPTOP';
+        mqttClient.subscribe(TOPIC_LAMP);
+      });
+
+      mqttClient.on('message', (topic, message) => {
+        if (topic === TOPIC_LAMP) {
+          const incomingState = message.toString() === 'ON';
+          if (incomingState !== lampOn) {
+            applyLampVisual(incomingState);
+          }
+        }
+      });
+    } catch (e) {
+      console.warn('MQTT fallback ke localStorage:', e);
     }
 
     function setCamView(mode) {
