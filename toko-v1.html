@@ -105,6 +105,7 @@
       display: inline-flex;
       align-items: center;
       gap: 6px;
+      cursor: pointer;
     }
     .nav-live-pill:hover {
       background: #27272a;
@@ -296,7 +297,7 @@
     .strip-item h4 { font-size: 14px; color: var(--green-dark); font-weight: 800; }
     .strip-item p { font-size: 12px; color: var(--text-muted); }
 
-    /* About Section dengan Foto Asli */
+    /* About Section */
     .about-section {
       max-width: 1180px;
       margin: 0 auto 70px;
@@ -367,7 +368,7 @@
       flex-shrink: 0;
     }
 
-    /* Olahan Kuliner Section dengan Foto Asli Makanan */
+    /* Olahan Kuliner Section */
     .recipes-section {
       max-width: 1180px;
       margin: 0 auto 75px;
@@ -831,6 +832,8 @@
       border-radius: 10px;
       font-size: 13.5px;
       font-weight: 800;
+      border: none;
+      cursor: pointer;
       transition: opacity 0.2s, transform 0.2s;
     }
     .btn-open-3d:hover {
@@ -843,7 +846,7 @@
       display: flex;
       flex-direction: column;
       gap: 10px;
-      max-height: 290px;
+      max-height: 320px;
       overflow-y: auto;
     }
     .batch-record {
@@ -855,10 +858,27 @@
       justify-content: space-between;
       align-items: center;
       gap: 10px;
+      transition: all 0.2s;
+    }
+    .batch-record.active-sync {
+      border-left: 4px solid #ec4899;
+      background: #fdf2f8;
     }
     .batch-record h4 {
       font-size: 14px;
       color: var(--green-dark);
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .sync-tag {
+      background: #18181b;
+      color: #f472b6;
+      font-size: 10px;
+      padding: 2px 7px;
+      border-radius: 999px;
       font-weight: 800;
     }
     .batch-record p {
@@ -866,13 +886,32 @@
       color: var(--text-muted);
       margin-top: 2px;
     }
+    .batch-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+    .btn-sync-3d {
+      background: linear-gradient(90deg, #ec4899, #8b5cf6);
+      color: #ffffff;
+      border: none;
+      padding: 7px 11px;
+      border-radius: 7px;
+      font-size: 11.5px;
+      font-weight: 800;
+      cursor: pointer;
+      white-space: nowrap;
+      box-shadow: 0 4px 10px rgba(236, 72, 153, 0.25);
+    }
+    .btn-sync-3d:hover { opacity: 0.9; }
     .btn-del-batch {
       background: #fee2e2;
       color: #b91c1c;
       border: none;
       padding: 6px 10px;
       border-radius: 6px;
-      font-size: 12px;
+      font-size: 11.5px;
       font-weight: 700;
       cursor: pointer;
     }
@@ -971,7 +1010,7 @@
 </head>
 <body>
 
-  <!-- Header dengan Menu Kalender Pengasinan & Live Sensor Monitoring -->
+  <!-- Header -->
   <header>
     <div class="nav-container">
       <a href="#" class="logo">
@@ -985,7 +1024,7 @@
           <li><a href="#pembelian">Daftar Harga &amp; Beli</a></li>
           <li><a href="#kalender-pengasinan" class="nav-cal-pill">📅 Kalender Pengasinan</a></li>
           <li>
-            <a href="https://agmilaoca-pixel.github.io/monitoring-telur/" target="_blank" rel="noopener noreferrer" class="nav-live-pill">
+            <a onclick="openLatestBatchIn3D()" class="nav-live-pill">
               <span class="live-dot"></span> Live Sensor Monitoring 3D
             </a>
           </li>
@@ -997,7 +1036,7 @@
     </div>
   </header>
 
-  <!-- Hero Section (Upload file bebek-hero.jpg di GitHub agar gambar langsung tampil) -->
+  <!-- Hero Section -->
   <section class="hero">
     <div>
       <div class="hero-tag">🦆 Peternakan Bebek &amp; Telur Asin Pilihan</div>
@@ -1060,7 +1099,7 @@
     </div>
   </div>
 
-  <!-- About Telur Bebek Biru (Upload telur-biru.jpg & telur-asin.jpg di GitHub) -->
+  <!-- About Telur Bebek Biru -->
   <section class="about-section" id="keunggulan">
     <div class="about-grid-imgs">
       <img src="telur-biru.jpg" alt="Telur Bebek Cangkang Biru Alami">
@@ -1082,7 +1121,7 @@
     </div>
   </section>
 
-  <!-- Olahan Kuliner & Resep (Upload botokan.jpg, udang.jpg, nasgor.jpg, pasta.jpg di GitHub) -->
+  <!-- Olahan Kuliner & Resep -->
   <section class="recipes-section" id="olahan">
     <div class="section-header-center">
       <div class="section-kicker">Sajian Nikmat Tradisional &amp; Modern</div>
@@ -1147,7 +1186,6 @@
       </div>
 
       <div class="shop-grid">
-        <!-- Daftar 4 Pilihan Telur -->
         <div class="shop-price-list">
           <div class="price-item">
             <div class="price-item-left">
@@ -1206,7 +1244,6 @@
           </div>
         </div>
 
-        <!-- Keranjang Belanja Interaktif -->
         <div class="cart-card">
           <h3>🛒 Keranjang Belanja</h3>
           <p class="cart-sub">Atur jumlah butir dan isi data penerima untuk dikirim ke WhatsApp penjual.</p>
@@ -1288,21 +1325,21 @@
       <div class="section-kicker">Buku Catatan Digital &amp; Integrasi Sensor IoT</div>
       <h2>Kalender Jadwal Pengasinan &amp; Live Sensor Monitoring</h2>
       <p style="color:var(--text-muted); font-size:14.5px;">
-        Catat tanggal mulai perendaman dan jadwal angkat telur asin panen, sekaligus pantau langsung kondisi wadah pengasinan secara <em>real-time</em> di Digital Twin 3D.
+        Klik tombol <strong>📡 Pantau 3D</strong> pada daftar riwayat di bawah untuk menyambungkan jadwal batch langsung ke waktu perendaman di Digital Twin 3D.
       </p>
     </div>
 
     <div class="cal-layout">
-      <!-- Form Input Batch Pengasinan + Daftar Riwayat -->
+      <!-- Form Input Batch Pengasinan + Daftar Riwayat Tersambung ke 3D -->
       <div class="cal-card">
         <h3>📝 Tambah Catatan Pengasinan</h3>
         <p style="font-size:13px; color:var(--text-muted); margin-bottom:14px;">
-          Isi detail batch rendaman baru untuk menandai tanggal mulai dan tanggal angkat panen di kalender.
+          Batch baru yang disimpan akan otomatis tersinkronisasi dengan penghitung hari di Live Sensor Monitoring 3D.
         </p>
 
         <div class="form-group">
           <label for="batchName">Nama Batch / Wadah *</label>
-          <input type="text" id="batchName" placeholder="Contoh: Batch #1 - Wadah Biru (100 Butir)">
+          <input type="text" id="batchName" placeholder="Contoh: PENGASINAN 1">
         </div>
 
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
@@ -1323,11 +1360,11 @@
 
         <div class="form-group">
           <label for="batchQty">Jumlah Telur (Butir)</label>
-          <input type="number" id="batchQty" placeholder="Contoh: 120" min="1">
+          <input type="number" id="batchQty" placeholder="Contoh: 25" min="1">
         </div>
 
         <button class="btn-primary" style="width:100%; justify-content:center; margin-top:16px;" onclick="addBatchRecord()">
-          + Simpan Jadwal ke Kalender
+          + Simpan Jadwal ke Kalender &amp; Sinkron 3D
         </button>
 
         <h4 style="font-size:15px; color:var(--green-dark); margin-top:24px; font-weight:800;">
@@ -1374,8 +1411,8 @@
             <strong style="font-size:15px; color:#ffffff;">📡 Digital Twin: Wadah Pengasinan Telur</strong>
             <span class="bridge-badge"><span class="live-dot"></span> LIVE SYNC 3D</span>
           </div>
-          <p style="font-size:12.5px; color:#cbd5e1;">
-            Pantau visualisasi 3D wadah perendaman beserta pembacaan sensor IoT (Slave 1 &amp; Slave 2) secara langsung:
+          <p style="font-size:12.5px; color:#cbd5e1;" id="bridgeActiveBatchInfo">
+            Memantau batch aktif di wadah 3D beserta sensor IoT (Slave 1 &amp; Slave 2):
           </p>
           <div class="bridge-sensors">
             <div class="sensor-mini-box">
@@ -1391,9 +1428,9 @@
               <strong>DHT22 &amp; RH</strong>
             </div>
           </div>
-          <a href="https://agmilaoca-pixel.github.io/monitoring-telur/" target="_blank" rel="noopener noreferrer" class="btn-open-3d">
-            🚀 Buka Live Sensor Monitoring 3D →
-          </a>
+          <button onclick="openLatestBatchIn3D()" class="btn-open-3d">
+            🚀 Buka Live Sensor Monitoring 3D (Batch Aktif) →
+          </button>
         </div>
       </div>
     </div>
@@ -1470,7 +1507,7 @@
       window.open(waUrl, '_blank');
     }
 
-    // --- LOGIKA KALENDER PENCATAT PENGASINAN PEDAGANG ---
+    // --- LOGIKA KALENDER & SINKRONISASI LIVE SENSOR MONITORING 3D ---
     const monthNames = [
       "Januari", "Februari", "Maret", "April", "Mei", "Juni",
       "Juli", "Agustus", "September", "Oktober", "November", "Desember"
@@ -1480,13 +1517,16 @@
     let batches = JSON.parse(localStorage.getItem('blueduck_batches_v1')) || [
       {
         id: 1,
-        name: "Batch #1 - Telur Bebek Biru Grade A",
-        startDate: "2026-11-06",
+        name: "PENGASINAN 1",
+        startDate: "2026-11-13",
         duration: 7,
-        harvestDate: "2026-11-13",
-        qty: 100
+        harvestDate: "2026-11-20",
+        qty: 25,
+        createdAtTimestamp: new Date("2026-11-13T08:00:00").getTime()
       }
     ];
+
+    let activeBatchId = Number(localStorage.getItem('blueduck_active_batch_id')) || (batches[0] ? batches[0].id : null);
 
     function formatDateIndo(isoStr) {
       const [y, m, d] = isoStr.split('-');
@@ -1503,8 +1543,32 @@
       return `${yy}-${mm}-${dd}`;
     }
 
+    function syncBatchToLocalStorage(batchObj) {
+      if (!batchObj) return;
+      activeBatchId = batchObj.id;
+      localStorage.setItem('blueduck_active_batch_id', String(batchObj.id));
+      localStorage.setItem('active_monitoring_batch', JSON.stringify(batchObj));
+      updateBridgeInfo(batchObj);
+    }
+
+    function updateBridgeInfo(batchObj) {
+      const infoEl = document.getElementById('bridgeActiveBatchInfo');
+      if (!batchObj) {
+        infoEl.innerHTML = `Belum ada batch aktif yang dipilih. Tambahkan jadwal pengasinan untuk disinkronkan ke 3D.`;
+        return;
+      }
+      infoEl.innerHTML = `Tersambung ke: <strong style="color:#f472b6;">${batchObj.name} (${batchObj.qty || 0} butir)</strong> — Mulai Rendam: <strong>${formatDateIndo(batchObj.startDate)}</strong> • Panen: <strong>${formatDateIndo(batchObj.harvestDate)}</strong>`;
+    }
+
     function saveBatches() {
       localStorage.setItem('blueduck_batches_v1', JSON.stringify(batches));
+      if (batches.length > 0) {
+        const currentActive = batches.find(b => b.id === activeBatchId) || batches[0];
+        syncBatchToLocalStorage(currentActive);
+      } else {
+        localStorage.removeItem('active_monitoring_batch');
+        updateBridgeInfo(null);
+      }
       renderBatchList();
       renderCalendar();
     }
@@ -1520,22 +1584,54 @@
         return;
       }
 
+      const now = new Date();
+      const [sy, sm, sd] = startDate.split('-').map(Number);
+      const startTimestamp = new Date(sy, sm - 1, sd, now.getHours(), now.getMinutes(), now.getSeconds()).getTime();
+
       const harvestDate = addDaysISO(startDate, duration);
-      batches.unshift({
+      const newBatch = {
         id: Date.now(),
         name,
         startDate,
         duration,
         harvestDate,
-        qty: qty ? Number(qty) : 0
-      });
+        qty: qty ? Number(qty) : 0,
+        createdAtTimestamp: startTimestamp
+      };
 
-      const [y, m] = startDate.split('-').map(Number);
-      viewDate = new Date(y, m - 1, 1);
+      batches.unshift(newBatch);
+      syncBatchToLocalStorage(newBatch);
 
+      viewDate = new Date(sy, sm - 1, 1);
       document.getElementById('batchName').value = "";
       document.getElementById('batchQty').value = "";
       saveBatches();
+    }
+
+    function openBatchIn3D(id) {
+      const found = batches.find(b => b.id === id);
+      if (!found) return;
+      syncBatchToLocalStorage(found);
+      renderBatchList();
+
+      const params = new URLSearchParams({
+        batch: found.name,
+        start: found.startDate,
+        harvest: found.harvestDate,
+        duration: found.duration,
+        qty: found.qty || 0,
+        ts: found.createdAtTimestamp || new Date(found.startDate + "T08:00:00").getTime()
+      });
+      window.open(`index.html?${params.toString()}`, '_blank');
+    }
+
+    function openLatestBatchIn3D() {
+      if (batches.length > 0) {
+        const target = batches.find(b => b.id === activeBatchId) || batches[0];
+        openBatchIn3D(target.id);
+      } else {
+        window.open('index.html', '_blank');
+      }
     }
 
     function deleteBatchRecord(id) {
@@ -1555,16 +1651,24 @@
         return;
       }
 
-      container.innerHTML = batches.map(b => `
-        <div class="batch-record">
+      container.innerHTML = batches.map(b => {
+        const isActive = b.id === activeBatchId;
+        return `
+        <div class="batch-record ${isActive ? 'active-sync' : ''}">
           <div>
-            <h4>${b.name} ${b.qty > 0 ? `(${b.qty} butir)` : ''}</h4>
+            <h4>
+              ${b.name} ${b.qty > 0 ? `(${b.qty} butir)` : ''}
+              ${isActive ? `<span class="sync-tag">● AKTIF DI 3D</span>` : ''}
+            </h4>
             <p>🔵 Mulai Rendam: <strong>${formatDateIndo(b.startDate)}</strong> (${b.duration} hari)</p>
             <p>🟢 Angkat / Panen: <strong>${formatDateIndo(b.harvestDate)}</strong></p>
           </div>
-          <button class="btn-del-batch" onclick="deleteBatchRecord(${b.id})">Hapus</button>
+          <div class="batch-actions">
+            <button class="btn-sync-3d" onclick="openBatchIn3D(${b.id})">📡 Pantau 3D</button>
+            <button class="btn-del-batch" onclick="deleteBatchRecord(${b.id})">Hapus</button>
+          </div>
         </div>
-      `).join('');
+      `}).join('');
     }
 
     function renderCalendar() {
@@ -1615,8 +1719,7 @@
     }
 
     document.getElementById('batchStartDate').valueAsDate = new Date();
-    renderBatchList();
-    renderCalendar();
+    saveBatches();
 
     // --- DATA POP-UP RESEP ---
     const recipes = {
