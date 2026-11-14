@@ -8,21 +8,19 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <style>
     :root {
-      --bg-main: #f0f7ff;
-      --bg-card: rgba(255, 255, 255, 0.92);
+      --bg-card: rgba(255, 255, 255, 0.94);
       --blue-primary: #0284c7;
       --blue-dark: #0f172a;
-      --blue-accent: #38bdf8;
-      --blue-border: #bae6fd;
+      --blue-border: #7dd3fc;
       --text-main: #0f172a;
       --text-sub: #475569;
-      --green-ok: #16a34a;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       font-family: 'Plus Jakarta Sans', sans-serif;
-      background: radial-gradient(circle at 50% 35%, #ffffff 0%, #e0f2fe 55%, #bae6fd 100%);
+      /* Latar gradasi biru medium-gelap di tengah agar lampu kuning & kaca 3D kontras jelas */
+      background: radial-gradient(circle at 50% 45%, #1e3a8a 0%, #0f172a 70%, #090d16 100%);
       color: var(--text-main);
       overflow: hidden;
       height: 100vh;
@@ -52,7 +50,7 @@
       background: var(--bg-card);
       backdrop-filter: blur(12px);
       border: 1.5px solid var(--blue-border);
-      box-shadow: 0 10px 25px rgba(2, 132, 199, 0.12);
+      box-shadow: 0 10px 28px rgba(0, 0, 0, 0.28);
       border-radius: 16px;
       padding: 12px 18px;
     }
@@ -84,16 +82,26 @@
       transition: background 0.2s;
     }
     .btn-back-store:hover { background: #0369a1; }
+
     .btn-lamp {
-      background: #e0f2fe;
-      color: var(--blue-primary);
-      border: 1px solid var(--blue-border);
-      padding: 8px 12px;
+      background: #fef08a;
+      color: #854d0e;
+      border: 1.5px solid #facc15;
+      padding: 8px 14px;
       border-radius: 10px;
       font-size: 12px;
       font-weight: 800;
       cursor: pointer;
+      box-shadow: 0 0 14px rgba(250, 204, 21, 0.55);
+      transition: all 0.2s;
     }
+    .btn-lamp.off {
+      background: #e2e8f0;
+      color: #64748b;
+      border-color: #cbd5e1;
+      box-shadow: none;
+    }
+
     .sync-pill {
       display: inline-flex;
       align-items: center;
@@ -114,13 +122,13 @@
       box-shadow: 0 0 8px #16a34a;
     }
 
-    /* Left Panel Cards */
+    /* Left Panel Cards (Putih-Biru Bersih) */
     .left-panel {
       position: fixed;
       top: 92px;
       left: 20px;
       bottom: 20px;
-      width: 300px;
+      width: 305px;
       z-index: 10;
       display: flex;
       flex-direction: column;
@@ -134,7 +142,7 @@
       border: 1.5px solid var(--blue-border);
       border-radius: 16px;
       padding: 13px 16px;
-      box-shadow: 0 8px 20px rgba(2, 132, 199, 0.08);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.22);
     }
     .card-head {
       display: flex;
@@ -204,7 +212,7 @@
       top: 92px;
       right: 20px;
       bottom: 20px;
-      width: 320px;
+      width: 330px;
       z-index: 10;
       display: flex;
       flex-direction: column;
@@ -213,32 +221,41 @@
     .day-tabs {
       display: grid;
       grid-template-columns: repeat(7, 1fr);
-      gap: 5px;
+      gap: 4px;
       background: var(--bg-card);
       padding: 6px;
       border-radius: 12px;
       border: 1.5px solid var(--blue-border);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.22);
     }
     .day-tab {
-      border: none;
-      background: transparent;
+      border: 1px solid transparent;
+      background: #f1f5f9;
       padding: 6px 0;
       border-radius: 8px;
       font-size: 11px;
       font-weight: 800;
-      color: var(--text-sub);
+      color: var(--text-main);
       cursor: pointer;
+      transition: all 0.2s;
     }
     .day-tab.active {
       background: var(--blue-primary);
       color: #fff;
+      box-shadow: 0 3px 10px rgba(2, 132, 199, 0.35);
+    }
+    .day-tab.locked {
+      background: #e2e8f0;
+      color: #94a3b8;
+      cursor: not-allowed;
+      opacity: 0.65;
     }
     .chart-card {
       background: var(--bg-card);
       border: 1.5px solid var(--blue-border);
       border-radius: 16px;
       padding: 12px 14px;
-      box-shadow: 0 8px 20px rgba(2, 132, 199, 0.08);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.22);
       flex: 1;
       display: flex;
       flex-direction: column;
@@ -246,7 +263,7 @@
     }
     .chart-svg {
       width: 100%;
-      height: 70px;
+      height: 68px;
       overflow: visible;
     }
     .chart-axis {
@@ -270,7 +287,7 @@
       padding: 6px 10px;
       border-radius: 12px;
       border: 1.5px solid var(--blue-border);
-      box-shadow: 0 8px 20px rgba(2, 132, 199, 0.12);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
     }
     .cam-btn {
       background: #e0f2fe;
@@ -301,7 +318,7 @@
     </div>
     <div class="top-actions">
       <a href="toko-v1.html#kalender-pengasinan" class="btn-back-store">← Kembali ke Toko &amp; Kalender</a>
-      <button class="btn-lamp" onclick="toggleLamp()">💡 Lampu Wadah</button>
+      <button class="btn-lamp" id="lampBtn" onclick="toggleLamp()">💡 Lampu Kuning: ON</button>
       <div class="sync-pill"><span class="dot-pulse"></span> LIVE SYNC</div>
     </div>
   </div>
@@ -311,9 +328,9 @@
     <div class="sensor-card">
       <div class="card-head">
         <span class="card-title">WAKTU PENGASINAN</span>
-        <span class="badge-slave" id="dayBadge">HARI 1 / 7</span>
+        <span class="badge-slave" id="dayBadge">HARI 2 / 7</span>
       </div>
-      <div class="timer-value" id="timerDisplay">0 Hari 00 Jam 00 Menit 00 Detik</div>
+      <div class="timer-value" id="timerDisplay">1 Hari 04 Jam 46 Menit 22 Detik</div>
       <div class="batch-sub" id="batchMetaText">Batch: Standar 7 Hari Perendaman</div>
       <div class="btn-row">
         <button class="btn-act btn-start" onclick="resetTimerNow()">▶ Mulai Baru</button>
@@ -358,17 +375,9 @@
     </div>
   </div>
 
-  <!-- Right Trend Charts -->
+  <!-- Right Trend Charts (H3-H7 Otomatis Terkunci Sesuai Hari Berjalan) -->
   <div class="right-panel">
-    <div class="day-tabs" id="dayTabsContainer">
-      <button class="day-tab active" onclick="selectDayTab(1)">H1</button>
-      <button class="day-tab" onclick="selectDayTab(2)">H2</button>
-      <button class="day-tab" onclick="selectDayTab(3)">H3</button>
-      <button class="day-tab" onclick="selectDayTab(4)">H4</button>
-      <button class="day-tab" onclick="selectDayTab(5)">H5</button>
-      <button class="day-tab" onclick="selectDayTab(6)">H6</button>
-      <button class="day-tab" onclick="selectDayTab(7)">H7</button>
-    </div>
+    <div class="day-tabs" id="dayTabsContainer"></div>
 
     <div class="chart-card">
       <div class="card-head">
@@ -376,7 +385,7 @@
         <span class="badge-slave" id="chartDayLabel1">HARI 1 (%)</span>
       </div>
       <svg class="chart-svg" viewBox="0 0 260 60">
-        <polyline fill="none" stroke="#0284c7" stroke-width="3" points="10,45 65,38 125,25 185,18 250,22" />
+        <polyline id="polyTds" fill="none" stroke="#0284c7" stroke-width="3" points="10,45 65,38 125,25 185,18 250,22" />
       </svg>
       <div class="chart-axis"><span>00:00</span><span>06:00</span><span>12:00</span><span>18:00</span><span>21:00</span></div>
     </div>
@@ -387,7 +396,7 @@
         <span class="badge-slave" id="chartDayLabel2">HARI 1 (°C)</span>
       </div>
       <svg class="chart-svg" viewBox="0 0 260 60">
-        <polyline fill="none" stroke="#0d9488" stroke-width="3" points="10,42 65,40 125,16 185,20 250,24" />
+        <polyline id="polyWater" fill="none" stroke="#0d9488" stroke-width="3" points="10,42 65,40 125,16 185,20 250,24" />
       </svg>
       <div class="chart-axis"><span>00:00</span><span>06:00</span><span>12:00</span><span>18:00</span><span>21:00</span></div>
     </div>
@@ -398,7 +407,7 @@
         <span class="badge-slave" id="chartDayLabel3">HARI 1 (°C)</span>
       </div>
       <svg class="chart-svg" viewBox="0 0 260 60">
-        <polyline fill="none" stroke="#2563eb" stroke-width="3" points="10,44 65,42 125,15 185,22 250,30" />
+        <polyline id="polyRoom" fill="none" stroke="#f59e0b" stroke-width="3" points="10,44 65,42 125,15 185,22 250,30" />
       </svg>
       <div class="chart-axis"><span>00:00</span><span>06:00</span><span>12:00</span><span>18:00</span><span>21:00</span></div>
     </div>
@@ -412,7 +421,7 @@
   </div>
 
   <script>
-    // --- 1. SINKRONISASI DATA BATCH DARI KALENDER TOKO-V1.HTML ---
+    // --- 1. SINKRONISASI DATA BATCH & PENGUNCIAN TAB HARI (H1-H7) ---
     const params = new URLSearchParams(window.location.search);
     const savedBatch = JSON.parse(localStorage.getItem('active_monitoring_batch') || 'null');
 
@@ -430,13 +439,63 @@
     document.getElementById('batchMetaText').innerText =
       `${batchName} (${eggQty} Butir) • Target Panen: ${harvestDate}`;
 
+    // Data grafik per hari (H1 s/d H7)
+    const chartDataByDay = {
+      1: {
+        tds: "10,45 65,38 125,25 185,18 250,22",
+        water: "10,42 65,40 125,16 185,20 250,24",
+        room: "10,44 65,42 125,15 185,22 250,30"
+      },
+      2: {
+        tds: "10,40 65,33 125,22 185,20 250,19",
+        water: "10,38 65,35 125,20 185,24 250,21",
+        room: "10,42 65,36 125,18 185,25 250,28"
+      },
+      3: {
+        tds: "10,38 65,30 125,24 185,19 250,17",
+        water: "10,40 65,34 125,19 185,22 250,23",
+        room: "10,41 65,35 125,17 185,24 250,27"
+      }
+    };
+
+    let unlockedMaxDay = 1;
+    let selectedTabDay = 1;
+
+    function renderDayTabs() {
+      const container = document.getElementById('dayTabsContainer');
+      container.innerHTML = "";
+      for (let d = 1; d <= 7; d++) {
+        const btn = document.createElement('button');
+        const isLocked = d > unlockedMaxDay;
+        btn.className = 'day-tab' + (d === selectedTabDay ? ' active' : '') + (isLocked ? ' locked' : '');
+        btn.innerText = isLocked ? `H${d}🔒` : `H${d}`;
+        btn.title = isLocked
+          ? `Hari ke-${d} belum berlangsung (Saat ini baru Hari ke-${unlockedMaxDay})`
+          : `Lihat data grafik Hari ke-${d}`;
+        btn.onclick = () => {
+          if (isLocked) {
+            alert(`Data H${d} belum tersedia karena proses pengasinan baru memasuki Hari ke-${unlockedMaxDay}.`);
+            return;
+          }
+          selectDayTab(d);
+        };
+        container.appendChild(btn);
+      }
+    }
+
     function selectDayTab(dayNum) {
-      document.querySelectorAll('.day-tab').forEach((btn, idx) => {
-        btn.classList.toggle('active', idx + 1 === dayNum);
-      });
+      if (dayNum > unlockedMaxDay) return;
+      selectedTabDay = dayNum;
+      renderDayTabs();
+
       document.getElementById('chartDayLabel1').innerText = `HARI ${dayNum} (%)`;
       document.getElementById('chartDayLabel2').innerText = `HARI ${dayNum} (°C)`;
       document.getElementById('chartDayLabel3').innerText = `HARI ${dayNum} (°C)`;
+
+      const d = chartDataByDay[dayNum] || chartDataByDay[2];
+      document.getElementById('polyTds').setAttribute('points', d.tds);
+      document.getElementById('polyWater').setAttribute('points', d.water);
+      document.getElementById('polyRoom').setAttribute('points', d.room);
     }
 
     function updateTimer() {
@@ -450,12 +509,27 @@
       document.getElementById('timerDisplay').innerText =
         `${days} Hari ${hours} Jam ${mins} Menit ${secs} Detik`;
       document.getElementById('dayBadge').innerText = `HARI ${currentDay} / ${durationDays}`;
+
+      if (currentDay !== unlockedMaxDay) {
+        unlockedMaxDay = currentDay;
+        selectedTabDay = currentDay;
+        selectDayTab(currentDay);
+      }
     }
+
+    // Inisialisasi awal
+    const initDiffSec = Math.max(0, Math.floor((Date.now() - startTimestamp) / 1000));
+    unlockedMaxDay = Math.min(durationDays, Math.floor(initDiffSec / 86400) + 1);
+    selectedTabDay = unlockedMaxDay;
+    renderDayTabs();
+    selectDayTab(unlockedMaxDay);
     setInterval(updateTimer, 1000);
     updateTimer();
 
     function resetTimerNow() {
       startTimestamp = Date.now();
+      unlockedMaxDay = 1;
+      selectDayTab(1);
       updateTimer();
     }
 
@@ -463,11 +537,11 @@
       alert(`Pengasinan ${batchName} (${eggQty} butir) selesai! Silakan kembali ke halaman Kalender Toko.`);
     }
 
-    // --- 2. VISUALISASI 3D THREE.JS TEMA BIRU PUTIH ---
+    // --- 2. VISUALISASI 3D DENGAN LAMPU KUNING HANGAT YANG TERLIHAT JELAS ---
     const container = document.getElementById('canvas3d');
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(42, window.innerWidth / window.innerHeight, 0.1, 1000);
-    camera.position.set(5.5, 4.8, 6.2);
+    camera.position.set(5.5, 4.6, 6.2);
     camera.lookAt(0, 0.2, 0);
 
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
@@ -475,87 +549,113 @@
     renderer.setPixelRatio(window.devicePixelRatio);
     container.appendChild(renderer.domElement);
 
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.95);
+    const ambientLight = new THREE.AmbientLight(0xdbeafe, 0.65);
     scene.add(ambientLight);
 
-    const dirLight = new THREE.DirectionalLight(0x38bdf8, 0.9);
+    const dirLight = new THREE.DirectionalLight(0x93c5fd, 0.7);
     dirLight.position.set(5, 10, 7);
     scene.add(dirLight);
 
-    const tankLight = new THREE.PointLight(0x0284c7, 1.4, 8);
-    tankLight.position.set(0, 1.5, 0);
-    scene.add(tankLight);
+    // Cahaya Lampu Pemanas/Penerang Kuning Hangat di Dalam Wadah
+    const warmLampLight = new THREE.PointLight(0xffcc00, 2.6, 9);
+    warmLampLight.position.set(0, 1.25, 0);
+    scene.add(warmLampLight);
 
-    // Grid Lantai Biru Muda
-    const gridHelper = new THREE.GridHelper(14, 18, 0x38bdf8, 0xbae6fd);
+    // Grid Lantai Kontras Biru
+    const gridHelper = new THREE.GridHelper(15, 20, 0x38bdf8, 0x1e3a8a);
     gridHelper.position.y = -1.55;
     scene.add(gridHelper);
 
     const tankGroup = new THREE.Group();
     scene.add(tankGroup);
 
-    // Dinding Kaca Wadah
+    // Dinding Kaca Wadah Transparan
     const boxGeo = new THREE.BoxGeometry(3.2, 3.0, 3.2);
     const glassMat = new THREE.MeshPhysicalMaterial({
       color: 0xe0f2fe,
       transparent: true,
-      opacity: 0.28,
-      roughness: 0.1,
-      transmission: 0.6
+      opacity: 0.22,
+      roughness: 0.08
     });
     const glassBox = new THREE.Mesh(boxGeo, glassMat);
     tankGroup.add(glassBox);
 
-    // Garis Tepi Wadah Biru Cerah
+    // Garis Tepi Wadah Biru Terang
     const edges = new THREE.EdgesGeometry(boxGeo);
-    const lineMat = new THREE.LineBasicMaterial({ color: 0x0284c7 });
+    const lineMat = new THREE.LineBasicMaterial({ color: 0x38bdf8 });
     const wireframe = new THREE.LineSegments(edges, lineMat);
     tankGroup.add(wireframe);
 
-    // Air Larutan Garam Biru Jernih
-    const waterGeo = new THREE.BoxGeometry(3.08, 2.1, 3.08);
+    // Air Larutan Garam Biru Muda Transparan
+    const waterGeo = new THREE.BoxGeometry(3.08, 2.05, 3.08);
     const waterMat = new THREE.MeshStandardMaterial({
-      color: 0x7dd3fc,
+      color: 0xbae6fd,
       transparent: true,
-      opacity: 0.62,
-      roughness: 0.2
+      opacity: 0.52,
+      roughness: 0.25
     });
     const waterMesh = new THREE.Mesh(waterGeo, waterMat);
-    waterMesh.position.y = -0.4;
+    waterMesh.position.y = -0.42;
     tankGroup.add(waterMesh);
 
-    // Tutup Atas Biru Tua Elegan
-    const lidGeo = new THREE.BoxGeometry(3.32, 0.18, 3.32);
-    const lidMat = new THREE.MeshStandardMaterial({ color: 0x0369a1, roughness: 0.3 });
+    // Tutup Wadah Transparan Gelap Kebiruan (Supaya Bohlam Kuning di Bawahnya Terlihat)
+    const lidGeo = new THREE.BoxGeometry(3.32, 0.16, 3.32);
+    const lidMat = new THREE.MeshStandardMaterial({
+      color: 0x1e3a8a,
+      transparent: true,
+      opacity: 0.78,
+      roughness: 0.3
+    });
     const lidMesh = new THREE.Mesh(lidGeo, lidMat);
     lidMesh.position.y = 1.55;
     tankGroup.add(lidMesh);
 
-    // Modul Sensor DHT22 Putih-Biru di Atas Tutup
+    // BOHLAM LAMPU KUNING MENYALA DI BAWAH TUTUP WADAH
+    const bulbGeo = new THREE.SphereGeometry(0.24, 24, 24);
+    const bulbMat = new THREE.MeshStandardMaterial({
+      color: 0xfef08a,
+      emissive: 0xffb703,
+      emissiveIntensity: 1.8
+    });
+    const bulbMesh = new THREE.Mesh(bulbGeo, bulbMat);
+    bulbMesh.position.set(0, 1.32, 0);
+    tankGroup.add(bulbMesh);
+
+    // Halo Cahaya Kuning di Sekitar Bohlam
+    const glowGeo = new THREE.SphereGeometry(0.45, 24, 24);
+    const glowMat = new THREE.MeshBasicMaterial({
+      color: 0xfacc15,
+      transparent: true,
+      opacity: 0.38
+    });
+    const glowMesh = new THREE.Mesh(glowGeo, glowMat);
+    glowMesh.position.set(0, 1.32, 0);
+    tankGroup.add(glowMesh);
+
+    // Modul Sensor DHT22 Putih di Atas Tutup
     const dhtGeo = new THREE.BoxGeometry(0.55, 0.75, 0.35);
-    const dhtMat = new THREE.MeshStandardMaterial({ color: 0xffffff });
+    const dhtMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.2 });
     const dhtMesh = new THREE.Mesh(dhtGeo, dhtMat);
     dhtMesh.position.set(0.2, 2.0, 0.2);
     tankGroup.add(dhtMesh);
 
     // Probe TDS & DS18B20 Masuk ke Larutan
     const probeGeo = new THREE.CylinderGeometry(0.08, 0.08, 1.9, 16);
-    const probeMat = new THREE.MeshStandardMaterial({ color: 0x0284c7 });
-    const probe1 = new THREE.Mesh(probeGeo, probeMat);
-    probe1.position.set(-0.6, 0.65, 0.5);
+    const probe1 = new THREE.Mesh(probeGeo, new THREE.MeshStandardMaterial({ color: 0x0284c7 }));
+    probe1.position.set(-0.65, 0.62, 0.5);
     tankGroup.add(probe1);
 
-    const probe2 = new THREE.Mesh(probeGeo, new THREE.MeshStandardMaterial({ color: 0x0d9488 }));
-    probe2.position.set(0.65, 0.65, -0.4);
+    const probe2 = new THREE.Mesh(probeGeo, new THREE.MeshStandardMaterial({ color: 0xf8fafc }));
+    probe2.position.set(0.68, 0.62, -0.4);
     tankGroup.add(probe2);
 
-    // Telur Bebek Biru di Dalam Wadah
+    // Telur Bebek Biru Muda (Memantulkan Cahaya Kuning Hangat Saat Lampu Menyala)
     const eggGeo = new THREE.SphereGeometry(0.38, 24, 24);
     eggGeo.scale(1, 1.22, 1);
     const eggMat = new THREE.MeshStandardMaterial({
-      color: 0xdbeafe,
-      roughness: 0.25,
-      metalness: 0.05
+      color: 0xe0f2fe,
+      roughness: 0.28,
+      metalness: 0.08
     });
 
     const eggPositions = [
@@ -573,13 +673,20 @@
     let lampOn = true;
     function toggleLamp() {
       lampOn = !lampOn;
-      tankLight.intensity = lampOn ? 1.4 : 0.1;
+      warmLampLight.intensity = lampOn ? 2.6 : 0.0;
+      bulbMat.emissiveIntensity = lampOn ? 1.8 : 0.0;
+      bulbMat.color.setHex(lampOn ? 0xfef08a : 0x64748b);
+      glowMesh.visible = lampOn;
+
+      const btn = document.getElementById('lampBtn');
+      btn.innerText = lampOn ? '💡 Lampu Kuning: ON' : '💡 Lampu Kuning: OFF';
+      btn.classList.toggle('off', !lampOn);
     }
 
     function setCamView(mode) {
       if (mode === 'top') camera.position.set(0, 8.5, 0.01);
       else if (mode === 'front') camera.position.set(0, 0.8, 7.8);
-      else camera.position.set(5.5, 4.8, 6.2);
+      else camera.position.set(5.5, 4.6, 6.2);
       camera.lookAt(0, 0.2, 0);
     }
 
