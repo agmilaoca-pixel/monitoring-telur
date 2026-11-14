@@ -444,7 +444,7 @@
         <span class="badge-slave">SLAVE 1</span>
       </div>
       <div class="metric-val" id="tdsValue">15.2 %</div>
-      <div class="metric-status">STATUS: Probe TDS Masuk ke Larutan Biru</div>
+      <div class="metric-status">STATUS: Probe TDS 2-Prong Masuk ke Larutan</div>
     </div>
 
     <div class="sensor-card">
@@ -453,16 +453,16 @@
         <span class="badge-slave">SLAVE 1</span>
       </div>
       <div class="metric-val" id="waterTempValue">27.8 °C</div>
-      <div class="metric-status">STATUS: Probe Waterproof Tercelup Air Garam</div>
+      <div class="metric-status">STATUS: Probe Stainless Tercelup Air Garam</div>
     </div>
 
     <div class="sensor-card">
       <div class="card-head">
-        <span class="card-title">KETINGGIAN AIR LARUTAN</span>
+        <span class="card-title">KETINGGIAN AIR (WATER LEVEL)</span>
         <span class="badge-slave">SLAVE 1</span>
       </div>
       <div class="metric-val" id="levelValue">88 %</div>
-      <div class="metric-status">VOLUME: Seluruh Telur Bebek Biru Terendam</div>
+      <div class="metric-status">SENSOR: Funduino Merah di Garis Permukaan Air</div>
     </div>
 
     <div class="sensor-card">
@@ -652,7 +652,7 @@
       alert(`Pengasinan ${batchName} (${eggQty} butir) selesai! Silakan kembali ke halaman Kalender Toko.`);
     }
 
-    // --- 2. VISUALISASI 3D DENGAN BENTUK SENSOR ASLI (DHT22, PROBE TDS, DS18B20) ---
+    // --- 2. VISUALISASI 3D LENGKAP 4 SENSOR (DHT22, PROBE TDS, DS18B20, WATER LEVEL FUNDUINO MERAH) ---
     const container = document.getElementById('canvas3d');
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(42, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -664,10 +664,10 @@
     renderer.setPixelRatio(window.devicePixelRatio);
     container.appendChild(renderer.domElement);
 
-    const ambientLight = new THREE.AmbientLight(0xdbeafe, 0.72);
+    const ambientLight = new THREE.AmbientLight(0xdbeafe, 0.75);
     scene.add(ambientLight);
 
-    const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+    const dirLight = new THREE.DirectionalLight(0xffffff, 0.85);
     dirLight.position.set(5, 10, 7);
     scene.add(dirLight);
 
@@ -698,7 +698,7 @@
     const wireframe = new THREE.LineSegments(edges, lineMat);
     tankGroup.add(wireframe);
 
-    // Air Larutan Garam
+    // Air Larutan Garam (Permukaan atas air berada di y = +0.60)
     const waterGeo = new THREE.BoxGeometry(3.08, 2.05, 3.08);
     const waterMat = new THREE.MeshStandardMaterial({
       color: 0xbae6fd,
@@ -712,19 +712,28 @@
     waterMesh.position.y = -0.42;
     tankGroup.add(waterMesh);
 
+    // Garis Bingkai Permukaan Air (Waterline Highlight)
+    const waterLineEdges = new THREE.EdgesGeometry(new THREE.BoxGeometry(3.09, 0.01, 3.09));
+    const waterLineMesh = new THREE.LineSegments(
+      waterLineEdges,
+      new THREE.LineBasicMaterial({ color: 0x7dd3fc })
+    );
+    waterLineMesh.position.y = 0.605;
+    tankGroup.add(waterLineMesh);
+
     // Tutup Wadah Transparan Biru Gelap
     const lidGeo = new THREE.BoxGeometry(3.32, 0.14, 3.32);
     const lidMat = new THREE.MeshStandardMaterial({
       color: 0x1e293b,
       transparent: true,
-      opacity: 0.82,
+      opacity: 0.78,
       roughness: 0.3
     });
     const lidMesh = new THREE.Mesh(lidGeo, lidMat);
     lidMesh.position.y = 1.55;
     tankGroup.add(lidMesh);
 
-    // Bohlam Lampu Pemanas Kuning di Bawah Tutup
+    // Bohlam Lampu Pemanas Kuning di Tengah Bawah Tutup
     const bulbGeo = new THREE.SphereGeometry(0.26, 24, 24);
     const bulbMat = new THREE.MeshStandardMaterial({
       color: 0xfef08a,
@@ -732,7 +741,7 @@
       emissiveIntensity: 1.8
     });
     const bulbMesh = new THREE.Mesh(bulbGeo, bulbMat);
-    bulbMesh.position.set(-0.2, 1.28, -0.15);
+    bulbMesh.position.set(0, 1.25, 0);
     tankGroup.add(bulbMesh);
 
     const glowGeo = new THREE.SphereGeometry(0.48, 24, 24);
@@ -742,28 +751,25 @@
       opacity: 0.38
     });
     const glowMesh = new THREE.Mesh(glowGeo, glowMat);
-    glowMesh.position.set(-0.2, 1.28, -0.15);
+    glowMesh.position.set(0, 1.25, 0);
     tankGroup.add(glowMesh);
 
     // =========================================================================
-    // A. RAKITAN DETAIL SENSOR DHT22 (Putih Berventilasi + Kuping Baut + Stand)
+    // A. RAKITAN DETAIL SENSOR DHT22 (Putih Berventilasi di Atas Tutup)
     // =========================================================================
     const dhtGroup = new THREE.Group();
-    dhtGroup.position.set(0.1, 1.62, 0.25);
+    dhtGroup.position.set(0.0, 1.62, 0.05);
 
-    // Bracket penyangga belakang hitam
     const standMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.5 });
     const standMesh = new THREE.Mesh(new THREE.BoxGeometry(0.54, 1.15, 0.08), standMat);
     standMesh.position.set(0, 0.58, -0.2);
     dhtGroup.add(standMesh);
 
-    // Bodi utama DHT22 putih
     const dhtWhiteMat = new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.25 });
     const dhtBody = new THREE.Mesh(new THREE.BoxGeometry(0.58, 0.82, 0.32), dhtWhiteMat);
     dhtBody.position.set(0, 0.42, 0);
     dhtGroup.add(dhtBody);
 
-    // Kuping baut atas DHT22 + lubang tengah
     const dhtTab = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.26, 0.08), dhtWhiteMat);
     dhtTab.position.set(0, 0.94, -0.1);
     dhtGroup.add(dhtTab);
@@ -776,7 +782,6 @@
     holeMesh.position.set(0, 0.95, -0.1);
     dhtGroup.add(holeMesh);
 
-    // Grid kisi-kisi ventilasi hitam di depan & samping DHT22 (4 kolom x 5 baris)
     const slotMat = new THREE.MeshBasicMaterial({ color: 0x1e293b });
     for (let r = 0; r < 5; r++) {
       for (let c = 0; c < 4; c++) {
@@ -785,129 +790,199 @@
         dhtGroup.add(slot);
       }
     }
-
-    // Pipa biru kecil sensor di belakang DHT22
-    const bluePipe = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.05, 0.05, 0.75, 16),
-      new THREE.MeshStandardMaterial({ color: 0x0284c7 })
-    );
-    bluePipe.rotation.z = Math.PI / 3.2;
-    bluePipe.position.set(-0.35, 0.65, -0.22);
-    dhtGroup.add(bluePipe);
-
     tankGroup.add(dhtGroup);
 
     // =========================================================================
-    // B. RAKITAN DETAIL PROBE TDS (Bodi Bertingkat + 2 Jarum Elektroda + Kabel)
+    // B. RAKITAN DETAIL SENSOR WATER LEVEL FUNDUINO MERAH (Dinding Kanan Atas Air)
+    // =========================================================================
+    const wlGroup = new THREE.Group();
+    // Posisi menempel di dinding kaca kanan-belakang, tepat memotong permukaan air (y = 0.60)
+    const wlX = 1.48, wlY = 0.56, wlZ = -0.25;
+    wlGroup.position.set(wlX, wlY, wlZ);
+    wlGroup.rotation.y = -Math.PI / 2; // Menghadap ke tengah wadah
+
+    const pcbRedMat = new THREE.MeshStandardMaterial({
+      color: 0xdc2626,
+      roughness: 0.35,
+      metalness: 0.1
+    });
+    const traceSilverMat = new THREE.MeshStandardMaterial({
+      color: 0xf8fafc,
+      metalness: 0.85,
+      roughness: 0.15
+    });
+
+    // Bodi Bawah PCB Merah (Bagian garis-garis yang tercelup sebagian ke air)
+    const wlLowerBody = new THREE.Mesh(new THREE.BoxGeometry(0.62, 0.88, 0.04), pcbRedMat);
+    wlLowerBody.position.set(0, -0.18, 0);
+    wlGroup.add(wlLowerBody);
+
+    // Bodi Kepala Atas PCB Merah (Bagian kering di atas permukaan air)
+    const wlUpperHead = new THREE.Mesh(new THREE.BoxGeometry(0.46, 0.34, 0.04), pcbRedMat);
+    wlUpperHead.position.set(0, 0.42, 0);
+    wlGroup.add(wlUpperHead);
+
+    // 2 Kuping Lubang Baut Kiri-Kanan di Kepala Sensor Funduino
+    const wlEarLeft = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.16, 0.04), pcbRedMat);
+    wlEarLeft.position.set(-0.25, 0.48, 0);
+    wlGroup.add(wlEarLeft);
+
+    const wlEarRight = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.16, 0.04), pcbRedMat);
+    wlEarRight.position.set(0.25, 0.48, 0);
+    wlGroup.add(wlEarRight);
+
+    const earHoleGeo = new THREE.CylinderGeometry(0.035, 0.035, 0.05, 12);
+    const earHoleMat = new THREE.MeshBasicMaterial({ color: 0x0f172a });
+    const earHoleL = new THREE.Mesh(earHoleGeo, earHoleMat);
+    earHoleL.rotation.x = Math.PI / 2;
+    earHoleL.position.set(-0.25, 0.48, 0);
+    wlGroup.add(earHoleL);
+
+    const earHoleR = new THREE.Mesh(earHoleGeo, earHoleMat);
+    earHoleR.rotation.x = Math.PI / 2;
+    earHoleR.position.set(0.25, 0.48, 0);
+    wlGroup.add(earHoleR);
+
+    // 10 Jalur Konduktif Perak Paralel Vertikal Khas Sensor Air Funduino
+    for (let i = 0; i < 10; i++) {
+      const trace = new THREE.Mesh(new THREE.BoxGeometry(0.028, 0.78, 0.012), traceSilverMat);
+      trace.position.set(-0.245 + i * 0.054, -0.20, 0.022);
+      wlGroup.add(trace);
+    }
+
+    // Baris Komponen SMD Hitam (Transistor & Resistor) di Atas Garis Air
+    const smdBlackMat = new THREE.MeshStandardMaterial({ color: 0x0f172a });
+    const smdTransistor = new THREE.Mesh(new THREE.BoxGeometry(0.09, 0.06, 0.03), smdBlackMat);
+    smdTransistor.position.set(0, 0.34, 0.025);
+    wlGroup.add(smdTransistor);
+
+    const smdRes1 = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.04, 0.025), smdBlackMat);
+    smdRes1.position.set(-0.12, 0.34, 0.025);
+    wlGroup.add(smdRes1);
+
+    const smdRes2 = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.04, 0.025), smdBlackMat);
+    smdRes2.position.set(0.12, 0.34, 0.025);
+    wlGroup.add(smdRes2);
+
+    // Kotak Label Putih [S] [+] [-]
+    const pinLabelBox = new THREE.Mesh(
+      new THREE.BoxGeometry(0.24, 0.07, 0.01),
+      new THREE.MeshBasicMaterial({ color: 0xffffff })
+    );
+    pinLabelBox.position.set(0, 0.46, 0.022);
+    wlGroup.add(pinLabelBox);
+
+    // Header Konektor Hitam 3-Pin (S, +, -) + 3 Jarum Pin Logam
+    const headerBlock = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.08, 0.08), smdBlackMat);
+    headerBlock.position.set(0, 0.56, 0.02);
+    wlGroup.add(headerBlock);
+
+    // 3 Kabel Jumper Warna-Warni (Merah VCC, Kuning Sinyal, Biru GND) Naik ke Tutup Atas
+    const wireColors = [0xfacc15, 0xef4444, 0x3b82f6];
+    [-0.07, 0.0, 0.07].forEach((offsetX, idx) => {
+      const pinCurve = new THREE.CatmullRomCurve3([
+        new THREE.Vector3(offsetX, 0.60, 0.02),
+        new THREE.Vector3(offsetX, 1.05, 0.05),
+        new THREE.Vector3(offsetX * 1.5, 1.35, -0.35),
+        new THREE.Vector3(0, 1.15, -1.15)
+      ]);
+      const wireMesh = new THREE.Mesh(
+        new THREE.TubeGeometry(pinCurve, 20, 0.022, 8, false),
+        new THREE.MeshStandardMaterial({ color: wireColors[idx], roughness: 0.3 })
+      );
+      wlGroup.add(wireMesh);
+    });
+
+    tankGroup.add(wlGroup);
+
+    // =========================================================================
+    // C. RAKITAN DETAIL PROBE TDS (Kanan Depan: Bodi Putih + 2 Jarum Elektroda)
     // =========================================================================
     const tdsGroup = new THREE.Group();
-    const tdsX = 0.72, tdsZ = 0.58;
+    const tdsX = 0.82, tdsZ = 0.72;
 
-    // Lubang grommet hitam di tutup wadah
     const grommetMat = new THREE.MeshStandardMaterial({ color: 0x0f172a });
-    const tdsGrommet = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.18, 0.18, 20), grommetMat);
+    const tdsGrommet = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.16, 0.18, 20), grommetMat);
     tdsGrommet.position.set(tdsX, 1.55, tdsZ);
     tdsGroup.add(tdsGrommet);
 
-    // Gagang atas probe TDS putih
-    const tdsUpper = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.11, 0.11, 0.65, 20),
-      new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.2 })
-    );
-    tdsUpper.position.set(tdsX, 0.25, tdsZ);
-    tdsGroup.add(tdsUpper);
-
-    // Cincin kerah tengah probe TDS (biru-hitam khas konektor tahan air)
-    const tdsCollar = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.145, 0.145, 0.16, 20),
-      new THREE.MeshStandardMaterial({ color: 0x0284c7, roughness: 0.3 })
-    );
-    tdsCollar.position.set(tdsX, -0.05, tdsZ);
-    tdsGroup.add(tdsCollar);
-
-    // Gagang bawah probe TDS putih
-    const tdsLower = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.095, 0.08, 0.42, 20),
+    const tdsBody = new THREE.Mesh(
+      new THREE.BoxGeometry(0.32, 0.52, 0.24),
       new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.2 })
     );
-    tdsLower.position.set(tdsX, -0.32, tdsZ);
-    tdsGroup.add(tdsLower);
+    tdsBody.position.set(tdsX, 0.05, tdsZ);
+    tdsGroup.add(tdsBody);
 
     // 2 Jarum Elektroda Logam (Dual-Prong) di Ujung Bawah Probe TDS
     const metalMat = new THREE.MeshStandardMaterial({
       color: 0xe2e8f0,
-      metalness: 0.85,
+      metalness: 0.88,
       roughness: 0.15
     });
-    const prong1 = new THREE.Mesh(new THREE.CylinderGeometry(0.018, 0.018, 0.24, 12), metalMat);
-    prong1.position.set(tdsX - 0.035, -0.62, tdsZ);
+    const prong1 = new THREE.Mesh(new THREE.CylinderGeometry(0.028, 0.028, 0.36, 14), metalMat);
+    prong1.position.set(tdsX - 0.07, -0.38, tdsZ);
     tdsGroup.add(prong1);
 
-    const prong2 = new THREE.Mesh(new THREE.CylinderGeometry(0.018, 0.018, 0.24, 12), metalMat);
-    prong2.position.set(tdsX + 0.035, -0.62, tdsZ);
+    const prong2 = new THREE.Mesh(new THREE.CylinderGeometry(0.028, 0.028, 0.36, 14), metalMat);
+    prong2.position.set(tdsX + 0.07, -0.38, tdsZ);
     tdsGroup.add(prong2);
 
-    // Kabel hitam dari gagang TDS naik menembus tutup lalu melengkung di atas
+    // Kabel Hitam Probe TDS
     const cableMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.4 });
-    const tdsInnerCable = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 1.05, 12), cableMat);
-    tdsInnerCable.position.set(tdsX, 1.05, tdsZ);
+    const tdsInnerCable = new THREE.Mesh(new THREE.CylinderGeometry(0.042, 0.042, 1.25, 12), cableMat);
+    tdsInnerCable.position.set(tdsX, 0.92, tdsZ);
     tdsGroup.add(tdsInnerCable);
 
     const tdsCurve = new THREE.CatmullRomCurve3([
       new THREE.Vector3(tdsX, 1.56, tdsZ),
-      new THREE.Vector3(tdsX, 1.92, tdsZ - 0.05),
-      new THREE.Vector3(tdsX - 0.25, 1.85, tdsZ - 0.3),
-      new THREE.Vector3(tdsX - 0.45, 1.65, tdsZ - 0.45)
+      new THREE.Vector3(tdsX, 1.90, tdsZ - 0.05),
+      new THREE.Vector3(tdsX - 0.35, 1.82, tdsZ - 0.35),
+      new THREE.Vector3(0.2, 1.68, 0.15)
     ]);
-    const tdsOuterCable = new THREE.Mesh(new THREE.TubeGeometry(tdsCurve, 24, 0.045, 12, false), cableMat);
+    const tdsOuterCable = new THREE.Mesh(new THREE.TubeGeometry(tdsCurve, 24, 0.042, 12, false), cableMat);
     tdsGroup.add(tdsOuterCable);
 
     tankGroup.add(tdsGroup);
 
     // =========================================================================
-    // C. RAKITAN DETAIL SENSOR SUHU DS18B20 WATERPROOF (Ujung Stainless + Kabel)
+    // D. RAKITAN DETAIL SENSOR SUHU DS18B20 WATERPROOF (Kiri Depan: Ujung Logam)
     // =========================================================================
     const dsGroup = new THREE.Group();
-    const dsX = -0.65, dsZ = -0.55;
+    const dsX = -0.82, dsZ = 0.45;
 
-    // Grommet lubang masuk di tutup wadah
-    const dsGrommet = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.16, 0.18, 20), grommetMat);
+    const dsGrommet = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.15, 0.18, 20), grommetMat);
     dsGrommet.position.set(dsX, 1.55, dsZ);
     dsGroup.add(dsGrommet);
 
-    // Kabel hitam vertikal DS18B20 di dalam wadah
-    const dsCableIn = new THREE.Mesh(new THREE.CylinderGeometry(0.042, 0.042, 1.75, 14), cableMat);
-    dsCableIn.position.set(dsX, 0.68, dsZ);
+    const dsCableIn = new THREE.Mesh(new THREE.CylinderGeometry(0.042, 0.042, 1.15, 14), cableMat);
+    dsCableIn.position.set(dsX, 0.98, dsZ);
     dsGroup.add(dsCableIn);
 
-    // Selongsong karet pelindung sambungan (heatshrink hitam)
-    const dsShrink = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.18, 14), grommetMat);
-    dsShrink.position.set(dsX, -0.22, dsZ);
+    const dsShrink = new THREE.Mesh(new THREE.CylinderGeometry(0.068, 0.068, 0.28, 16), grommetMat);
+    dsShrink.position.set(dsX, 0.32, dsZ);
     dsGroup.add(dsShrink);
 
-    // Ujung kapsul logam Stainless Steel DS18B20 yang tercelup larutan
-    const dsSteelTip = new THREE.Mesh(new THREE.CylinderGeometry(0.055, 0.055, 0.52, 20), metalMat);
-    dsSteelTip.position.set(dsX, -0.55, dsZ);
+    const dsSteelTip = new THREE.Mesh(new THREE.CylinderGeometry(0.062, 0.062, 0.95, 20), metalMat);
+    dsSteelTip.position.set(dsX, -0.28, dsZ);
     dsGroup.add(dsSteelTip);
 
-    const dsDome = new THREE.Mesh(new THREE.SphereGeometry(0.055, 16, 16), metalMat);
-    dsDome.position.set(dsX, -0.81, dsZ);
+    const dsDome = new THREE.Mesh(new THREE.SphereGeometry(0.062, 16, 16), metalMat);
+    dsDome.position.set(dsX, -0.75, dsZ);
     dsGroup.add(dsDome);
 
-    // Lengkungan kabel hitam DS18B20 di atas tutup wadah
     const dsCurve = new THREE.CatmullRomCurve3([
       new THREE.Vector3(dsX, 1.56, dsZ),
-      new THREE.Vector3(dsX, 2.02, dsZ),
-      new THREE.Vector3(dsX + 0.3, 1.95, dsZ + 0.25),
-      new THREE.Vector3(dsX + 0.5, 1.65, dsZ + 0.4)
+      new THREE.Vector3(dsX, 1.92, dsZ),
+      new THREE.Vector3(dsX + 0.35, 1.85, dsZ - 0.2),
+      new THREE.Vector3(-0.15, 1.68, 0.05)
     ]);
-    const dsOuterCable = new THREE.Mesh(new THREE.TubeGeometry(dsCurve, 24, 0.045, 12, false), cableMat);
+    const dsOuterCable = new THREE.Mesh(new THREE.TubeGeometry(dsCurve, 24, 0.042, 12, false), cableMat);
     dsGroup.add(dsOuterCable);
 
     tankGroup.add(dsGroup);
 
     // =========================================================================
-    // D. TELUR BEBEK BIRU DI DASAR WADAH
+    // E. TELUR BEBEK BIRU DI DASAR WADAH
     // =========================================================================
     const eggGeo = new THREE.SphereGeometry(0.38, 24, 24);
     eggGeo.scale(1, 1.22, 1);
@@ -920,10 +995,9 @@
     });
 
     const eggPositions = [
-      [-0.75, -0.95, -0.7], [0.0, -0.95, -0.7], [0.75, -0.95, -0.7],
-      [-0.75, -0.95,  0.1], [0.0, -0.95,  0.1], [0.75, -0.95,  0.1],
-      [-0.4,  -0.95,  0.8], [0.45, -0.95,  0.8],
-      [-0.4,  -0.30, -0.2], [0.4,  -0.30, -0.2], [0.0, -0.30, 0.45]
+      [-0.65, -0.95, -0.55], [0.0, -0.95, -0.55], [0.65, -0.95, -0.55],
+      [-0.65, -0.95,  0.20], [0.0, -0.95,  0.20], [0.65, -0.95,  0.20],
+      [-0.32, -0.35, -0.18], [0.32, -0.35, -0.18], [0.0, -0.35, 0.35]
     ];
     eggPositions.forEach(([x, y, z]) => {
       const egg = new THREE.Mesh(eggGeo, eggMat);
