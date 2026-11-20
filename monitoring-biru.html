@@ -184,6 +184,14 @@
       padding: 2px 8px;
       border-radius: 999px;
     }
+    .badge-done {
+      background: #16a34a;
+      color: #ffffff;
+      font-size: 10px;
+      font-weight: 800;
+      padding: 2px 8px;
+      border-radius: 999px;
+    }
     .timer-value {
       font-size: 16px;
       font-weight: 800;
@@ -210,7 +218,7 @@
       cursor: pointer;
     }
     .btn-start { background: var(--blue-primary); color: white; }
-    .btn-reset { background: #fee2e2; color: #b91c1c; }
+    .btn-reset { background: #dcfce7; color: #15803d; border: 1px solid #86efac; }
 
     .metric-val {
       font-size: 21px;
@@ -428,9 +436,9 @@
     <div class="sensor-card">
       <div class="card-head">
         <span class="card-title">WAKTU PENGASINAN</span>
-        <span class="badge-slave" id="dayBadge">HARI 2 / 7</span>
+        <span class="badge-slave" id="dayBadge">HARI 7 / 7</span>
       </div>
-      <div class="timer-value" id="timerDisplay">1 Hari 05 Jam 21 Menit 03 Detik</div>
+      <div class="timer-value" id="timerDisplay">7 Hari 00 Jam 00 Menit 00 Detik</div>
       <div class="batch-sub" id="batchMetaText">Batch: Standar 7 Hari Perendaman</div>
       <div class="btn-row">
         <button class="btn-act btn-start" onclick="resetTimerNow()">▶ Mulai Baru</button>
@@ -443,7 +451,7 @@
         <span class="card-title">KEPEKATAN GARAM (TDS)</span>
         <span class="badge-slave">SLAVE 1</span>
       </div>
-      <div class="metric-val" id="tdsValue">15.2 %</div>
+      <div class="metric-val" id="tdsValue">16.4 %</div>
       <div class="metric-status">STATUS: Probe TDS 2-Prong Masuk ke Larutan</div>
     </div>
 
@@ -452,7 +460,7 @@
         <span class="card-title">SUHU LARUTAN (DS18B20)</span>
         <span class="badge-slave">SLAVE 1</span>
       </div>
-      <div class="metric-val" id="waterTempValue">27.8 °C</div>
+      <div class="metric-val" id="waterTempValue">27.7 °C</div>
       <div class="metric-status">STATUS: Probe Stainless Tercelup Air Garam</div>
     </div>
 
@@ -461,7 +469,7 @@
         <span class="card-title">KETINGGIAN AIR (WATER LEVEL)</span>
         <span class="badge-slave">SLAVE 1</span>
       </div>
-      <div class="metric-val" id="levelValue">88 %</div>
+      <div class="metric-val" id="levelValue">87 %</div>
       <div class="metric-status">SENSOR: Funduino Merah di Garis Permukaan Air</div>
     </div>
 
@@ -482,7 +490,7 @@
     <div class="chart-card">
       <div class="card-head">
         <span class="card-title">GRAFIK TDS GARAM (SLAVE 1)</span>
-        <span class="badge-slave" id="chartDayLabel1">HARI 2 (%)</span>
+        <span class="badge-slave" id="chartDayLabel1">HARI 7 (%)</span>
       </div>
       <svg class="chart-svg" viewBox="0 0 260 60">
         <polyline id="polyTds" fill="none" stroke="#0284c7" stroke-width="3" points="10,45 65,38 125,25 185,18 250,22" />
@@ -493,7 +501,7 @@
     <div class="chart-card">
       <div class="card-head">
         <span class="card-title">GRAFIK SUHU LARUTAN DS18B20</span>
-        <span class="badge-slave" id="chartDayLabel2">HARI 2 (°C)</span>
+        <span class="badge-slave" id="chartDayLabel2">HARI 7 (°C)</span>
       </div>
       <svg class="chart-svg" viewBox="0 0 260 60">
         <polyline id="polyWater" fill="none" stroke="#0d9488" stroke-width="3" points="10,42 65,40 125,16 185,20 250,24" />
@@ -504,7 +512,7 @@
     <div class="chart-card">
       <div class="card-head">
         <span class="card-title">GRAFIK SUHU RUANG DHT22</span>
-        <span class="badge-slave" id="chartDayLabel3">HARI 2 (°C)</span>
+        <span class="badge-slave" id="chartDayLabel3">HARI 7 (°C)</span>
       </div>
       <svg class="chart-svg" viewBox="0 0 260 60">
         <polyline id="polyRoom" fill="none" stroke="#d97706" stroke-width="3" points="10,44 65,42 125,15 185,22 250,30" />
@@ -522,8 +530,8 @@
 
   <script>
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.getRegistrations().then(regs => {
-        regs.forEach(r => r.unregister());
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js');
       });
     }
 
@@ -541,40 +549,51 @@
       document.getElementById('mobBtnGrafik').classList.toggle('active', mode === 'grafik');
     }
 
-    // --- 1. SINKRONISASI DATA BATCH & PENGUNCIAN TAB HARI (H1-H7) ---
+    // --- 1. SINKRONISASI DATA & STATUS SELESAI PER PENGASINAN ---
     const params = new URLSearchParams(window.location.search);
     const savedBatch = JSON.parse(localStorage.getItem('active_monitoring_batch') || 'null');
+    let allBatches = JSON.parse(localStorage.getItem('blueduck_batches_v1') || '[]');
 
     let batchName = params.get('batch') || (savedBatch && savedBatch.name) || 'PENGASINAN 1';
     let startDate = params.get('start') || (savedBatch && savedBatch.startDate) || '2026-11-13';
     let harvestDate = params.get('harvest') || (savedBatch && savedBatch.harvestDate) || '2026-11-20';
     let durationDays = Number(params.get('duration') || (savedBatch && savedBatch.duration) || 7);
     let eggQty = Number(params.get('qty') || (savedBatch && savedBatch.qty) || 25);
+    let batchStatus = params.get('status') || (savedBatch && savedBatch.status) || 'selesai';
 
+    function getTodayISO() {
+      const now = new Date();
+      const yy = now.getFullYear();
+      const mm = String(now.getMonth() + 1).padStart(2, '0');
+      const dd = String(now.getDate()).padStart(2, '0');
+      return `${yy}-${mm}-${dd}`;
+    }
+
+    const isCompleted = (batchStatus === 'selesai') || (getTodayISO() >= harvestDate);
     const [sy, sm, sd] = startDate.split('-').map(Number);
     let startTimestamp = new Date(sy, sm - 1, sd, 8, 0, 0).getTime();
 
-    document.getElementById('topBatchBanner').innerText =
-      `● BATCH AKTIF: ${batchName} (${eggQty} BUTIR) | MULAI: ${startDate} → PANEN: ${harvestDate}`;
-    document.getElementById('batchMetaText').innerText =
-      `${batchName} (${eggQty} Butir) • Target Panen: ${harvestDate}`;
+    // Ambil log data sensor spesifik milik batch ini jika tersimpan di memori
+    const matchedBatchObj = allBatches.find(b => b.name === batchName && b.startDate === startDate);
+    const batchLogs = (matchedBatchObj && matchedBatchObj.sensorLogs) || (savedBatch && savedBatch.sensorLogs) || [];
+
+    function updateTopHeaderStatus() {
+      const doneText = isCompleted ? ' | ✅ SELESAI (SIAP PANEN)' : ' | ⏳ SEDANG BERJALAN';
+      document.getElementById('topBatchBanner').innerText =
+        `● ${batchName} (${eggQty} BUTIR) | MULAI: ${startDate} → PANEN: ${harvestDate}${doneText}`;
+      document.getElementById('batchMetaText').innerText =
+        `${batchName} (${eggQty} Butir) • Panen: ${harvestDate} ${isCompleted ? '(✅ SELESAI)' : ''}`;
+    }
+    updateTopHeaderStatus();
 
     const chartDataByDay = {
-      1: {
-        tds: "10,45 65,38 125,25 185,18 250,22",
-        water: "10,42 65,40 125,16 185,20 250,24",
-        room: "10,44 65,42 125,15 185,22 250,30"
-      },
-      2: {
-        tds: "10,40 65,33 125,22 185,20 250,19",
-        water: "10,38 65,35 125,20 185,24 250,21",
-        room: "10,42 65,36 125,18 185,25 250,28"
-      },
-      3: {
-        tds: "10,38 65,30 125,24 185,19 250,17",
-        water: "10,40 65,34 125,19 185,22 250,23",
-        room: "10,41 65,35 125,17 185,24 250,27"
-      }
+      1: { tds: "10,48 65,42 125,34 185,28 250,26", water: "10,42 65,40 125,20 185,24 250,28", room: "10,44 65,42 125,18 185,25 250,32" },
+      2: { tds: "10,44 65,37 125,28 185,24 250,22", water: "10,38 65,35 125,20 185,24 250,21", room: "10,42 65,36 125,18 185,25 250,28" },
+      3: { tds: "10,40 65,33 125,25 185,21 250,19", water: "10,40 65,34 125,19 185,22 250,23", room: "10,41 65,35 125,17 185,24 250,27" },
+      4: { tds: "10,36 65,30 125,22 185,18 250,17", water: "10,39 65,33 125,18 185,21 250,22", room: "10,40 65,34 125,16 185,23 250,26" },
+      5: { tds: "10,33 65,27 125,20 185,16 250,15", water: "10,38 65,32 125,17 185,20 250,21", room: "10,39 65,33 125,16 185,22 250,25" },
+      6: { tds: "10,30 65,24 125,18 185,15 250,14", water: "10,37 65,31 125,17 185,19 250,20", room: "10,38 65,32 125,15 185,21 250,24" },
+      7: { tds: "10,28 65,22 125,16 185,14 250,13", water: "10,36 65,30 125,16 185,19 250,20", room: "10,37 65,31 125,15 185,20 250,23" }
     };
 
     let unlockedMaxDay = 1;
@@ -583,9 +602,9 @@
     function renderDayTabs() {
       const container = document.getElementById('dayTabsContainer');
       container.innerHTML = "";
-      for (let d = 1; d <= 7; d++) {
+      for (let d = 1; d <= durationDays; d++) {
         const btn = document.createElement('button');
-        const isLocked = d > unlockedMaxDay;
+        const isLocked = !isCompleted && (d > unlockedMaxDay);
         btn.className = 'day-tab' + (d === selectedTabDay ? ' active' : '') + (isLocked ? ' locked' : '');
         btn.innerText = isLocked ? `H${d}🔒` : `H${d}`;
         btn.onclick = () => {
@@ -600,7 +619,7 @@
     }
 
     function selectDayTab(dayNum) {
-      if (dayNum > unlockedMaxDay) return;
+      if (!isCompleted && dayNum > unlockedMaxDay) return;
       selectedTabDay = dayNum;
       renderDayTabs();
 
@@ -608,13 +627,30 @@
       document.getElementById('chartDayLabel2').innerText = `HARI ${dayNum} (°C)`;
       document.getElementById('chartDayLabel3').innerText = `HARI ${dayNum} (°C)`;
 
-      const d = chartDataByDay[dayNum] || chartDataByDay[2];
+      // Perbarui angka kartu sensor sesuai data hari ke-dayNum milik batch ini
+      const logForDay = batchLogs[dayNum - 1];
+      if (logForDay) {
+        document.getElementById('tdsValue').innerText = `${logForDay.tds} %`;
+        document.getElementById('waterTempValue').innerText = `${logForDay.waterTemp} °C`;
+        document.getElementById('roomTempValue').innerText = `${logForDay.roomTemp} °C`;
+        document.getElementById('levelValue').innerText = `${logForDay.level} %`;
+      }
+
+      const d = chartDataByDay[dayNum] || chartDataByDay[7];
       document.getElementById('polyTds').setAttribute('points', d.tds);
       document.getElementById('polyWater').setAttribute('points', d.water);
       document.getElementById('polyRoom').setAttribute('points', d.room);
     }
 
     function updateTimer() {
+      const badge = document.getElementById('dayBadge');
+      if (isCompleted) {
+        document.getElementById('timerDisplay').innerText = `${durationDays} Hari 00 Jam 00 Menit (SELESAI)`;
+        badge.innerText = `✅ SELESAI (${durationDays}/${durationDays})`;
+        badge.className = 'badge-done';
+        return;
+      }
+
       const diffSec = Math.max(0, Math.floor((Date.now() - startTimestamp) / 1000));
       const days = Math.floor(diffSec / 86400);
       const hours = Math.floor((diffSec % 86400) / 3600);
@@ -624,7 +660,7 @@
 
       document.getElementById('timerDisplay').innerText =
         `${days} Hari ${hours} Jam ${mins} Menit ${secs} Detik`;
-      document.getElementById('dayBadge').innerText = `HARI ${currentDay} / ${durationDays}`;
+      badge.innerText = `HARI ${currentDay} / ${durationDays}`;
 
       if (currentDay !== unlockedMaxDay) {
         unlockedMaxDay = currentDay;
@@ -634,7 +670,9 @@
     }
 
     const initDiffSec = Math.max(0, Math.floor((Date.now() - startTimestamp) / 1000));
-    unlockedMaxDay = Math.min(durationDays, Math.floor(initDiffSec / 86400) + 1);
+    unlockedMaxDay = isCompleted
+      ? durationDays
+      : Math.min(durationDays, Math.floor(initDiffSec / 86400) + 1);
     selectedTabDay = unlockedMaxDay;
     renderDayTabs();
     selectDayTab(unlockedMaxDay);
@@ -649,10 +687,20 @@
     }
 
     function finishBatch() {
-      alert(`Pengasinan ${batchName} (${eggQty} butir) selesai! Silakan kembali ke halaman Kalender Toko.`);
+      // Tandai selesai dan simpan permanen ke daftar riwayat toko-v1.html
+      let storedBatches = JSON.parse(localStorage.getItem('blueduck_batches_v1') || '[]');
+      storedBatches = storedBatches.map(b => {
+        if (b.name === batchName && b.startDate === startDate) {
+          b.status = 'selesai';
+        }
+        return b;
+      });
+      localStorage.setItem('blueduck_batches_v1', JSON.stringify(storedBatches));
+      alert(`✅ ${batchName} (${eggQty} butir) ditandai SELESAI dan data sensornya sudah diarsipkan di Riwayat Kalender!`);
+      window.location.href = 'toko-v1.html#kalender-pengasinan';
     }
 
-    // --- 2. VISUALISASI 3D LENGKAP 4 SENSOR (DHT22, PROBE TDS, DS18B20, WATER LEVEL FUNDUINO MERAH) ---
+    // --- 2. VISUALISASI 3D LENGKAP 4 SENSOR ---
     const container = document.getElementById('canvas3d');
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(42, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -682,7 +730,6 @@
     const tankGroup = new THREE.Group();
     scene.add(tankGroup);
 
-    // Dinding Kaca Wadah
     const boxGeo = new THREE.BoxGeometry(3.2, 3.0, 3.2);
     const glassMat = new THREE.MeshPhysicalMaterial({
       color: 0xe0f2fe,
@@ -698,7 +745,6 @@
     const wireframe = new THREE.LineSegments(edges, lineMat);
     tankGroup.add(wireframe);
 
-    // Air Larutan Garam (Permukaan atas air berada di y = +0.60)
     const waterGeo = new THREE.BoxGeometry(3.08, 2.05, 3.08);
     const waterMat = new THREE.MeshStandardMaterial({
       color: 0xbae6fd,
@@ -712,16 +758,6 @@
     waterMesh.position.y = -0.42;
     tankGroup.add(waterMesh);
 
-    // Garis Bingkai Permukaan Air (Waterline Highlight)
-    const waterLineEdges = new THREE.EdgesGeometry(new THREE.BoxGeometry(3.09, 0.01, 3.09));
-    const waterLineMesh = new THREE.LineSegments(
-      waterLineEdges,
-      new THREE.LineBasicMaterial({ color: 0x7dd3fc })
-    );
-    waterLineMesh.position.y = 0.605;
-    tankGroup.add(waterLineMesh);
-
-    // Tutup Wadah Transparan Biru Gelap
     const lidGeo = new THREE.BoxGeometry(3.32, 0.14, 3.32);
     const lidMat = new THREE.MeshStandardMaterial({
       color: 0x1e293b,
@@ -733,7 +769,7 @@
     lidMesh.position.y = 1.55;
     tankGroup.add(lidMesh);
 
-    // Bohlam Lampu Pemanas Kuning di Tengah Bawah Tutup
+    // Bohlam Lampu Kuning
     const bulbGeo = new THREE.SphereGeometry(0.26, 24, 24);
     const bulbMat = new THREE.MeshStandardMaterial({
       color: 0xfef08a,
@@ -754,12 +790,9 @@
     glowMesh.position.set(0, 1.25, 0);
     tankGroup.add(glowMesh);
 
-    // =========================================================================
-    // A. RAKITAN DETAIL SENSOR DHT22 (Putih Berventilasi di Atas Tutup)
-    // =========================================================================
+    // A. Sensor DHT22 Putih Berventilasi
     const dhtGroup = new THREE.Group();
     dhtGroup.position.set(0.0, 1.62, 0.05);
-
     const standMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.5 });
     const standMesh = new THREE.Mesh(new THREE.BoxGeometry(0.54, 1.15, 0.08), standMat);
     standMesh.position.set(0, 0.58, -0.2);
@@ -774,14 +807,6 @@
     dhtTab.position.set(0, 0.94, -0.1);
     dhtGroup.add(dhtTab);
 
-    const holeMesh = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.07, 0.07, 0.12, 16),
-      new THREE.MeshBasicMaterial({ color: 0x0f172a })
-    );
-    holeMesh.rotation.x = Math.PI / 2;
-    holeMesh.position.set(0, 0.95, -0.1);
-    dhtGroup.add(holeMesh);
-
     const slotMat = new THREE.MeshBasicMaterial({ color: 0x1e293b });
     for (let r = 0; r < 5; r++) {
       for (let c = 0; c < 4; c++) {
@@ -792,133 +817,40 @@
     }
     tankGroup.add(dhtGroup);
 
-    // =========================================================================
-    // B. RAKITAN DETAIL SENSOR WATER LEVEL FUNDUINO MERAH (Dinding Kanan Atas Air)
-    // =========================================================================
+    // B. Water Level Sensor Funduino Merah
     const wlGroup = new THREE.Group();
-    // Posisi menempel di dinding kaca kanan-belakang, tepat memotong permukaan air (y = 0.60)
-    const wlX = 1.48, wlY = 0.56, wlZ = -0.25;
-    wlGroup.position.set(wlX, wlY, wlZ);
-    wlGroup.rotation.y = -Math.PI / 2; // Menghadap ke tengah wadah
+    wlGroup.position.set(1.48, 0.56, -0.25);
+    wlGroup.rotation.y = -Math.PI / 2;
 
-    const pcbRedMat = new THREE.MeshStandardMaterial({
-      color: 0xdc2626,
-      roughness: 0.35,
-      metalness: 0.1
-    });
-    const traceSilverMat = new THREE.MeshStandardMaterial({
-      color: 0xf8fafc,
-      metalness: 0.85,
-      roughness: 0.15
-    });
+    const pcbRedMat = new THREE.MeshStandardMaterial({ color: 0xdc2626, roughness: 0.35 });
+    const traceSilverMat = new THREE.MeshStandardMaterial({ color: 0xf8fafc, metalness: 0.85, roughness: 0.15 });
 
-    // Bodi Bawah PCB Merah (Bagian garis-garis yang tercelup sebagian ke air)
     const wlLowerBody = new THREE.Mesh(new THREE.BoxGeometry(0.62, 0.88, 0.04), pcbRedMat);
     wlLowerBody.position.set(0, -0.18, 0);
     wlGroup.add(wlLowerBody);
 
-    // Bodi Kepala Atas PCB Merah (Bagian kering di atas permukaan air)
     const wlUpperHead = new THREE.Mesh(new THREE.BoxGeometry(0.46, 0.34, 0.04), pcbRedMat);
     wlUpperHead.position.set(0, 0.42, 0);
     wlGroup.add(wlUpperHead);
 
-    // 2 Kuping Lubang Baut Kiri-Kanan di Kepala Sensor Funduino
-    const wlEarLeft = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.16, 0.04), pcbRedMat);
-    wlEarLeft.position.set(-0.25, 0.48, 0);
-    wlGroup.add(wlEarLeft);
-
-    const wlEarRight = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.16, 0.04), pcbRedMat);
-    wlEarRight.position.set(0.25, 0.48, 0);
-    wlGroup.add(wlEarRight);
-
-    const earHoleGeo = new THREE.CylinderGeometry(0.035, 0.035, 0.05, 12);
-    const earHoleMat = new THREE.MeshBasicMaterial({ color: 0x0f172a });
-    const earHoleL = new THREE.Mesh(earHoleGeo, earHoleMat);
-    earHoleL.rotation.x = Math.PI / 2;
-    earHoleL.position.set(-0.25, 0.48, 0);
-    wlGroup.add(earHoleL);
-
-    const earHoleR = new THREE.Mesh(earHoleGeo, earHoleMat);
-    earHoleR.rotation.x = Math.PI / 2;
-    earHoleR.position.set(0.25, 0.48, 0);
-    wlGroup.add(earHoleR);
-
-    // 10 Jalur Konduktif Perak Paralel Vertikal Khas Sensor Air Funduino
     for (let i = 0; i < 10; i++) {
       const trace = new THREE.Mesh(new THREE.BoxGeometry(0.028, 0.78, 0.012), traceSilverMat);
       trace.position.set(-0.245 + i * 0.054, -0.20, 0.022);
       wlGroup.add(trace);
     }
-
-    // Baris Komponen SMD Hitam (Transistor & Resistor) di Atas Garis Air
-    const smdBlackMat = new THREE.MeshStandardMaterial({ color: 0x0f172a });
-    const smdTransistor = new THREE.Mesh(new THREE.BoxGeometry(0.09, 0.06, 0.03), smdBlackMat);
-    smdTransistor.position.set(0, 0.34, 0.025);
-    wlGroup.add(smdTransistor);
-
-    const smdRes1 = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.04, 0.025), smdBlackMat);
-    smdRes1.position.set(-0.12, 0.34, 0.025);
-    wlGroup.add(smdRes1);
-
-    const smdRes2 = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.04, 0.025), smdBlackMat);
-    smdRes2.position.set(0.12, 0.34, 0.025);
-    wlGroup.add(smdRes2);
-
-    // Kotak Label Putih [S] [+] [-]
-    const pinLabelBox = new THREE.Mesh(
-      new THREE.BoxGeometry(0.24, 0.07, 0.01),
-      new THREE.MeshBasicMaterial({ color: 0xffffff })
-    );
-    pinLabelBox.position.set(0, 0.46, 0.022);
-    wlGroup.add(pinLabelBox);
-
-    // Header Konektor Hitam 3-Pin (S, +, -) + 3 Jarum Pin Logam
-    const headerBlock = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.08, 0.08), smdBlackMat);
-    headerBlock.position.set(0, 0.56, 0.02);
-    wlGroup.add(headerBlock);
-
-    // 3 Kabel Jumper Warna-Warni (Merah VCC, Kuning Sinyal, Biru GND) Naik ke Tutup Atas
-    const wireColors = [0xfacc15, 0xef4444, 0x3b82f6];
-    [-0.07, 0.0, 0.07].forEach((offsetX, idx) => {
-      const pinCurve = new THREE.CatmullRomCurve3([
-        new THREE.Vector3(offsetX, 0.60, 0.02),
-        new THREE.Vector3(offsetX, 1.05, 0.05),
-        new THREE.Vector3(offsetX * 1.5, 1.35, -0.35),
-        new THREE.Vector3(0, 1.15, -1.15)
-      ]);
-      const wireMesh = new THREE.Mesh(
-        new THREE.TubeGeometry(pinCurve, 20, 0.022, 8, false),
-        new THREE.MeshStandardMaterial({ color: wireColors[idx], roughness: 0.3 })
-      );
-      wlGroup.add(wireMesh);
-    });
-
     tankGroup.add(wlGroup);
 
-    // =========================================================================
-    // C. RAKITAN DETAIL PROBE TDS (Kanan Depan: Bodi Putih + 2 Jarum Elektroda)
-    // =========================================================================
+    // C. Probe TDS 2-Prong
     const tdsGroup = new THREE.Group();
     const tdsX = 0.82, tdsZ = 0.72;
-
     const grommetMat = new THREE.MeshStandardMaterial({ color: 0x0f172a });
-    const tdsGrommet = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.16, 0.18, 20), grommetMat);
-    tdsGrommet.position.set(tdsX, 1.55, tdsZ);
-    tdsGroup.add(tdsGrommet);
+    const cableMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.4 });
+    const metalMat = new THREE.MeshStandardMaterial({ color: 0xe2e8f0, metalness: 0.88, roughness: 0.15 });
 
-    const tdsBody = new THREE.Mesh(
-      new THREE.BoxGeometry(0.32, 0.52, 0.24),
-      new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.2 })
-    );
+    const tdsBody = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.52, 0.24), dhtWhiteMat);
     tdsBody.position.set(tdsX, 0.05, tdsZ);
     tdsGroup.add(tdsBody);
 
-    // 2 Jarum Elektroda Logam (Dual-Prong) di Ujung Bawah Probe TDS
-    const metalMat = new THREE.MeshStandardMaterial({
-      color: 0xe2e8f0,
-      metalness: 0.88,
-      roughness: 0.15
-    });
     const prong1 = new THREE.Mesh(new THREE.CylinderGeometry(0.028, 0.028, 0.36, 14), metalMat);
     prong1.position.set(tdsX - 0.07, -0.38, tdsZ);
     tdsGroup.add(prong1);
@@ -927,63 +859,24 @@
     prong2.position.set(tdsX + 0.07, -0.38, tdsZ);
     tdsGroup.add(prong2);
 
-    // Kabel Hitam Probe TDS
-    const cableMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.4 });
     const tdsInnerCable = new THREE.Mesh(new THREE.CylinderGeometry(0.042, 0.042, 1.25, 12), cableMat);
     tdsInnerCable.position.set(tdsX, 0.92, tdsZ);
     tdsGroup.add(tdsInnerCable);
-
-    const tdsCurve = new THREE.CatmullRomCurve3([
-      new THREE.Vector3(tdsX, 1.56, tdsZ),
-      new THREE.Vector3(tdsX, 1.90, tdsZ - 0.05),
-      new THREE.Vector3(tdsX - 0.35, 1.82, tdsZ - 0.35),
-      new THREE.Vector3(0.2, 1.68, 0.15)
-    ]);
-    const tdsOuterCable = new THREE.Mesh(new THREE.TubeGeometry(tdsCurve, 24, 0.042, 12, false), cableMat);
-    tdsGroup.add(tdsOuterCable);
-
     tankGroup.add(tdsGroup);
 
-    // =========================================================================
-    // D. RAKITAN DETAIL SENSOR SUHU DS18B20 WATERPROOF (Kiri Depan: Ujung Logam)
-    // =========================================================================
+    // D. Sensor Suhu DS18B20 Waterproof
     const dsGroup = new THREE.Group();
     const dsX = -0.82, dsZ = 0.45;
-
-    const dsGrommet = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.15, 0.18, 20), grommetMat);
-    dsGrommet.position.set(dsX, 1.55, dsZ);
-    dsGroup.add(dsGrommet);
-
     const dsCableIn = new THREE.Mesh(new THREE.CylinderGeometry(0.042, 0.042, 1.15, 14), cableMat);
     dsCableIn.position.set(dsX, 0.98, dsZ);
     dsGroup.add(dsCableIn);
 
-    const dsShrink = new THREE.Mesh(new THREE.CylinderGeometry(0.068, 0.068, 0.28, 16), grommetMat);
-    dsShrink.position.set(dsX, 0.32, dsZ);
-    dsGroup.add(dsShrink);
-
     const dsSteelTip = new THREE.Mesh(new THREE.CylinderGeometry(0.062, 0.062, 0.95, 20), metalMat);
     dsSteelTip.position.set(dsX, -0.28, dsZ);
     dsGroup.add(dsSteelTip);
-
-    const dsDome = new THREE.Mesh(new THREE.SphereGeometry(0.062, 16, 16), metalMat);
-    dsDome.position.set(dsX, -0.75, dsZ);
-    dsGroup.add(dsDome);
-
-    const dsCurve = new THREE.CatmullRomCurve3([
-      new THREE.Vector3(dsX, 1.56, dsZ),
-      new THREE.Vector3(dsX, 1.92, dsZ),
-      new THREE.Vector3(dsX + 0.35, 1.85, dsZ - 0.2),
-      new THREE.Vector3(-0.15, 1.68, 0.05)
-    ]);
-    const dsOuterCable = new THREE.Mesh(new THREE.TubeGeometry(dsCurve, 24, 0.042, 12, false), cableMat);
-    dsGroup.add(dsOuterCable);
-
     tankGroup.add(dsGroup);
 
-    // =========================================================================
-    // E. TELUR BEBEK BIRU DI DASAR WADAH
-    // =========================================================================
+    // E. Telur Bebek Biru
     const eggGeo = new THREE.SphereGeometry(0.38, 24, 24);
     eggGeo.scale(1, 1.22, 1);
     const eggMat = new THREE.MeshStandardMaterial({
@@ -1054,7 +947,7 @@
         }
       });
     } catch (e) {
-      console.warn('MQTT fallback:', e);
+      console.warn('MQTT offline fallback:', e);
     }
 
     function setCamView(mode) {
