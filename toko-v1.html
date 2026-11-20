@@ -1643,7 +1643,6 @@
       return `${yy}-${mm}-${dd}`;
     }
 
-    // Setiap batch mendapat profil kurva sensor unik (tidak sama dengan batch lain)
     function generateUniqueSensorLogs(duration, batchSeed = 1) {
       const logs = [];
       const baseTds = 14.2 + ((batchSeed % 5) * 0.35);
@@ -1756,7 +1755,6 @@
 
       const now = new Date();
       const [sy, sm, sd] = startDate.split('-').map(Number);
-      // Jika mulai hari ini, timer benar-benar mulai dari detik 0 (Date.now())!
       const startTimestamp = (startDate === getTodayISO())
         ? Date.now()
         : new Date(sy, sm - 1, sd, now.getHours(), now.getMinutes(), now.getSeconds()).getTime();
@@ -1786,10 +1784,10 @@
       saveBatches();
     }
 
-    function toggleBatchDone(id) {
+    function markBatchDone(id) {
       batches = batches.map(b => {
         if (b.id === id) {
-          b.status = (b.status === 'selesai') ? 'berjalan' : 'selesai';
+          b.status = 'selesai';
         }
         return b;
       });
@@ -1803,7 +1801,6 @@
       const logs = b.sensorLogs || generateUniqueSensorLogs(b.duration || 7, 1);
       const isDone = b.status === 'selesai' || getTodayISO() >= b.harvestDate;
 
-      // Jika masih baru berjalan (misal baru Hari ke-1), tampilkan hari yang sudah berjalan saja
       const elapsedDays = Math.min(
         b.duration,
         Math.max(1, Math.floor((Date.now() - (b.createdAtTimestamp || Date.now())) / 86400000) + 1)
@@ -1932,9 +1929,7 @@
           <div class="batch-actions">
             <button class="btn-sync-3d" onclick="openBatchIn3D(${b.id})">📡 Pantau 3D</button>
             <button class="btn-data-batch" onclick="openBatchDataModal(${b.id})">📊 Data Hasil</button>
-            <button class="btn-done-batch" onclick="toggleBatchDone(${b.id})">
-              ${isDone ? '↺ Ulangi Aktif' : '✓ Selesai'}
-            </button>
+            ${!isDone ? `<button class="btn-done-batch" onclick="markBatchDone(${b.id})">✓ Selesai</button>` : ''}
             <button class="btn-del-batch" onclick="deleteBatchRecord(${b.id})">Hapus</button>
           </div>
         </div>
