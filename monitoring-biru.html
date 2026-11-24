@@ -417,7 +417,7 @@
         <p id="topBatchBanner">● BATCH AKTIF: PENGASINAN 1 (25 BUTIR)</p>
       </div>
       <div class="top-actions">
-        <a href="toko-v1.html#kalender-pengasinan" class="btn-back-store">← Toko &amp; Kalender</a>
+        <a href="index.html#kalender-pengasinan" class="btn-back-store">← Toko &amp; Kalender</a>
         <button class="btn-lamp" id="lampBtn" onclick="toggleLamp(true)">💡 Lampu: ON</button>
         <div class="sync-pill"><span class="dot-pulse" id="mqttDot"></span> <span id="mqttText">SYNC</span></div>
       </div>
@@ -549,17 +549,18 @@
       document.getElementById('mobBtnGrafik').classList.toggle('active', mode === 'grafik');
     }
 
-    // --- 1. SINKRONISASI DATA & STATUS SELESAI PER PENGASINAN ---
+    // --- 1. SINKRONISASI DATA, WAKTU START 0, & KURVA GRAFIK UNIK PER PENGASINAN ---
     const params = new URLSearchParams(window.location.search);
     const savedBatch = JSON.parse(localStorage.getItem('active_monitoring_batch') || 'null');
     let allBatches = JSON.parse(localStorage.getItem('blueduck_batches_v1') || '[]');
 
+    let batchId = Number(params.get('id') || (savedBatch && savedBatch.id) || 1);
     let batchName = params.get('batch') || (savedBatch && savedBatch.name) || 'PENGASINAN 1';
     let startDate = params.get('start') || (savedBatch && savedBatch.startDate) || '2026-11-13';
     let harvestDate = params.get('harvest') || (savedBatch && savedBatch.harvestDate) || '2026-11-20';
     let durationDays = Number(params.get('duration') || (savedBatch && savedBatch.duration) || 7);
     let eggQty = Number(params.get('qty') || (savedBatch && savedBatch.qty) || 25);
-    let batchStatus = params.get('status') || (savedBatch && savedBatch.status) || 'selesai';
+    let batchStatus = params.get('status') || (savedBatch && savedBatch.status) || 'berjalan';
 
     function getTodayISO() {
       const now = new Date();
@@ -569,16 +570,23 @@
       return `${yy}-${mm}-${dd}`;
     }
 
-    const isCompleted = (batchStatus === 'selesai') || (getTodayISO() >= harvestDate);
-    const [sy, sm, sd] = startDate.split('-').map(Number);
-    let startTimestamp = new Date(sy, sm - 1, sd, 8, 0, 0).getTime();
+    const matchedBatchObj = allBatches.find(b => b.id === batchId) ||
+                            allBatches.find(b => b.name === batchName && b.startDate === startDate);
 
-    // Ambil log data sensor spesifik milik batch ini jika tersimpan di memori
-    const matchedBatchObj = allBatches.find(b => b.name === batchName && b.startDate === startDate);
-    const batchLogs = (matchedBatchObj && matchedBatchObj.sensorLogs) || (savedBatch && savedBatch.sensorLogs) || [];
+    let startTimestamp = Number(params.get('ts')) ||
+                         (matchedBatchObj && matchedBatchObj.createdAtTimestamp) ||
+                         (savedBatch && savedBatch.createdAtTimestamp) ||
+                         Date.now();
+
+    const isCompleted = (batchStatus === 'selesai') ||
+                        (matchedBatchObj && matchedBatchObj.status === 'selesai') ||
+                        (getTodayISO() >= harvestDate);
+
+    const batchLogs = (matchedBatchObj && matchedBatchObj.sensorLogs) ||
+                      (savedBatch && savedBatch.sensorLogs) || [];
 
     function updateTopHeaderStatus() {
-      const doneText = isCompleted ? ' | ✅ SELESAI (SIAP PANEN)' : ' | ⏳ SEDANG BERJALAN';
+      const doneText = isCompleted ? ' | ✅ SELESAI (7 HARI)' : ' | ⏳ BARU MULAI / BERJALAN';
       document.getElementById('topBatchBanner').innerText =
         `● ${batchName} (${eggQty} BUTIR) | MULAI: ${startDate} → PANEN: ${harvestDate}${doneText}`;
       document.getElementById('batchMetaText').innerText =
@@ -586,18 +594,23 @@
     }
     updateTopHeaderStatus();
 
-    const chartDataByDay = {
-      1: { tds: "10,48 65,42 125,34 185,28 250,26", water: "10,42 65,40 125,20 185,24 250,28", room: "10,44 65,42 125,18 185,25 250,32" },
-      2: { tds: "10,44 65,37 125,28 185,24 250,22", water: "10,38 65,35 125,20 185,24 250,21", room: "10,42 65,36 125,18 185,25 250,28" },
-      3: { tds: "10,40 65,33 125,25 185,21 250,19", water: "10,40 65,34 125,19 185,22 250,23", room: "10,41 65,35 125,17 185,24 250,27" },
-      4: { tds: "10,36 65,30 125,22 185,18 250,17", water: "10,39 65,33 125,18 185,21 250,22", room: "10,40 65,34 125,16 185,23 250,26" },
-      5: { tds: "10,33 65,27 125,20 185,16 250,15", water: "10,38 65,32 125,17 185,20 250,21", room: "10,39 65,33 125,16 185,22 250,25" },
-      6: { tds: "10,30 65,24 125,18 185,15 250,14", water: "10,37 65,31 125,17 185,19 250,20", room: "10,38 65,32 125,15 185,21 250,24" },
-      7: { tds: "10,28 65,22 125,16 185,14 250,13", water: "10,36 65,30 125,16 185,19 250,20", room: "10,37 65,31 125,15 185,20 250,23" }
-    };
+    function buildUniqueChartPoints(dayNum, seed) {
+      const s = (seed % 7) + 1;
+      const y1 = Math.max(12, Math.min(48, 46 - dayNum * 2 - (s % 4) * 2));
+      const y2 = Math.max(12, Math.min(48, 40 - dayNum * 2 + ((s + 1) % 5) * 2));
+      const y3 = Math.max(10, Math.min(46, 28 - dayNum * 1.5 - ((s + 2) % 4) * 2));
+      const y4 = Math.max(10, Math.min(46, 22 - dayNum * 1.2 + ((s + 3) % 4) * 2));
+      const y5 = Math.max(10, Math.min(45, 20 - dayNum * 1.1 - (s % 3) * 2));
+      return {
+        tds: `10,${y1} 65,${y2} 125,${y3} 185,${y4} 250,${y5}`,
+        water: `10,${Math.min(46, y2 + 4)} 65,${Math.min(46, y1 - 2)} 125,${Math.max(12, y4 - 3)} 185,${y3} 250,${Math.min(44, y5 + 5)}`,
+        room: `10,${Math.min(47, y1 + 2)} 65,${y3 + 6} 125,${Math.max(12, y5)} 185,${y2 - 4} 250,${Math.min(45, y4 + 7)}`
+      };
+    }
 
     let unlockedMaxDay = 1;
     let selectedTabDay = 1;
+    let liveEspConnected = false;
 
     function renderDayTabs() {
       const container = document.getElementById('dayTabsContainer');
@@ -609,7 +622,7 @@
         btn.innerText = isLocked ? `H${d}🔒` : `H${d}`;
         btn.onclick = () => {
           if (isLocked) {
-            alert(`Tidak bisa dibuka: Pengasinan baru berjalan di Hari ke-${unlockedMaxDay}. Data Hari ke-${d} belum tersedia!`);
+            alert(`Tidak bisa dibuka: ${batchName} baru berjalan di Hari ke-${unlockedMaxDay}. Data Hari ke-${d} belum tersedia!`);
             return;
           }
           selectDayTab(d);
@@ -623,20 +636,21 @@
       selectedTabDay = dayNum;
       renderDayTabs();
 
-      document.getElementById('chartDayLabel1').innerText = `HARI ${dayNum} (%)`;
-      document.getElementById('chartDayLabel2').innerText = `HARI ${dayNum} (°C)`;
-      document.getElementById('chartDayLabel3').innerText = `HARI ${dayNum} (°C)`;
+      document.getElementById('chartDayLabel1').innerText = `${batchName} • H${dayNum} (%)`;
+      document.getElementById('chartDayLabel2').innerText = `${batchName} • H${dayNum} (°C)`;
+      document.getElementById('chartDayLabel3').innerText = `${batchName} • H${dayNum} (°C)`;
 
-      // Perbarui angka kartu sensor sesuai data hari ke-dayNum milik batch ini
-      const logForDay = batchLogs[dayNum - 1];
-      if (logForDay) {
-        document.getElementById('tdsValue').innerText = `${logForDay.tds} %`;
-        document.getElementById('waterTempValue').innerText = `${logForDay.waterTemp} °C`;
-        document.getElementById('roomTempValue').innerText = `${logForDay.roomTemp} °C`;
-        document.getElementById('levelValue').innerText = `${logForDay.level} %`;
+      if (!liveEspConnected) {
+        const logForDay = batchLogs[dayNum - 1];
+        if (logForDay) {
+          document.getElementById('tdsValue').innerText = `${logForDay.tds} %`;
+          document.getElementById('waterTempValue').innerText = `${logForDay.waterTemp} °C`;
+          document.getElementById('roomTempValue').innerText = `${logForDay.roomTemp} °C`;
+          document.getElementById('levelValue').innerText = `${logForDay.level} %`;
+        }
       }
 
-      const d = chartDataByDay[dayNum] || chartDataByDay[7];
+      const d = buildUniqueChartPoints(dayNum, batchId);
       document.getElementById('polyTds').setAttribute('points', d.tds);
       document.getElementById('polyWater').setAttribute('points', d.water);
       document.getElementById('polyRoom').setAttribute('points', d.room);
@@ -659,7 +673,7 @@
       const currentDay = Math.min(durationDays, days + 1);
 
       document.getElementById('timerDisplay').innerText =
-        `${days} Hari ${hours} Jam ${mins} Menit ${secs} Detik`;
+        `${days} Hari ${String(hours).padStart(2, '0')} Jam ${String(mins).padStart(2, '0')} Menit ${String(secs).padStart(2, '0')} Detik`;
       badge.innerText = `HARI ${currentDay} / ${durationDays}`;
 
       if (currentDay !== unlockedMaxDay) {
@@ -687,17 +701,16 @@
     }
 
     function finishBatch() {
-      // Tandai selesai dan simpan permanen ke daftar riwayat toko-v1.html
       let storedBatches = JSON.parse(localStorage.getItem('blueduck_batches_v1') || '[]');
       storedBatches = storedBatches.map(b => {
-        if (b.name === batchName && b.startDate === startDate) {
+        if (b.id === batchId || (b.name === batchName && b.startDate === startDate)) {
           b.status = 'selesai';
         }
         return b;
       });
       localStorage.setItem('blueduck_batches_v1', JSON.stringify(storedBatches));
-      alert(`✅ ${batchName} (${eggQty} butir) ditandai SELESAI dan data sensornya sudah diarsipkan di Riwayat Kalender!`);
-      window.location.href = 'toko-v1.html#kalender-pengasinan';
+      alert(`✅ ${batchName} (${eggQty} butir) ditandai SELESAI dan seluruh rekaman grafiknya tersimpan di Riwayat Kalender!`);
+      window.location.href = 'index.html#kalender-pengasinan';
     }
 
     // --- 2. VISUALISASI 3D LENGKAP 4 SENSOR ---
@@ -843,7 +856,6 @@
     // C. Probe TDS 2-Prong
     const tdsGroup = new THREE.Group();
     const tdsX = 0.82, tdsZ = 0.72;
-    const grommetMat = new THREE.MeshStandardMaterial({ color: 0x0f172a });
     const cableMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.4 });
     const metalMat = new THREE.MeshStandardMaterial({ color: 0xe2e8f0, metalness: 0.88, roughness: 0.15 });
 
@@ -898,9 +910,12 @@
       tankGroup.add(egg);
     });
 
-    // --- 3. SINKRONISASI REAL-TIME LAMPU ON/OFF ANTARA HP & LAPTOP VIA MQTT ---
-    const TOPIC_LAMP = 'agmilaoca/blueduck/monitoring-biru/lamp';
+    // --- 3. SINKRONISASI REAL-TIME ESP32 (SLAVE 1 & SLAVE 2) + LAMPU VIA MQTT ---
+    const TOPIC_LAMP    = 'agmilaoca/blueduck/monitoring-biru/lamp';
+    const TOPIC_SLAVE1  = 'agmilaoca/blueduck/monitoring-biru/slave1';
+    const TOPIC_SLAVE2  = 'agmilaoca/blueduck/monitoring-biru/slave2';
     let lampOn = true;
+    let currentHumidity = '68.0';
     let mqttClient = null;
 
     function applyLampVisual(state) {
@@ -917,7 +932,7 @@
       btn.classList.toggle('off', !lampOn);
 
       document.getElementById('roomHumValue').innerText =
-        lampOn ? 'KELEMBABAN: 68.0 % | LAMPU: MENYALA (ON)' : 'KELEMBABAN: 68.0 % | LAMPU: MATI (OFF)';
+        lampOn ? `KELEMBABAN: ${currentHumidity} % | LAMPU: MENYALA (ON)` : `KELEMBABAN: ${currentHumidity} % | LAMPU: MATI (OFF)`;
     }
 
     function toggleLamp(broadcast = true) {
@@ -930,20 +945,46 @@
 
     try {
       mqttClient = mqtt.connect('wss://broker.hivemq.com:8884/mqtt', {
-        clientId: 'blueduck_' + Math.random().toString(16).slice(2, 10)
+        clientId: 'blueduck_web_' + Math.random().toString(16).slice(2, 10)
       });
 
       mqttClient.on('connect', () => {
         document.getElementById('mqttText').innerText = 'SYNC';
-        mqttClient.subscribe(TOPIC_LAMP);
+        mqttClient.subscribe([TOPIC_LAMP, TOPIC_SLAVE1, TOPIC_SLAVE2]);
       });
 
       mqttClient.on('message', (topic, message) => {
+        const payload = message.toString();
+
         if (topic === TOPIC_LAMP) {
-          const incomingState = message.toString() === 'ON';
+          const incomingState = payload === 'ON';
           if (incomingState !== lampOn) {
             applyLampVisual(incomingState);
           }
+        } else if (topic === TOPIC_SLAVE1 && !isCompleted) {
+          try {
+            const s1 = JSON.parse(payload);
+            liveEspConnected = true;
+            document.getElementById('mqttText').innerText = 'ESP32 LIVE';
+            if (s1.tds !== undefined) document.getElementById('tdsValue').innerText = `${Number(s1.tds).toFixed(1)} %`;
+            if (s1.waterTemp !== undefined) document.getElementById('waterTempValue').innerText = `${Number(s1.waterTemp).toFixed(1)} °C`;
+            if (s1.level !== undefined) {
+              const lvl = Math.max(0, Math.min(100, Number(s1.level)));
+              document.getElementById('levelValue').innerText = `${lvl.toFixed(0)} %`;
+              waterMesh.scale.y = Math.max(0.25, lvl / 100);
+            }
+          } catch (err) {}
+        } else if (topic === TOPIC_SLAVE2 && !isCompleted) {
+          try {
+            const s2 = JSON.parse(payload);
+            liveEspConnected = true;
+            document.getElementById('mqttText').innerText = 'ESP32 LIVE';
+            if (s2.roomTemp !== undefined) document.getElementById('roomTempValue').innerText = `${Number(s2.roomTemp).toFixed(1)} °C`;
+            if (s2.humidity !== undefined) {
+              currentHumidity = Number(s2.humidity).toFixed(1);
+              applyLampVisual(lampOn);
+            }
+          } catch (err) {}
         }
       });
     } catch (e) {
